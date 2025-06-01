@@ -1,0 +1,319 @@
+====NOTES[locators - https://playwright.dev/docs/locators, autowaits - https://playwright.dev/docs/actionability]====
+**Title:** Playwright Locators - Methods and Selector Types
+
+**Problem Statement:**
+- How can we use Playwright locators to find elements on a web page for interaction?
+- What are the different ways to write selectors in Playwright?
+
+---
+
+**Approach:**
+1. **What are Locators?**
+   - **Definition:**
+     - Locators in Playwright represent a way to find and interact with elements on the page.
+	 - Locators are the central piece of Playwright's auto-waiting and retry-ability. In a nutshell, locators represent a way to find element(s) on the page at any moment.
+     - They can dynamically resolve elements at any given moment, ensuring robustness against DOM changes.
+   - **Purpose:**
+     - Used to locate and perform actions (click, type, etc.) on elements in a web page or frame.
+
+2. **Creating a Locator:**
+   - Locators can be created using the `page.locator()` method.
+   - Syntax:
+     ====CODE====
+     page.locator(selector);
+     page.locator(selector, options);
+     ====END====
+   - Example:
+     ====CODE====
+     const button = page.locator('button#submit');
+     await button.click(); // Perform an action on the located element
+     ====END====
+
+3. **Advantages of Locators:**
+   - Automatically retry actions if the element is not ready (e.g., still rendering).
+   - Support flexible ways to locate elements using different types of selectors.
+
+---
+
+**Section 1: Types of Selectors**
+
+1. **XPath Selectors:**
+   - **Definition:** XPath is a technique to navigate and locate elements in the HTML DOM using a hierarchical structure.
+   - **Usage:**
+     - To find elements by attributes:
+       1. `//htmltag[@attribute='attributeValue']`
+       2. `//*[@attribute='attributeValue']` (matches any tag with the specified attribute)
+   - **Examples:**
+     ====CODE====
+     const element = page.locator("//div[@class='example']");
+     await element.click();
+
+     const input = page.locator("//*[@type='text']");
+     await input.fill('Playwright');
+     ====END====
+
+2. **CSS Selectors:**
+   - **Definition:** CSS Selectors are string patterns used to identify elements based on their tag name, class, id, or attributes.
+   - **Usage:**
+     - To find elements by:
+       1. Class Name: `htmltag.classvalue` or `.classvalue`
+       2. ID: `htmltag#idValue` or `#idValue`
+       3. Attribute: `htmltag[attributeName=attributeValue]` or `[attributeName=attributeValue]`
+   - **Examples:**
+     ====CODE====
+     const button = page.locator('button.submit-button'); // By class name
+     await button.click();
+
+     const input = page.locator('input#username'); // By ID
+     await input.fill('User123');
+
+     const checkbox = page.locator('[type="checkbox"]'); // By attribute
+     await checkbox.check();
+     ====END====
+
+3. **Text Selectors:**
+   - **Definition:** Locates elements based on visible text content.
+   - **Types:**
+     1. `text='textValue'` - Case-sensitive
+     2. `text=textValue` - Non-case-sensitive
+   - **Examples:**
+     ====CODE====
+     const link = page.locator("text='Sign In'"); // Case-sensitive
+     await link.click();
+
+     const button = page.locator("text=submit"); // Non-case-sensitive
+     await button.click();
+     ====END====
+
+4. **ID and Data Attributes:**
+   - **Definition:** Finds elements based on unique `id` or custom attributes like `data-testid`, `data-test`, etc.
+   - **Usage:**
+     - Use `id`, `data-test-id`, `data-testid`, or other attributes directly in the selector.
+   - **Examples:**
+     ====CODE====
+     const button = page.locator('id=submitButton');
+     await button.click();
+
+     const element = page.locator('data-testid=login-form');
+     await element.fill('Login Details');
+     ====END====
+
+---
+
+**Section 2: How Locators Work**
+1. Locators are **declarative**, meaning they don’t immediately interact with the DOM but instead define an element to locate when needed.
+2. Playwright automatically retries actions performed with locators if the element is not visible, detached, or still rendering.
+
+---
+
+**Section 3: Use Cases for Different Selectors**
+
+1. **XPath:**
+   - Best for deeply nested elements or elements without unique identifiers.
+   - Example:
+     - `//div[@class='content']//span[text()='Welcome']`
+
+2. **CSS Selectors:**
+   - Most commonly used for their flexibility and speed.
+   - Example:
+     - `input[type="email"]`
+
+3. **Text Selectors:**
+   - Ideal for buttons, links, or elements with static visible text.
+   - Example:
+     - `text='Submit'`
+
+4. **ID/Data Attributes:**
+   - Best for elements with unique `id` or custom attributes.
+   - Example:
+     - `id=signupForm`
+
+---
+
+**Key Takeaways:**
+1. **Locator Creation:**
+   - Use `page.locator(selector)` to define a locator for an element.
+   - Perform actions like `click`, `fill`, or `check` on the located element.
+
+2. **Selector Types:**
+   - XPath: For navigating DOM hierarchies.
+   - CSS: For identifying elements by class, id, or attributes.
+   - Text: For finding elements by visible text.
+   - ID/Data Attributes: For unique element identification.
+
+3. **Best Practices:**
+   - Prefer CSS Selectors for performance and simplicity.
+   - Use Text Selectors for human-readable tests (e.g., "Click Submit").
+   - Use ID or custom data attributes (`data-testid`) for stable element identification.
+   - Avoid overly complex XPath unless necessary.
+
+====END====
+
+====NOTES====
+**Title:** Playwright Locators - Auto-Waiting, Retry-ability, and Behind-the-Scenes Workflow
+
+**Problem Statement:**
+- What does "Locators are the central piece of Playwright's auto-waiting and retry-ability" mean?
+- How do locators work behind the scenes to handle dynamic elements in UI?
+- Why are XPath and CSS selectors often discouraged in automation?
+
+---
+
+**Section 1: Meaning of Auto-Waiting and Retry-ability**
+
+1. **Definition of Auto-Waiting:**
+   - Auto-waiting ensures that Playwright waits for elements to appear, become visible, or be interactable (enabled) before performing actions on 
+      them (e.g., `click`, `fill`, etc.).
+   - This is done automatically for every Playwright action, such as `page.locator().click()`.
+
+2. **Definition of Retry-ability:**
+   - Retry-ability means Playwright retries locating the element or performing an action on it until it becomes available or the timeout is reached (default: 30 seconds).
+
+3. **Why It’s Important:**
+   - In dynamic UIs, elements may take time to load, appear, or become ready for interaction due to animations, AJAX calls, or delays in rendering.
+   - Locators remove the need for explicit waits like `waitForSelector()` or `sleep()`, making tests more stable and resilient.
+
+---
+
+**Section 2: How Auto-Waiting and Retry-ability Work Behind the Scenes**
+
+1. **Workflow:**
+   - When you create a locator using `page.locator(selector)`:
+     1. The locator doesn’t immediately interact with the DOM.
+     2. It waits for the element to meet the expected state before performing any action (e.g., visible, attached, enabled).
+   - If the element is not ready, Playwright retries locating or interacting with it until:
+     - The action succeeds, or
+     - The timeout is reached.
+
+2. **Behind-the-Scenes Process:**
+   - **Step 1:** Resolve the selector to find matching elements in the DOM.
+   - **Step 2:** Check if the element satisfies the expected conditions (e.g., visible, enabled, stable).
+   - **Step 3:** Perform the action (e.g., `click`, `fill`).
+   - **Step 4:** If any step fails, retry until the timeout.
+
+3. **Example of Auto-Waiting:**
+   ====CODE====
+   import { test, expect } from '@playwright/test';
+
+   test('auto-waiting example', async ({ page }) => {
+       await page.goto('https://example.com');
+
+       // Locator auto-waits for the button to appear and become enabled
+       const button = page.locator('button#submit');
+       await button.click(); // Automatically retries if button is not ready
+
+       // Auto-waiting for text to appear
+       const successMessage = page.locator('text="Success"');
+       await expect(successMessage).toBeVisible(); // Retries until text is visible
+   });
+   ====END====
+
+---
+
+**Section 3: How Locators Handle Dynamic Elements**
+
+1. **Dynamic Element Challenges:**
+   - UI elements can change dynamically due to:
+     - Delayed rendering (e.g., loading spinners).
+     - Asynchronous API calls (e.g., dynamic lists or data grids).
+     - Animations or transitions (e.g., modal dialogs).
+
+2. **Locators’ Approach:**
+   - **Dynamic Resolution:** Locators resolve the element only at the moment of interaction, ensuring the latest DOM state is used.
+   - **Auto-Retry:** Automatically retries if the element is:
+     - Not attached to the DOM.
+     - Not visible or interactable.
+     - In a detached or unstable state.
+
+3. **Example:**
+   ====CODE====
+   test('handling dynamic elements', async ({ page }) => {
+       await page.goto('https://example.com');
+
+       // Dynamic loading - Waits for element to appear
+       const dynamicButton = page.locator('button.dynamic');
+       await dynamicButton.click();
+
+       // Dynamic content - Waits for text to appear after API response
+       const dynamicText = page.locator('text=Loaded Content');
+       await expect(dynamicText).toBeVisible();
+   });
+   ====END====
+
+---
+
+**Section 4: Why XPath and CSS Selectors Are Often Discouraged**
+
+1. **Problems with XPath:**
+   - **Complexity:** XPath expressions can become very long and hard to read/maintain.
+   - **Performance:** XPath evaluation is slower compared to CSS selectors, especially in large DOMs.
+   - **Fragility:** XPath is sensitive to DOM structure changes (e.g., nested elements).
+   - element location can be changed or element properties can be changed due to wch locator will also fail. Same reason for css.
+      So as per playwright if we use locators like text type or label etc, changing there name will not happen soon and if element properties 
+	  changed still locating it on UI will not fail.
+
+   **Example of Fragility:**
+   ====CODE====
+   // XPath to locate an element
+   const element = page.locator("//div[@class='parent']//span[text()='Child']");
+   await element.click();
+   // This breaks if the DOM structure or class changes
+   ====END====
+
+2. **Problems with CSS Selectors:**
+   - **Fragility:** Similar to XPath, CSS selectors can break if classes or IDs change frequently.
+   - **Readability:** Overly specific CSS selectors can be hard to maintain.
+   - **Dynamic Classes:** CSS frameworks often generate dynamic class names (e.g., `btn-1234`), which are unreliable for selectors.
+
+3. **Better Alternatives:**
+   - Use **Text Selectors**:
+     - Example: `text="Submit"` (Readable and stable for buttons or links with static text).
+   - Use **Custom Attributes**:
+     - Example: `data-testid="submit-button"` (Designed for automation and not affected by UI changes).
+
+---
+
+**Section 5: Best Practices for Locators**
+
+1. **Prefer Stable Selectors:**
+   - Use `id`, `data-testid`, or `data-test` attributes when available.
+   - Example:
+     ====CODE====
+     const button = page.locator('data-testid=submit');
+     await button.click();
+     ====END====
+
+2. **Avoid Overly Specific Selectors:**
+   - Do not rely on long, complex XPath or CSS selectors unless necessary.
+   - Avoid dynamic classes or elements prone to frequent changes.
+
+3. **Leverage Playwright Features:**
+   - Use `hasText` or `nth` options for locating dynamic elements:
+     ====CODE====
+     const row = page.locator('tr', { hasText: 'Row Content' }).nth(0);
+     await row.click();
+     ====END====
+
+4. **Use Page Object Models (POM):**
+   - Abstract locators into reusable methods or classes for better maintainability.
+
+---
+
+**Key Takeaways:**
+1. **Locators and Auto-Waiting:**
+   - Locators automatically wait for elements to appear, become visible, and be interactable.
+   - Retry actions until the timeout is reached.
+
+2. **Dynamic Elements:**
+   - Locators dynamically resolve the DOM state at the moment of interaction.
+   - Handles delays, rendering issues, and animations effectively.
+
+3. **Avoid XPath and Complex CSS:**
+   - XPath and complex CSS are fragile and harder to maintain.
+   - Prefer stable selectors like `data-testid` or Text Selectors.
+
+4. **Best Practices:**
+   - Use readable, stable selectors to reduce test flakiness.
+   - Leverage Playwright’s built-in features like `hasText`, auto-waiting, and retry-ability.
+
+====END====

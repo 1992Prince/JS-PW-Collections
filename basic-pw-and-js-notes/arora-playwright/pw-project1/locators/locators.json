@@ -1,0 +1,13 @@
+{
+    "HomePage": {
+        "newCarsMenu": "//*[text()='NEW CARS']",
+        "findNewCarsMenu": "text=Find New Cars"
+    },
+    "NewCarsPage": {
+        "newCarsHeading": "//h1[text()='New Cars']",
+        "bmwCar": "//*[text()='BMW']",
+        "hondaCar": "//*[text()='Honda']",
+        "hyundaiCar": "//*[text()='Hyundai']",
+        "toyotaCar": "//*[text()='Toyota']"
+    }
+}

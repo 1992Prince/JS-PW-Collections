@@ -1,0 +1,150 @@
+Title: getByRole in Playwright
+
+1. Purpose of getByRole
+
+Approach:
+- `getByRole` is a Playwright method that locates elements based on their **ARIA role**, **ARIA attributes**, and **accessible name**.
+- It focuses on the **functionality** of the element rather than its structure or HTML tag.
+- **ARIA roles** are used to define the purpose of an element, such as a button, checkbox, heading, etc.
+- The purpose of `getByRole` is to identify elements in a more **semantic way**, which is also **accessibility** friendly.
+
+Edge Cases:
+- It's especially useful when working with **accessibility** tests or ensuring that elements are accessible to **screen readers**.
+- It helps target elements based on their **purpose**, even if the element’s HTML tag changes.
+
+2. When to Use getByRole
+
+Approach:
+- **When you want to locate elements by their functionality** instead of their tag or structure.
+- It is helpful in **accessibility testing** to make sure elements are correctly identified and function as expected by users with disabilities.
+- Use `getByRole` for any element where its **role** (like `button`, `checkbox`, `link`) defines its purpose.
+
+Edge Cases:
+- If you don't care about **structure** or **HTML tags**, but care about **functionality** and **accessibility**.
+
+3. getByRole vs Locator
+
+Approach:
+- **`getByRole`** should be preferred when you want to target elements by their **functionality**, and it is based on **ARIA roles** (like `button`, `link`, `checkbox`).
+- **Locator** should be used when you need to locate elements based on specific **HTML structure**, **CSS selectors**, or **XPath**.
+- **`getByRole`** is more **robust** and **reliable** when you care about the **semantic meaning** of an element.
+
+Edge Cases:
+- **Locator** is better for complex selectors, deep hierarchies, or if you need to target an element based on **CSS classes** or **ID selectors**.
+
+4. Options in getByRole
+
+Approach:
+- `getByRole` allows the use of options that refine your search. Here are the key options:
+  
+  - **setName**: Match the **accessible name** of the element.
+    Example:
+    ```typescript
+    page.getByRole('button', { name: 'Submit' }).click();
+    ```
+  
+  - **setExact**: Ensure an **exact match** for the name, which is case-sensitive and full-string.
+    Example:
+    ```typescript
+    page.getByRole('button', { name: 'Submit', setExact: true }).click();
+    ```
+
+  - **setChecked**: Use to locate checkboxes or radio buttons based on whether they are checked or not.
+    Example:
+    ```typescript
+    page.getByRole('checkbox', { setChecked: true }).check();
+    ```
+
+  - **setDisabled**: Use to target elements that are disabled.
+    Example:
+    ```typescript
+    page.getByRole('button', { setDisabled: true }).click();
+    ```
+
+  - **setExpanded**: Use to check for expanded/collapsed elements (useful for dropdowns, accordions).
+    Example:
+    ```typescript
+    page.getByRole('button', { setExpanded: true }).click();
+    ```
+
+  - **setIncludeHidden**: Include hidden elements in the search.
+    Example:
+    ```typescript
+    page.getByRole('button', { setIncludeHidden: true }).click();
+    ```
+
+  - **setLevel**: Use for headings to match specific **heading levels** (like `<h1>`, `<h2>`, etc.).
+    Example:
+    ```typescript
+    page.getByRole('heading', { setLevel: 2 }).isVisible();
+    ```
+
+5. Example Code: Demonstrating getByRole
+
+```typescript
+test('Demonstrating getByRole', async ({ page }) => {
+  
+  // Page ko open karo
+  await page.goto('https://naveenautomationlabs.com/opencart/index.php?route=account/register');
+  
+  // "Register Account" heading ko locate karna aur check karna ki wo visible hai ya nahi
+  await expect(page.getByRole('heading', { name: 'Register Account' })).toBeVisible();
+  
+  // "Forgotten Password" link ko locate karna aur check karna ki wo visible hai ya nahi
+  await expect(page.getByRole('link', { name: 'Forgotten Password' })).toBeVisible();
+  
+  // "Yes" radio button ko locate karna aur check karna ki wo visible hai ya nahi
+  await expect(page.getByRole('radio', { name: 'Yes' })).toBeVisible();
+  
+  // "Yes" radio button ko click karna
+  await page.getByRole('radio', { name: 'Yes' }).click();
+  
+  // Checkbox ko click karna
+  await page.getByRole('checkbox').click();
+  
+  // "Continue" button ko click karna
+  await page.getByRole('button', { name: 'Continue' }).click();
+  
+  // Execution ko pause karna
+  await page.pause();
+  
+});
+
+
+-----------------------------------------------------------------------------
+
+
+Consider the following DOM structure.
+
+<h3>Sign up</h3>
+<label>
+  <input type="checkbox" /> Subscribe
+</label>
+<br/>
+<button>Submit</button>
+
+You can locate each element by it's implicit role:
+
+assertThat(page
+    .getByRole(AriaRole.HEADING,
+               new Page.GetByRoleOptions().setName("Sign up")))
+    .isVisible();
+
+page.getByRole(AriaRole.CHECKBOX,
+               new Page.GetByRoleOptions().setName("Subscribe"))
+    .check();
+
+page.getByRole(AriaRole.BUTTON,
+               new Page.GetByRoleOptions().setName(
+                   Pattern.compile("submit", Pattern.CASE_INSENSITIVE)))
+    .click();
+
+Arguments
+
+role enum AriaRole { ALERT, ALERTDIALOG, APPLICATION, ARTICLE, BANNER, BLOCKQUOTE, BUTTON, CAPTION, CELL, CHECKBOX, CODE, 
+                                 COLUMNHEADER, COMBOBOX, COMPLEMENTARY, CONTENTINFO, DEFINITION, DELETION, DIALOG, DIRECTORY, DOCUMENT, 
+								 EMPHASIS, FEED, FIGURE, FORM, GENERIC, GRID, GRIDCELL, GROUP, HEADING, IMG, INSERTION, LINK, LIST, LISTBOX, LISTITEM, 
+								 LOG, MAIN, MARQUEE, MATH, METER, MENU, MENUBAR, MENUITEM, MENUITEMCHECKBOX, MENUITEMRADIO, NAVIGATION, NONE, 
+								 NOTE, OPTION, PARAGRAPH, PRESENTATION, PROGRESSBAR, RADIO, RADIOGROUP, REGION, ROW, ROWGROUP, ROWHEADER, SCROLLBAR, 
+								 SEARCH, SEARCHBOX, SEPARATOR, SLIDER, SPINBUTTON, STATUS, STRONG, SUBSCRIPT, SUPERSCRIPT, SWITCH, TAB, TABLE, TABLIST, TABPANEL, 
+								 TERM, TEXTBOX, TIME, TIMER, TOOLBAR, TOOLTIP, TREE, TREEGRID, TREEITEM }

@@ -1,0 +1,74 @@
+
+**Title: Negating Matchers, Soft Assertions, and Custom Expect Message in Playwright**
+
+Approach:
+In Playwright, you can negate matchers, use soft assertions that allow tests to continue even if some assertions fail, and provide custom messages to assertions for better context. Below is a detailed explanation of each of these concepts with examples.
+
+1. Negating Matchers:
+   - **Description**: You can negate an assertion by using `.not` in front of the matcher. This checks for the opposite condition (i.e., not equal, not visible, etc.).
+   - **Examples**:
+   ====CODE====
+   expect(value).not.toEqual(0); // Passes if value is NOT equal to 0
+   await expect(locator).not.toContainText('some text'); // Passes if the locator does NOT contain 'some text'
+   ====END====
+   - **Explanation**: These assertions check the opposite of the condition. `.not` is useful when you want to assert that something should not be true.
+
+2. Soft Assertions:
+   - **Description**: Soft assertions allow a test to continue even if some assertions fail. By default, failed assertions stop the test execution, but soft assertions don't. You can use them to run multiple checks without failing the entire test.
+   - **Examples**:
+   ====CODE====
+   await expect.soft(page.getByTestId('status')).toHaveText('Success'); // Soft assertion - doesn't stop test
+   await expect.soft(page.getByTestId('eta')).toHaveText('1 day'); // Soft assertion - doesn't stop test
+   await page.getByRole('link', { name: 'next page' }).click();
+   await expect.soft(page.getByRole('heading', { name: 'Make another order' })).toBeVisible(); // Continues test
+   ====END====
+   - **Explanation**: Soft assertions let you run multiple checks, even if some of them fail. This is useful for validating multiple conditions without stopping the entire test.
+
+   - **Checking Soft Assertion Failures**:
+   ====CODE====
+   expect(test.info().errors).toHaveLength(0); // Check if there were soft assertion failures
+   ====END====
+   - **Explanation**: You can check if any soft assertions failed by inspecting `test.info().errors`.
+
+   **Note**: Soft assertions only work with Playwright’s test runner.
+
+3. Custom Expect Message:
+   - **Description**: You can add a custom message to an assertion using the second argument to the `expect()` function. This provides more context about what the assertion is checking and is displayed in the test reporter.
+   - **Examples**:
+   ====CODE====
+   await expect(page.getByText('Name'), 'should be logged in').toBeVisible(); // Custom message added
+   ====END====
+   - **Explanation**: If the assertion passes, the custom message will be shown in the reporter output. If the assertion fails, the message will be included in the error details.
+
+   **When the assertion passes**:
+   ```
+   ✅ should be logged in    @example.spec.ts:18
+   ```
+
+   **When the assertion fails**:
+   ```
+   Error: should be logged in
+   Call log:
+     - expect.toBeVisible with timeout 5000ms
+     - waiting for "getByText('Name')"
+   
+   2 |
+   3 | test('example test', async({ page }) => {
+   > 4 |   await expect(page.getByText('Name'), 'should be logged in').toBeVisible();
+       |                                                                  ^
+   5 | });
+   6 |
+   ```
+
+   - **Explanation**: The custom message makes the assertion more understandable in both pass and fail cases. It helps provide context for the test steps.
+
+   - **Soft Assertions with Custom Message**:
+   ====CODE====
+   expect.soft(value, 'my soft assertion').toBe(56); // Soft assertion with a custom message
+   ====END====
+   - **Explanation**: You can also use custom messages with soft assertions to provide more context about the soft assertion.
+
+Key Takeaways:
+- **Negating Matchers**: Use `.not` to check for the opposite condition.
+- **Soft Assertions**: Allow tests to continue even if some assertions fail, useful for running multiple checks.
+- **Custom Expect Message**: Adds a message to assertions, providing more context for both passing and failing assertions.

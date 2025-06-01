@@ -1,0 +1,127 @@
+
+**Title: Auto-Retrying Assertions in Playwright with Examples**
+
+Approach:
+Auto-retrying assertions in Playwright are used for dynamic conditions where the element or value might not be immediately available. These assertions retry checking the condition until it passes or the timeout is reached. These assertions are **asynchronous** and need to be awaited.
+
+1. await expect(response).toBeOK()
+   - **Description**: Checks if the HTTP response has an OK status code (200).
+   - **Example**:
+   ====CODE====
+   const response = await page.goto('https://example.com');
+   await expect(response).toBeOK(); // Passes if the response status code is 200
+   ====END====
+   - **Explanation**: This checks that the server returns a successful response (status code 200).
+
+2. await expect(page).toHaveURL()
+   - **Description**: Checks if the current page URL matches the expected URL.
+   - **Example**:
+   ====CODE====
+   await page.goto('https://example.com');
+   await expect(page).toHaveURL('https://example.com'); // Passes if the page URL matches
+   ====END====
+   - **Explanation**: This checks if the page's URL matches the expected one after navigating.
+
+3. await expect(page).toHaveTitle()
+   - **Description**: Checks if the page has the expected title.
+   - **Example**:
+   ====CODE====
+   await page.goto('https://example.com');
+   await expect(page).toHaveTitle('Example Domain'); // Passes if the page title is 'Example Domain'
+   ====END====
+   - **Explanation**: This checks the title of the page.
+
+4. await expect(locator).toHaveValues()
+   - **Description**: Checks if a `<select>` element has the expected selected values.
+   - **Example**:
+   ====CODE====
+   await expect(page.locator('select')).toHaveValues(['Option 1', 'Option 2']); // Passes if these values are selected
+   ====END====
+   - **Explanation**: This checks if the `<select>` element has the correct selected values.
+
+5. await expect(locator).toHaveValue()
+   - **Description**: Checks if an input field has the expected value.
+   - **Example**:
+   ====CODE====
+   await page.fill('#inputField', 'Test value');
+   await expect(page.locator('#inputField')).toHaveValue('Test value'); // Passes if the input field has 'Test value'
+   ====END====
+   - **Explanation**: This checks if the value of the input field matches the expected one.
+
+6. await expect(locator).toHaveText()
+   - **Description**: Checks if an element contains the expected text.
+   - **Example**:
+   ====CODE====
+   await page.locator('#message').textContent('Hello, World!');
+   await expect(page.locator('#message')).toHaveText('Hello, World!'); // Passes if the element contains 'Hello, World!'
+   ====END====
+   - **Explanation**: This checks if the element's text matches the expected value.
+
+7. await expect(locator).toHaveCount()
+   - **Description**: Checks if an element has the specified number of child elements.
+   - **Example**:
+   ====CODE====
+   await expect(page.locator('ul li')).toHaveCount(3); // Passes if the list has exactly 3 items
+   ====END====
+   - **Explanation**: This checks the number of child elements inside a parent element.
+
+8. await expect(locator).toHaveAttribute()
+   - **Description**: Checks if an element has a specific attribute with a certain value.
+   - **Example**:
+   ====CODE====
+   await expect(page.locator('button')).toHaveAttribute('disabled', 'true'); // Passes if the button has a 'disabled' attribute with value 'true'
+   ====END====
+   - **Explanation**: This checks if the element has the specified attribute and value.
+
+9. await expect(locator).toContainText()
+   - **Description**: Checks if an element contains the specified text (substring).
+   - **Example**:
+   ====CODE====
+   await expect(page.locator('h1')).toContainText('Welcome'); // Passes if the element contains the text 'Welcome'
+   ====END====
+   - **Explanation**: This checks if the text is contained within the element (substring match).
+
+10. await expect(locator).toBeVisible()
+    - **Description**: Checks if an element is visible on the page.
+    - **Example**:
+    ====CODE====
+    await expect(page.locator('button')).toBeVisible(); // Passes if the button is visible on the page
+    ====END====
+    - **Explanation**: This checks if the element is visible on the page. Playwright will retry until the element is visible.
+
+11. await expect(locator).toBeHidden()
+    - **Description**: Checks if an element is not visible on the page.
+    - **Example**:
+    ====CODE====
+    await expect(page.locator('div.loading')).toBeHidden(); // Passes if the 'loading' div is hidden
+    ====END====
+    - **Explanation**: This checks if the element is hidden (either `display: none` or not attached to the DOM).
+
+12. await expect(locator).toBeEnabled()
+    - **Description**: Checks if an element is enabled (e.g., a clickable button or input).
+    - **Example**:
+    ====CODE====
+    await expect(page.locator('button')).toBeEnabled(); // Passes if the button is enabled
+    ====END====
+    - **Explanation**: This checks if the element is enabled and clickable.
+
+13. await expect(locator).toBeChecked()
+    - **Description**: Checks if a checkbox or radio button is checked.
+    - **Example**:
+    ====CODE====
+    await page.locator('input[type="checkbox"]').check();
+    await expect(page.locator('input[type="checkbox"]')).toBeChecked(); // Passes if the checkbox is checked
+    ====END====
+    - **Explanation**: This checks if the checkbox or radio button is selected.
+
+14. await expect(locator).toBeEditable()
+    - **Description**: Checks if an input element is editable.
+    - **Example**:
+    ====CODE====
+    await expect(page.locator('input')).toBeEditable(); // Passes if the input element is editable
+    ====END====
+    - **Explanation**: This checks if the element is editable (i.e., not disabled or readonly).
+
+Key Takeaways:
+- These assertions **retry automatically** until the condition is met or the timeout is reached.
+- **Async assertions** are used when dealing with dynamic content, like elements that appear after a page load or actions.

@@ -1,0 +1,113 @@
+✅ JavaScript vs TypeScript – Practical Interview-Ready Breakdown
+
+🔹 File Extensions
+
+Language	Extension
+JavaScript	.js
+TypeScript	.ts
+
+🔹 How to Run
+JavaScript:
+Save the file as example.js
+
+Run using: node example.js
+
+TypeScript:
+Save the file as example.ts
+
+Compile to JavaScript: tsc example.ts
+Run the generated JavaScript file: node example.js
+
+✅ Make sure TypeScript is installed globally using: npm install -g typescript
+
+
+🔹 JavaScript Example (No Type Safety)
+
+// example.js
+function add(a, b) {
+  return a + b;
+}
+
+console.log(add(10, 20));       // ✅ 30
+console.log(add("10", 20));     // ✅ "1020" (string concatenation, no error!)
+console.log(add(true, null));   // ✅ 1 (no compile-time error!)
+❌ JavaScript does not warn if incorrect data types are passed — it just runs!
+
+🔹 TypeScript Example (With Type Safety)
+// example.ts
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+console.log(add(10, 20));         // ✅ OK
+console.log(add("10", 20));       // ❌ Compile-time Error: Argument of type 'string' is not assignable to parameter of type 'number'
+✅ TypeScript prevents errors at compile time, ensuring type correctness.
+
+🔷 1. Definition
+JavaScript	
+A scripting language used to create dynamic web content.	
+
+TypeScript
+A superset of JavaScript that adds static typing.
+
+🔷 2. Typing System
+| JavaScript                                             | TypeScript                                                |
+| ------------------------------------------------------ | --------------------------------------------------------- |
+| **Dynamically typed** – types are resolved at runtime. | **Statically typed** – types are checked at compile time. |
+| You can write: `let name = 123;`                       | You can write: `let name: string = 'John';`               |
+
+🔷 3. Compilation
+| JavaScript                           | TypeScript                                                                    |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| Interpreted directly by the browser. | Needs to be **compiled to JavaScript** using the TypeScript compiler (`tsc`). |
+
+🔷 4. Error Detection
+| JavaScript                    | TypeScript                                                   |
+| ----------------------------- | ------------------------------------------------------------ |
+| Errors appear **at runtime**. | Errors are **caught during development** (before code runs). |
+
+🔷 6. Use in Projects
+✅ JavaScript is suitable for small scripts or when flexibility is needed.
+
+✅ TypeScript is used for large-scale applications, especially where maintainability and collaboration are important 
+   (e.g., Angular, Playwright, NestJS projects).
+   
+   🧠 Interview Tip:
+   “JavaScript is dynamically typed and flexible, which is good for small-scale apps or quick prototypes. 
+   TypeScript, on the other hand, brings in static typing, early error detection, and better developer tooling, 
+   making it ideal for large and maintainable codebases. 
+   Since TypeScript is a superset of JavaScript, all JS code is valid TS, but TS adds optional type safety which 
+   boosts productivity and reduces bugs.”
+
+
+---------------------------------------------------------------------------
+
+Pre-requisite for TypeScript
+
+1) Nodejs installed
+2) IDE - VSCode
+3) typescript   -  npm install -g typescript and know about tsc version via command : tsc --version and output will be - Version 5.8.3
+   now create a empty folder typescript-tutorials and run command : npm init -y and this will install package.json file in that folder
+   i.e. for me inside typescript-tutorials, package.json file will be created.
+
+   Also one config file comes with typescript called as tsconfig.json file
+   run command to install it : tsc --init and tsconfig.json file will be created inside folder typescript-tutorials
+4) ts-node
+
+
+In src folder create ts extension files and then run command :  npx tsc and this will create js files for all ts files inside src folder
+and js files will be available in dist folders
+
+
+also if above step u think is tedios then install vs code plugin -  Code Runner
+and then right click on ts file and u will get direct option to run ts file.
+while running might be chances are u will get below error - 
+
+[Running] ts-node "d:\2025\playwright\arora-playwright\typescript-tutorials\src\01-intro.ts"
+'ts-node' is not recognized as an internal or external command,
+operable program or batch file.
+
+In this case run command - npm install -g ts-node typescript
+This installs both ts-node and typescript globally so you can run .ts files directly.
+
+

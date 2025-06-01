@@ -1,0 +1,256 @@
+====NOTES====
+**Title:** Sample Code for Playwright Fixtures
+
+---
+
+**Section 1: page Fixture**
+
+**Description:**
+- Provides an isolated browser page instance for each test.
+- Used to interact with a webpage in a test.
+
+**Code Example:**
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('test using page fixture', async ({ page }) => {
+    await page.goto('https://example.com'); // Navigate to the URL
+    const title = await page.title();      // Get the page title
+    console.log(`Page Title: ${title}`);
+    await expect(page).toHaveTitle('Example Domain'); // Assert title
+});
+====END====
+
+---
+
+**Section 2: context Fixture**
+
+**Description:**
+- Provides an isolated browser context for each test.
+- Useful for managing cookies, storage, or session data separately for each test.
+- In same context multiple pages can be opened wch will share cookies, storage or session data within that context.
+- If we have req like to open multiple pages with same session or cookies or storage data then use context fixture for that test.
+
+**Code Example:**
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('test using context fixture', async ({ context }) => {
+    const page = await context.newPage(); // Create a new page in the isolated context
+    await page.goto('https://example.com');
+    const cookies = await context.cookies(); // Get cookies from the context
+    console.log(`Cookies: ${JSON.stringify(cookies)}`);
+    await page.close(); // Page and context will be cleaned up automatically
+});
+====END====
+
+---
+
+**Section 3: browser Fixture**
+
+**Description:**
+- Provides a shared browser instance across all tests.
+- Requires manual management of `BrowserContext` and `Page`.
+
+**Code Example:**
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('test using browser fixture', async ({ browser }) => {
+    const context = await browser.newContext(); // Create a new context manually
+    const page = await context.newPage();      // Create a page in the context
+    await page.goto('https://example.com');
+    console.log(`Page Title: ${await page.title()}`);
+
+    // Cleanup
+    await page.close(); // Close the page
+    await context.close(); // Close the context
+});
+====END====
+
+---
+
+**Section 4: browserName Fixture**
+
+**Description:**
+- Indicates the name of the browser being used for the test (`chromium`, `firefox`, or `webkit`).
+- Helps in writing browser-specific logic.
+
+**Code Example:**
+====CODE====
+import { test } from '@playwright/test';
+
+test('test using browserName fixture', async ({ browserName, page }) => {
+    console.log(`Running test on: ${browserName}`); // Log the browser name
+
+    if (browserName === 'chromium') {
+        await page.goto('https://chromium-specific-site.com');
+    } else if (browserName === 'firefox') {
+        await page.goto('https://firefox-specific-site.com');
+    } else if (browserName === 'webkit') {
+        await page.goto('https://webkit-specific-site.com');
+    }
+
+    console.log(`Page Title: ${await page.title()}`);
+});
+====END====
+
+---
+
+**Section 5: request Fixture**
+
+**Description:**
+- Provides an isolated API request context for testing API endpoints directly.
+- Useful for testing backend APIs without UI interactions.
+
+**Code Example:**
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('test using request fixture', async ({ request }) => {
+    // Make a GET request
+    const response = await request.get('https://api.example.com/data');
+    console.log(`GET Status: ${response.status()}`);
+    console.log(`GET Response: ${await response.json()}`);
+
+    // Make a POST request
+    const postResponse = await request.post('https://api.example.com/create', {
+        data: { name: 'Playwright', type: 'testing' },
+    });
+    console.log(`POST Status: ${postResponse.status()}`);
+    console.log(`POST Response: ${await postResponse.json()}`);
+
+    // Assertions
+    expect(response.status()).toBe(200);
+    expect(postResponse.status()).toBe(201);
+});
+====END====
+
+---
+
+**Key Takeaways:**
+1. **page Fixture:**
+   - Use for interacting with webpages (isolated for each test).
+
+2. **context Fixture:**
+   - Use for managing session data or cookies (isolated for each test).
+
+3. **browser Fixture:**
+   - Use when you need manual control over contexts or pages.
+   - Shared across tests; requires explicit cleanup.
+
+4. **browserName Fixture:**
+   - Use for writing browser-specific test logic.
+   - Supports `chromium`, `firefox`, and `webkit`.
+
+5. **request Fixture:**
+   - Use for making API requests directly in tests.
+   - Ideal for backend API testing or preparing data for UI tests.
+
+====END====
+
+====NOTES====
+**Title:** Understanding `context` Fixture with Multiple Pages Sharing Data
+
+**Problem Statement:**
+- How do multiple pages created in the same `context` share cookies, session data, and local storage?
+- Can we simulate multiple tabs or windows in a browser session with shared data?
+
+---
+
+**Approach:**
+1. **Behavior of `context` Fixture:**
+   - The `context` fixture in Playwright provides an isolated browser context for each test.
+   - Multiple pages created within the same context share:
+     - Cookies
+     - Local storage
+     - Session storage
+   - Each browser context is independent, ensuring isolation between contexts.
+
+2. **Key Features of `context`:**
+   - **Shared State Across Pages in the Same Context:**
+     - Cookies and storage data (like `localStorage` or `sessionStorage`) are shared between all pages created in the same context.
+   - **Isolation Between Contexts:**
+     - Data in one browser context is not accessible in another browser context.
+
+3. **Use Cases:**
+   - Simulating multiple tabs in a browser where cookies and session data are shared.
+   - Testing scenarios where one tab affects another (e.g., shared notifications, dynamic updates).
+   - Validating data consistency in multi-page workflows.
+
+---
+
+**Code Example:**
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('multiple pages in the same context share cookies and storage', async ({ context }) => {
+    // Create the first page
+    const page1 = await context.newPage();
+    await page1.goto('https://example.com');
+    
+    // Set a cookie on page1
+    await context.addCookies([{ name: 'test-cookie', value: '12345', domain: 'example.com' }]);
+    console.log('Cookies after setting on page1:', await context.cookies());
+
+    // Create the second page
+    const page2 = await context.newPage();
+    await page2.goto('https://example.com');
+
+    // Both pages share cookies
+    const cookiesOnPage2 = await context.cookies();
+    console.log('Cookies on page2:', cookiesOnPage2);
+
+    // Verify shared session data
+    await page1.evaluate(() => {
+        localStorage.setItem('key', 'value-from-page1');
+    });
+
+    const localStorageOnPage2 = await page2.evaluate(() => localStorage.getItem('key'));
+    console.log('LocalStorage on page2:', localStorageOnPage2);
+    expect(localStorageOnPage2).toBe('value-from-page1');
+
+    // Cleanup
+    await page1.close();
+    await page2.close();
+});
+====END====
+
+---
+
+**Output:**
+1. **Cookies Sharing:**
+   - Cookies set on one page (`page1`) are accessible on another page (`page2`) created in the same context.
+   - Example Output:
+     ```
+     Cookies after setting on page1: [ { name: 'test-cookie', value: '12345', domain: 'example.com' } ]
+     Cookies on page2: [ { name: 'test-cookie', value: '12345', domain: 'example.com' } ]
+     ```
+
+2. **Local Storage Sharing:**
+   - Data written to `localStorage` on one page (`page1`) is accessible on another page (`page2`) in the same context.
+   - Example Output:
+     ```
+     LocalStorage on page2: value-from-page1
+     ```
+
+---
+
+**Key Takeaways:**
+1. **Within the Same Context:**
+   - Cookies, local storage, and session data are shared across all pages.
+   - Suitable for simulating multiple tabs or windows in a user session.
+
+2. **Across Different Contexts:**
+   - Each context is fully isolated and does not share cookies, storage, or session data with other contexts.
+   - Useful for simulating independent user sessions.
+
+3. **Best Practices:**
+   - Use the `context` fixture to test scenarios requiring shared session data.
+   - Use separate contexts for tests requiring isolation (e.g., simulating multiple users).
+
+4. **Use Cases:**
+   - Testing workflows involving multiple tabs/windows with shared session data.
+   - Verifying cross-tab functionality (e.g., notifications, shared state).
+
+====END====

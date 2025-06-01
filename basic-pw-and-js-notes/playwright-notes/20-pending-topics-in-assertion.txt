@@ -1,0 +1,6 @@
+dic-link = https://playwright.dev/docs/test-assertions
+expect.configure
+expect.poll
+expect.toPass
+Add custom matchers using expect.extend
+Combine custom matchers from multiple modules

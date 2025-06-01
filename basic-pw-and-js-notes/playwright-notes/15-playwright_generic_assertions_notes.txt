@@ -1,0 +1,101 @@
+
+Title: Generic Assertions in Playwright
+
+Approach:
+Generic assertions in Playwright are used to verify conditions in your tests. These assertions can be synchronous or asynchronous based on the type of value or element you're testing. You can use these assertions to check for equality, presence, visibility, and other conditions.
+
+1. toBe() - Exact Equality (Sync)
+Description: Checks if a value is exactly equal to the expected value.
+Example (Sync):
+====CODE====
+expect(5).toBe(5); // Passes because 5 is exactly equal to 5
+expect('Hello').toBe('Hello'); // Passes because both strings are the same
+====END====
+Explanation: This assertion is synchronous, as it checks the value immediately.
+
+2. toBeTruthy() - Truthy Value (Sync)
+Description: Checks if a value is truthy (i.e., not false, 0, null, undefined).
+Example (Sync):
+====CODE====
+expect(true).toBeTruthy(); // Passes because true is truthy
+expect(1).toBeTruthy(); // Passes because 1 is truthy
+expect('').toBeTruthy(); // Fails because an empty string is falsy
+====END====
+Explanation: This assertion is synchronous.
+
+3. toBeFalsy() - Falsy Value (Sync)
+Description: Checks if a value is falsy (i.e., false, 0, null, undefined, NaN, or empty string).
+Example (Sync):
+====CODE====
+expect(false).toBeFalsy(); // Passes because false is falsy
+expect(0).toBeFalsy(); // Passes because 0 is falsy
+expect('Non-empty').toBeFalsy(); // Fails because non-empty string is truthy
+====END====
+Explanation: This assertion is synchronous.
+
+4. toEqual() - Deep Equality (Sync)
+Description: Checks if the value is deeply equal to the expected value, comparing objects and arrays.
+Example (Sync):
+====CODE====
+expect({name: 'John'}).toEqual({name: 'John'}); // Passes because objects have the same structure and values
+expect([1, 2, 3]).toEqual([1, 2, 3]); // Passes because arrays have the same values
+====END====
+Explanation: This is a synchronous assertion that compares values deeply.
+
+5. toContain() - Contains a Substring or Element (Sync)
+Description: Checks if a string contains a substring or if an array contains an element.
+Example (Sync):
+====CODE====
+expect('Hello world').toContain('world'); // Passes because 'world' is in 'Hello world'
+expect([1, 2, 3]).toContain(2); // Passes because the array contains 2
+====END====
+Explanation: This is a synchronous assertion.
+
+6. toHaveLength() - Length of Array/String (Sync)
+Description: Checks if an array or string has the specified length.
+Example (Sync):
+====CODE====
+expect([1, 2, 3]).toHaveLength(3); // Passes because the array has 3 elements
+expect('Hello').toHaveLength(5); // Passes because the string has 5 characters
+====END====
+Explanation: This is a synchronous assertion.
+
+7. Async Assertions - Web Element Checks (Async)
+Description: When testing elements on a webpage, Playwright uses async assertions to wait for conditions like visibility or presence of text.
+
+8. toBeVisible() - Element is Visible (Async)
+Description: Checks if an element is visible on the page.
+Example (Async):
+====CODE====
+await expect(page.locator('button')).toBeVisible(); // Passes if the button is visible on the page
+====END====
+Explanation: This is asynchronous because Playwright needs to wait for the element to become visible.
+
+9. toHaveText() - Element Contains Specific Text (Async)
+Description: Checks if an element contains the expected text.
+Example (Async):
+====CODE====
+await expect(page.locator('h1')).toHaveText('Welcome'); // Passes if the h1 element contains 'Welcome'
+====END====
+Explanation: This is asynchronous because Playwright will wait for the text to appear in the element.
+
+10. toBeHidden() - Element is Hidden (Async)
+Description: Checks if an element is not visible (hidden or not attached to the DOM).
+Example (Async):
+====CODE====
+await expect(page.locator('div.loading')).toBeHidden(); // Passes if the 'loading' div is hidden
+====END====
+Explanation: This is asynchronous because it needs to wait for the element to become hidden.
+
+11. toHaveClass() - Element Has a Specific Class (Async)
+Description: Checks if an element has a specified class.
+Example (Async):
+====CODE====
+await expect(page.locator('button')).toHaveClass('active'); // Passes if the button has the 'active' class
+====END====
+Explanation: This is asynchronous because Playwright waits for the class to appear on the element.
+
+Key Takeaways:
+- `expect(value)` is used for both synchronous and asynchronous assertions in Playwright.
+- Synchronous assertions work for immediate JavaScript values (like numbers and strings).
+- Asynchronous assertions work for elements, where Playwright waits for conditions like visibility or text to appear.

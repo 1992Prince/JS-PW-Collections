@@ -1,0 +1,143 @@
+====NOTES====
+**Title:** Understanding `has`, `hasNot`, `hasText`, and `hasNotText` in Playwright
+
+---
+
+**1. What is `has`?**
+- **Purpose:**
+  - Filters parent elements that **contain a specific child element** matching the given condition.
+- **Use Case:**
+  - To locate a parent element based on its child’s structure or attributes.
+
+---
+
+**2. What is `hasNot`?**
+- **Purpose:**
+  - Filters parent elements that **do not contain a specific child element**.
+- **Use Case:**
+  - To exclude parent elements that have a certain child.
+
+---
+
+**3. What is `hasText`?**
+- **Purpose:**
+  - Matches elements containing a specific **visible text**.
+- **Use Case:**
+  - To locate an element based on its text content.
+
+---
+
+**4. What is `hasNotText`?**
+- **Purpose:**
+  - Matches elements that **do not contain specific text**.
+- **Use Case:**
+  - To exclude elements that contain specific text.
+
+---
+
+**Example DOM:**
+<div class="card">
+  <h2>Card 1</h2>
+  <button>Click Me</button>
+</div>
+<div class="card">
+  <h2>Card 2</h2>
+  <button>Submit</button>
+</div>
+<div class="card">
+  <h2>Card 3</h2>
+</div>
+<div class="card">
+  <h2>Card 4</h2>
+  <button>Disabled</button>
+</div>
+
+---
+
+**Code Example (Single Program for All Methods):**
+import { test, expect } from '@playwright/test';
+
+test('example for has, hasNot, hasText, hasNotText in Playwright', async ({ page }) => {
+  await page.setContent(`
+    <div class="card">
+      <h2>Card 1</h2>
+      <button>Click Me</button>
+    </div>
+    <div class="card">
+      <h2>Card 2</h2>
+      <button>Submit</button>
+    </div>
+    <div class="card">
+      <h2>Card 3</h2>
+    </div>
+    <div class="card">
+      <h2>Card 4</h2>
+      <button>Disabled</button>
+    </div>
+  `);
+
+  // Example for `has`
+  const cardWithSubmitButton = page.locator('div.card', {
+    has: page.locator('button', { hasText: 'Submit' }),
+  });
+  await expect(cardWithSubmitButton).toBeVisible();
+  console.log('Card with Submit button is located.');
+
+  // Example for `hasNot`
+  const cardWithoutButton = page.locator('div.card', {
+    hasNot: page.locator('button'),
+  });
+  await expect(cardWithoutButton.locator('h2')).toHaveText('Card 3');
+  console.log('Card without any button is located.');
+
+  // Example for `hasText`
+  const buttonWithClickMeText = page.locator('button', { hasText: 'Click Me' }).first(); // Use `.first()` to handle strict mode
+  await expect(buttonWithClickMeText).toBeVisible();
+  console.log('Button with text "Click Me" is located.');
+
+  // Example for `hasNotText`
+  const buttonWithoutDisabledText = page.locator('button').filter({ hasNotText: 'Disabled' }).first(); // Use `.filter()` to refine results
+  await expect(buttonWithoutDisabledText).toHaveText('Click Me');
+  console.log('Button without text "Disabled" is located.');
+});
+---
+
+**Explanation of the Code:**
+
+1. **Using `has`:**
+   - **Locator:** `page.locator('div.card', { has: page.locator('button', { hasText: 'Submit' }) })`
+   - **What It Does:** Finds a `<div>` with the class `card` that contains a `<button>` with text `Submit`.
+
+2. **Using `hasNot`:**
+   - **Locator:** `page.locator('div.card', { hasNot: page.locator('button') })`
+   - **What It Does:** Finds a `<div>` with the class `card` that **does not contain any `<button>`**.
+
+3. **Using `hasText`:**
+   - **Locator:** `page.locator('button', { hasText: 'Click Me' })`
+   - **What It Does:** Finds a `<button>` element containing the visible text `Click Me`.
+
+4. **Using `hasNotText`:**
+   - **Locator:** `page.locator('button', { hasNotText: 'Disabled' })`
+   - **What It Does:** Finds a `<button>` element that **does not contain the text `Disabled`**.
+
+---
+
+**Output Explanation:**
+- `has`: Locates the parent `<div>` containing the child `<button>` with text `Submit`.
+- `hasNot`: Locates the `<div>` without any `<button>`.
+- `hasText`: Finds the `<button>` containing the exact text `Click Me`.
+- `hasNotText`: Finds the `<button>` that does not contain the text `Disabled`.
+
+---
+
+**Key Takeaways:**
+1. **Use `has`:**
+   - To locate parent elements based on child elements.
+2. **Use `hasNot`:**
+   - To exclude parent elements containing a specific child element.
+3. **Use `hasText`:**
+   - To find elements based on specific visible text.
+4. **Use `hasNotText`:**
+   - To exclude elements with specific visible text.
+
+====END====

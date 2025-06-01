@@ -1,0 +1,68 @@
+
+**Title: Assertions in Playwright**
+
+Approach: 
+Playwright uses the expect function for assertions. The expect function allows us to check if a value or element meets a specific condition by using matchers.
+
+*1. The expect function:*
+The expect function is the foundation of assertions in Playwright. You pass a value or an element to it, and then use a matcher to check a specific condition about that value or element.
+
+Example:
+====CODE====
+expect(success).toBeTruthy();
+====END====
+
+Explanation:
+- success is the value being checked.
+- toBeTruthy() is the matcher that checks if the value is truthy (not false, 0, null, or undefined).
+
+*2. Matchers:*
+Matchers are used with expect to define the condition we want to check for.
+
+- toBeTruthy(): Checks if the value is truthy (e.g., non-zero numbers, non-empty strings, and objects).
+- toEqual(): Checks if the value is deeply equal to the expected value.
+- toContain(): Checks if a string or array contains a certain element.
+
+Examples:
+====CODE====
+expect(value).toBeTruthy(); // Passes if value is truthy.
+expect(value).toEqual('Hello'); // Passes if value is exactly 'Hello'.
+expect(array).toContain(2); // Passes if array contains 2.
+====END====
+
+*3. Web-Specific Async Matchers:*
+Playwright provides async matchers to wait for a condition to be satisfied. These matchers are useful when dealing with dynamic web pages where elements may take some time to appear or change.
+
+Example:
+====CODE====
+await expect(page.getByTestId('status')).toHaveText('Submitted');
+====END====
+
+Explanation:
+- `page.getByTestId('status')` fetches the element with the test ID 'status'.
+- `toHaveText('Submitted')` checks if the element's text is 'Submitted'.
+- Playwright will keep retrying the check until the condition is met or the timeout is reached.
+
+*4. Timeout and Retrying:*
+By default, assertions have a timeout of 5 seconds in Playwright. If the condition is not met in that time, the test fails.
+
+You can change the timeout by passing a custom value to each assertion or configure it globally.
+
+Example:
+====CODE====
+await expect(page.getByTestId('status')).toHaveText('Submitted', { timeout: 10000 });
+====END====
+
+Explanation:
+- This example sets the timeout for the assertion to 10 seconds (instead of the default 5 seconds).
+
+*5. Default Timeout and Configuration:*
+The default timeout for assertions is set to 5 seconds. Playwright will retry fetching and checking the condition for 5 seconds. You can change this globally by configuring it in the testConfig.
+
+Key Takeaways:
+- expect(value) is used to make assertions in Playwright.
+- Matchers like toBeTruthy(), toEqual(), and toContain() are used to define the conditions.
+- Async matchers are useful for waiting until conditions are met in dynamic pages.
+- Assertions retry automatically until the condition is met or the timeout is reached.
+- Timeout can be configured for individual assertions or globally.
+

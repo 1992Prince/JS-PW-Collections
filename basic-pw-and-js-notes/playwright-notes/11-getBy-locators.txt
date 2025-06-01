@@ -1,0 +1,90 @@
+====NOTES====
+**Title:** Understanding `getByLabel`, `getByPlaceholder`, and `getByText` in Playwright
+
+---
+
+**1. What is `getByLabel`?**
+- **Purpose:**
+  - `getByLabel` ka use form elements (like `<input>`, `<textarea>`) ko locate karne ke liye hota hai.
+  - Yeh label text ke basis pe associated input element ko locate karta hai.
+
+- **Example DOM:**
+  <label for="username">Username</label>
+  <input id="username" type="text" />
+
+- **Example Code:**
+  const usernameInput = page.getByLabel('Username');
+  await usernameInput.fill('JohnDoe');
+
+- **Explanation:**
+  - `getByLabel` `<label>` ka text read karta hai (`Username`) aur uske associated `<input>` element ko locate karta hai.
+
+---
+
+**2. What is `getByPlaceholder`?**
+- **Purpose:**
+  - `getByPlaceholder` ka use un input fields ko locate karne ke liye hota hai jinme `placeholder` attribute defined ho.
+
+- **Example DOM:**
+  <input type="text" placeholder="Enter your name" />
+
+- **Example Code:**
+  const inputByPlaceholder = page.getByPlaceholder('Enter your name');
+  await inputByPlaceholder.fill('John Doe');
+
+- **Explanation:**
+  - `getByPlaceholder` us input field ko locate karega jiska `placeholder="Enter your name"` ho.
+
+---
+
+**3. What is `getByText`?**
+- **Purpose:**
+  - `getByText` ka use kisi bhi element ko locate karne ke liye hota hai jo specific **visible text content** contain karta ho.
+
+- **Example DOM:**
+  <button>Submit</button>
+
+- **Example Code:**
+  const submitButton = page.getByText('Submit');
+  await submitButton.click();
+
+- **Explanation:**
+  - `getByText` visible text `Submit` ke basis pe `<button>` element ko locate karega.
+
+---
+
+**Key Takeaways:**
+1. **`getByLabel`:**
+   - Label ke text ke basis pe associated input ya textarea locate karta hai.
+2. **`getByPlaceholder`:**
+   - Placeholder attribute ke basis pe input fields locate karta hai.
+3. **`getByText`:**
+   - Visible text ke basis pe kisi bhi element ko locate karta hai.
+
+====END====
+
+test('Demonstrating getByLabel, getByPlaceholder, and getByText', async ({ page }) => {
+  // Set up the HTML content
+  await page.setContent(`
+    <label for="username">Username</label>
+    <input id="username" type="text" placeholder="Enter your username" />
+
+    <button>Submit</button>
+    <button>Cancel</button>
+  `);
+
+  // 1. Using getByLabel
+  const usernameInput = page.getByLabel('Username'); // Locate input via label text
+  await usernameInput.fill('JohnDoe'); // Fill the input field
+  console.log('Filled input using getByLabel.');
+
+  // 2. Using getByPlaceholder
+  const inputByPlaceholder = page.getByPlaceholder('Enter your username'); // Locate input via placeholder
+  await inputByPlaceholder.fill('JaneDoe'); // Overwrite with a new value
+  console.log('Filled input using getByPlaceholder.');
+
+  // 3. Using getByText
+  const submitButton = page.getByText('Submit'); // Locate button via visible text
+  await submitButton.click(); // Click the button
+  console.log('Clicked Submit button using getByText.');
+});

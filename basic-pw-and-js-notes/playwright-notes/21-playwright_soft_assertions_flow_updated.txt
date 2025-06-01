@@ -1,0 +1,56 @@
+
+**Title: Soft Assertions Flow and Behavior in Playwright**
+
+Approach:
+In Playwright, soft assertions allow tests to continue executing even if one or more assertions fail. These assertions do not stop the test on failure but are still reported in the test results. Below is a detailed explanation of soft assertions flow, including an example and clarification about the reporting behavior.
+
+1. **How Soft Assertions Work**:
+   - **Description**: Soft assertions allow you to run multiple assertions without stopping the test if one or more assertions fail. The failure is recorded, but the test continues to execute.
+   - **Usage**: Use `expect.soft()` for assertions that should not stop the test if they fail.
+   
+   **Example**:
+   ```javascript
+   // softAssertionTest.spec.ts
+   import { test, expect } from '@playwright/test';
+   
+   test('Soft Assertions Flow', async ({ page }) => {
+     // Navigate to the page
+     await page.goto('https://example.com');
+   
+     // Perform soft assertions
+     await expect.soft(page.locator('#status')).toHaveText('Success'); // Soft assertion 1
+     await expect.soft(page.locator('#eta')).toHaveText('1 day'); // Soft assertion 2
+   
+     // Continue test execution even if soft assertions fail
+     await page.click('a#nextPage'); // This will run even if soft assertions failed
+     await expect.soft(page.locator('h1')).toHaveText('Make another order'); // Soft assertion 3
+   
+     // Check for soft assertion failures after all assertions
+     expect(test.info().errors).toHaveLength(0); // Fail the test if there were any soft assertion errors
+   });
+   ```
+
+2. **Check for Soft Assertion Failures**:
+   - **Description**: You can check for soft assertion failures at any point using `test.info().errors`. If this is included, the test will fail if any soft assertions failed.
+   - **Example**:
+   ```javascript
+   // Check if any soft assertions failed
+   expect(test.info().errors).toHaveLength(0); // Fail the test if there were any soft assertion errors
+   ```
+
+   - **Explanation**: If `test.info().errors` returns any errors, you can stop the test execution based on the result. However, this line is **optional**. 
+                                  If it’s not included, Playwright will still report the soft assertion results (failures and successes) in the test report, but the test will not fail automatically.
+
+3. **Soft Assertions Without `expect(test.info().errors).toHaveLength(0)`**:
+   - **Description**: If you do not include `expect(test.info().errors).toHaveLength(0);`, Playwright will still populate the soft assertion results in the report, marking which assertions passed and which ones failed. However, the test will continue even if there are soft assertion failures.
+   - **Explanation**: The failure of soft assertions will be recorded in the report, and the test will continue executing. This allows for a more flexible testing approach where you can review the results of all assertions even if some failed.
+
+4. **Soft Assertion Behavior in the Report**:
+   - **Successful Soft Assertion**: A successful soft assertion will show as a passing step in the report (✅).
+   - **Failed Soft Assertion**: A failed soft assertion will show as a failure in the report (❌), but the test will continue running further assertions.
+
+5. **Key Takeaways**:
+   - **Soft Assertions**: Allow tests to continue even if some assertions fail, useful for running multiple checks.
+   - **Optional Error Check**: `expect(test.info().errors).toHaveLength(0);` is optional but helps decide if the test should fail based on soft assertion errors.
+   - **Reporting**: Soft assertion failures will be displayed in the report, regardless of whether you check for errors or not.
+

@@ -1,0 +1,134 @@
+
+**Title: Playwright Test Scripts - Async, Non-Async, and Soft Assertions**
+
+Approach:
+Below are three different Playwright test scripts demonstrating the use of async assertions, non-async assertions, and soft assertions.
+
+1. **Async Assertions Test Script:**
+
+This script demonstrates async assertions that automatically retry until the condition is met or the timeout is reached.
+
+```javascript
+// test.spec.ts
+
+import { test, expect } from '@playwright/test';
+
+test('Async Assertions Example', async ({ page, response }) => {
+  
+  // Navigate to the page
+  await page.goto('https://example.com');
+
+  // Check if the response status is OK (200)
+  const res = await page.goto('https://example.com');
+  await expect(res).toBeOK(); // Asserts response status is 200
+
+  // Check if the page has the expected URL
+  await expect(page).toHaveURL('https://example.com'); // Asserts page URL is correct
+  
+  // Check if the page has the expected title
+  await expect(page).toHaveTitle('Example Domain'); // Asserts page title is correct
+
+  // Check if an input element has the expected values
+  await expect(page.locator('select')).toHaveValues(['Option 1', 'Option 2']); // Asserts <select> element values
+
+  // Check if an input element has a specific value
+  await expect(page.locator('input[type="text"]')).toHaveValue('Test input'); // Asserts input value is correct
+
+  // Check if an element contains specific text
+  await expect(page.locator('h1')).toHaveText('Example Domain'); // Asserts <h1> element text
+
+  // Check if an element has the specified number of children
+  await expect(page.locator('ul li')).toHaveCount(3); // Asserts the <ul> element has 3 <li> items
+
+  // Check if an element has a specific attribute
+  await expect(page.locator('button')).toHaveAttribute('disabled', 'true'); // Asserts <button> has 'disabled' attribute
+
+  // Check if an element contains specific text
+  await expect(page.locator('div')).toContainText('Welcome'); // Asserts <div> contains 'Welcome'
+
+  // Check if an element is visible
+  await expect(page.locator('button')).toBeVisible(); // Asserts <button> is visible
+
+  // Check if an element is hidden
+  await expect(page.locator('div.hidden')).toBeHidden(); // Asserts <div> is hidden
+
+  // Check if an element is enabled
+  await expect(page.locator('button')).toBeEnabled(); // Asserts <button> is enabled
+
+  // Check if a checkbox is checked
+  await expect(page.locator('input[type="checkbox"]')).toBeChecked(); // Asserts checkbox is checked
+
+  // Check if an element is editable
+  await expect(page.locator('input[type="text"]')).toBeEditable(); // Asserts input field is editable
+});
+```
+
+---
+
+2. **Non-Async Assertions Test Script:**
+
+This script demonstrates non-async assertions, which do not require waiting or retrying and are used for static checks.
+
+```javascript
+// nonAsyncTest.spec.ts
+
+import { test, expect } from '@playwright/test';
+
+test('Non-Async Assertions Example', async () => {
+  
+  // Example of non-async assertions
+  const value = 5;
+  
+  // Check if value is equal to 5
+  expect(value).toBe(5); // Passes if value is exactly 5
+
+  const text = 'Hello, World';
+  
+  // Check if the text contains 'Hello'
+  expect(text).toContain('Hello'); // Passes if text contains 'Hello'
+  
+  const arr = [1, 2, 3];
+  
+  // Check if the array has length 3
+  expect(arr).toHaveLength(3); // Passes if array length is 3
+  
+  const user = { name: 'John' };
+  
+  // Check if the object has property 'name'
+  expect(user).toHaveProperty('name'); // Passes if object has 'name' property
+});
+```
+
+---
+
+3. **Soft Assertions Test Script:**
+
+This script demonstrates soft assertions, where failed assertions do not stop the test execution but are recorded for review.
+
+```javascript
+// softAssertionTest.spec.ts
+
+import { test, expect } from '@playwright/test';
+
+test('Soft Assertions Example', async ({ page }) => {
+  
+  // Navigate to the page
+  await page.goto('https://example.com');
+
+  // Soft assertions
+  await expect.soft(page.locator('#status')).toHaveText('Success'); // Will not stop the test if failed
+  await expect.soft(page.locator('#eta')).toHaveText('1 day'); // Will not stop the test if failed
+  
+  // Continue with more actions
+  await page.click('a#nextPage'); // Click the next page link
+  await expect.soft(page.locator('h1')).toHaveText('Make another order'); // Soft assertion on heading
+
+  // Check if there were any soft assertion failures
+  expect(test.info().errors).toHaveLength(0); // Fail the test if there were soft assertion errors
+});
+```
+
+Key Takeaways:
+- **Async assertions** are used to check dynamic elements or conditions that require retrying.
+- **Non-async assertions** are useful for static checks and do not retry.
+- **Soft assertions** allow the test to continue even if some assertions fail, useful for running multiple checks.

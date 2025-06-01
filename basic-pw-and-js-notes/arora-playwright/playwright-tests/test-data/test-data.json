@@ -1,0 +1,22 @@
+[
+    {
+        "username": "testuser",
+        "password": "testpassword",
+        "mobile": "1234567890"
+    },
+    {
+        "username": "testuser2",
+        "password": "testpassword2",
+        "mobile": "0987654321"
+    },
+    {
+        "username": "testuser3",
+        "password": "testpassword3",
+        "mobile": "1122334455"
+    },
+    {
+        "username": "testuser4",
+        "password": "testpassword4",
+        "mobile": "5566778899"
+    }
+]

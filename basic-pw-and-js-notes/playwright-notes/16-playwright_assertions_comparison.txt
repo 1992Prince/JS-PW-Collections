@@ -1,0 +1,62 @@
+
+**Title: Auto-Retrying Assertions vs Non-Retrying Assertions in Playwright**
+
+Approach:
+In Playwright, assertions can be categorized into auto-retrying and non-retrying assertions. Auto-retrying assertions are used when dealing with dynamic or asynchronous content, while non-retrying assertions are more suitable for static checks. Below is a detailed explanation of both types of assertions with examples.
+
+1. Auto-Retrying Assertions:
+Auto-retrying assertions are asynchronous and keep checking the specified condition until the assertion passes or the timeout is reached. These assertions are useful for situations where the element or condition is dynamic and may not be immediately available.
+
+These assertions need to be awaited using the `await` keyword.
+
+Examples of Auto-Retrying Assertions:
+- await expect(locator).toBeAttached(); // Element is attached to DOM
+- await expect(locator).toBeChecked(); // Checkbox is checked
+- await expect(locator).toBeDisabled(); // Element is disabled
+- await expect(locator).toBeEditable(); // Element is editable
+- await expect(locator).toBeEmpty(); // Container is empty
+- await expect(locator).toBeEnabled(); // Element is enabled
+- await expect(locator).toBeFocused(); // Element is focused
+- await expect(locator).toBeHidden(); // Element is not visible
+- await expect(locator).toBeInViewport(); // Element intersects viewport
+- await expect(locator).toBeVisible(); // Element is visible
+- await expect(locator).toContainText('Hello'); // Element contains text 'Hello'
+- await expect(locator).toHaveText('Submit'); // Element matches the text 'Submit'
+- await expect(page).toHaveTitle('Home'); // Page has title 'Home'
+- await expect(page).toHaveURL('https://example.com'); // Page has URL 'https://example.com'
+
+Explanation:
+- These assertions are **asynchronous** and **retry** until the condition is met or the timeout is reached (default is 5 seconds).
+- They are particularly useful for dynamic elements on a webpage, such as buttons, inputs, or status messages that appear after some delay.
+
+2. Non-Retrying Assertions:
+Non-retrying assertions are synchronous and only evaluate the condition once. If the condition is not true at the moment of evaluation, the assertion will fail. These assertions are better suited for static values that do not change over time.
+
+Examples of Non-Retrying Assertions:
+- expect(value).toBe(5); // Value is exactly 5
+- expect(value).toBeFalsy(); // Value is falsy
+- expect(value).toEqual('Hello'); // Value is exactly 'Hello'
+- expect(array).toContain(2); // Array contains 2
+- expect(object).toHaveProperty('name'); // Object has property 'name'
+- expect(function).toThrow(); // Function throws an error
+- expect('Hello').toContain('world'); // String contains 'world'
+- expect([1, 2, 3]).toHaveLength(3); // Array has length 3
+
+Explanation:
+- These assertions are **synchronous** and only evaluate the condition once.
+- They are useful for simple, static checks like verifying a value, property, or length of an array.
+- They **do not retry** if the condition is not met at the time of the check.
+
+3. Key Differences:
+
+| Feature                       | **Auto-Retrying Assertions**                                  | **Non-Retrying Assertions**                                    |
+|-------------------------------|---------------------------------------------------------------|---------------------------------------------------------------|
+| **Type**                       | Asynchronous (Async)                                          | Synchronous (Sync)                                             |
+| **Behavior**                   | Retries the condition until it passes or timeout is reached   | Evaluates the condition once and does not retry               |
+| **Use Case**                   | Ideal for web elements or conditions that change over time   | Suitable for static checks, like exact equality or properties |
+| **Examples**                   | toBeVisible(), toHaveText(), toBeEnabled()                    | toBe(), toEqual(), toContain()                                |
+| **Risk of Flaky Tests**        | Less risk of flaky tests as they handle dynamic content well  | Higher risk of flaky tests if used for dynamic or async data  |
+
+Key Takeaways:
+- **Auto-retrying assertions** are ideal for web elements and dynamic content. They wait for the condition to be met.
+- **Non-retrying assertions** are ideal for simple, static checks. They check the condition once and do not retry.

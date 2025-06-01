@@ -1,0 +1,94 @@
+====NOTES====
+**Title:** Playwright Test and Test Fixtures
+
+**Approach:**
+1. **What is Playwright Test?**
+   - Playwright Test is the built-in testing framework included with Playwright.
+   - It provides a test runner, assertions, and support for test fixtures.
+   - Key features:
+     - Built-in fixtures for browser automation and API testing.
+     - Test isolation to prevent interference between tests.
+     - Parallel test execution for faster test runs.
+     - Retry mechanism for failed tests.
+
+2. **What are Test Fixtures?**
+   - Fixtures are reusable building blocks that provide the required environment for each test.
+   - Purpose:
+     - Set up necessary resources (e.g., a browser page or API context).
+     - Ensure tests are isolated and independent.
+     - Reduce boilerplate by reusing setup/teardown logic.
+
+3. **How Fixtures Work in Playwright Test:**
+   - Fixtures are passed as arguments to test functions (e.g., `{ page }`).
+   - They are set up before each test and torn down after the test completes.
+
+**Edge Cases:**
+- Without fixtures:
+  - Tests may share state (e.g., same browser or page), leading to unpredictable results.
+  - Repeated setup/teardown logic increases complexity and reduces maintainability.
+
+**Code:**
+1. **Using Built-in Fixtures:**
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('basic test', async ({ page }) => {
+    await page.goto('https://playwright.dev/');
+    await expect(page).toHaveTitle(/Playwright/);
+});
+====END====
+   - Explanation: The `{ page }` fixture provides an isolated browser page instance for this test.
+
+2. **Defining Custom Fixtures:**
+====CODE====
+import { test as base } from '@playwright/test';
+
+const test = base.extend({
+    myFixture: async ({ page }, use) => {
+        await page.goto('https://example.com');
+        await use(page); // Provide the page to the test
+        await page.close();
+    }
+});
+
+test('custom fixture test', async ({ myFixture }) => {
+    await myFixture.click('text=Login');
+});
+====END====
+   - Explanation: Custom fixture `myFixture` sets up the environment, provides it to the test, and tears it down after.
+
+**Output:**
+- Example:
+  - Input: Use `{ page }` fixture in multiple tests.
+  - Result: Each test runs with a fresh page instance, isolated from others.
+
+**Notes:**
+1. **How Fixtures Are Available to JavaScript Scripts:**
+   - Playwright Test detects the required fixtures from the test function's arguments.
+   - It sets up the fixtures, injects them into the test, and tears them down after execution.
+
+2. **Built-in Fixtures:**
+   | **Fixture**           | **Type**                    | **Purpose**                                                                                                 |
+   |------------------- |-----------------------|-----------------------------------------------------------------------------|
+   | `page`                  | `Page`                         | Provides an isolated browser page for the test.                                           |
+   | `context`              | `BrowserContext`        | Provides an isolated browser context for cookies, storage, etc.                  |
+   | `browser`             | `Browser`                    | Shared browser instance across tests to optimize resource usage.             |
+   | `browserName`   | `string`                        | Indicates the browser name (`chromium`, `firefox`, or `webkit`).                  |
+   | `request`             | `APIRequestContext`   | Provides an isolated API request context for API testing.                            |
+
+3. **Benefits of Fixtures:**
+   - **Isolation:** Ensures each test runs independently with no shared state.
+   - **Reusability:** Built-in and custom fixtures can be reused across multiple tests.
+   - **Flexibility:** Tests can combine fixtures for tailored setups.
+   - **Simplified Code:** Encapsulates setup and teardown logic, reducing boilerplate.
+
+4. **What Happens Without Fixtures?**
+   - Tests may share state, causing interference and flaky results.
+   - Manual setup/teardown logic becomes repetitive and error-prone.
+
+5. **Best Practices:**
+   - Use built-in fixtures like `page` and `context` whenever possible.
+   - Create custom fixtures for unique setup/teardown requirements.
+   - Avoid shared state by isolating resources between tests.
+
+====END====

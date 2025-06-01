@@ -1,0 +1,129 @@
+====NOTES====
+**Title:** Understanding `getByAltText`, `getByTitle`, `getByRole`, and `getByTestId` in Playwright
+
+---
+
+**1. What is `getByAltText`?**
+- **Purpose:**
+  - `getByAltText` ka use un elements ko locate karne ke liye hota hai jinme `alt` attribute ho.
+  - Mostly used for images (`<img>` tags) but works for any element with `alt` attribute.
+
+- **Example DOM:**
+  <img src="logo.png" alt="Company Logo" />
+
+- **Example Code:**
+  const image = page.getByAltText('Company Logo');
+  await expect(image).toBeVisible();
+
+- **Explanation:**
+  - Yeh `<img>` element ko locate karega jiska `alt="Company Logo"` hai.
+
+---
+
+**2. What is `getByTitle`?**
+- **Purpose:**
+  - `getByTitle` ka use un elements ko locate karne ke liye hota hai jinme `title` attribute defined ho.
+
+- **Example DOM:**
+  <button title="Save Changes">Save</button>
+
+- **Example Code:**
+  const saveButton = page.getByTitle('Save Changes');
+  await saveButton.click();
+
+- **Explanation:**
+  - Yeh `<button>` element ko locate karega jiska `title="Save Changes"` ho.
+
+---
+
+**3. What is `getByRole`?**
+- **Purpose:**
+  - `getByRole` ka use accessibility roles ke basis par elements ko locate karne ke liye hota hai.
+  - Iske saath filters jaise `name`, `checked`, etc. use kiya ja sakta hai.
+
+- **Example DOM:**
+  <button role="button" aria-label="Download">Download</button>
+
+- **Example Code:**
+  const downloadButton = page.getByRole('button', { name: 'Download' });
+  await downloadButton.click();
+
+- **Explanation:**
+  - Yeh `<button>` ko locate karega jiska role `button` hai aur accessible name `Download` hai.
+
+---
+
+**4. What is `getByTestId`?**
+- **Purpose:**
+  - `getByTestId` ka use un elements ko locate karne ke liye hota hai jinke paas `data-testid` attribute ho.
+  - Yeh testing ke liye common practice hai.
+
+- **Example DOM:**
+  <div data-testid="profile-card">Profile Details</div>
+
+- **Example Code:**
+  const profileCard = page.getByTestId('profile-card');
+  await expect(profileCard).toBeVisible();
+
+- **Explanation:**
+  - Yeh `<div>` element ko locate karega jiska `data-testid="profile-card"` ho.
+
+---
+
+**Single Program to Demonstrate All Methods**
+
+====CODE====
+import { test, expect } from '@playwright/test';
+
+test('Demonstrating getByAltText, getByTitle, getByRole, and getByTestId', async ({ page }) => {
+  // Set up the HTML content
+  await page.setContent(`
+    <img src="logo.png" alt="Company Logo" />
+    <button title="Save Changes">Save</button>
+    <button role="button" aria-label="Download">Download</button>
+    <div data-testid="profile-card">Profile Details</div>
+  `);
+
+  // 1. Using getByAltText
+  const image = page.getByAltText('Company Logo');
+  await expect(image).toBeVisible();
+  console.log('Located image using getByAltText.');
+
+  // 2. Using getByTitle
+  const saveButton = page.getByTitle('Save Changes');
+  await saveButton.click();
+  console.log('Clicked Save button using getByTitle.');
+
+  // 3. Using getByRole
+  const downloadButton = page.getByRole('button', { name: 'Download' });
+  await downloadButton.click();
+  console.log('Clicked Download button using getByRole.');
+
+  // 4. Using getByTestId
+  const profileCard = page.getByTestId('profile-card');
+  await expect(profileCard).toBeVisible();
+  console.log('Located Profile Card using getByTestId.');
+});
+====END====
+
+---
+
+**Explanation of the Code:**
+
+1. **`getByAltText`:**
+   - Matches `<img>` or other elements using their `alt` attribute.
+
+2. **`getByTitle`:**
+   - Matches elements with a specific `title` attribute (e.g., `<button>`).
+
+3. **`getByRole`:**
+   - Matches elements based on their accessibility roles (e.g., `button`, `link`).
+   - Filters like `name` or `checked` can be used for more precision.
+
+4. **`getByTestId`:**
+   - Matches elements with a `data-testid` attribute.
+   - Commonly used in testing environments to target specific elements.
+
+---
+
+**Output in Console:**

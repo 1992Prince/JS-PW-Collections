@@ -1,0 +1,266 @@
+**7. retries: process.env.CI ? 2 : 0
+
+*Purpose: 
+
+The retries option in Playwright defines how many times Playwright will retry a failed test before marking it as failed. This is useful for handling flaky tests (i.e., tests that might fail intermittently).
+
+*What does process.env.CI ? 2 : 0 mean?
+
+process.env.CI: Ye environment variable hai jo CI tools (like Jenkins, GitHub Actions, etc.) mein automatically set hota hai jab tests run ho rahe hote hain.
+process.env.CI ? 2 : 0 is a ternary operator. Ye condition check karta hai ki process.env.CI set hai ya nahi:
+
+Agar process.env.CI ka value true hai (i.e., tests CI environment mein run ho rahe hain), toh Playwright will retry failed tests 2 times (retries: 2).
+Agar process.env.CI ka value undefined hai (i.e., local machine pe run ho rahe tests), toh Playwright retries ko 0 set karega, matlab failed test ko dobara nahi chalega.
+
+*Why use this?:
+
+In CI environments, it’s useful to retry failed tests automatically (because CI environments might sometimes have intermittent failures).
+Locally, it's often more efficient to not retry tests, so you set retries to 0.
+
+*1. What values can we give to retries for local execution?
+Yes, you can set the retries value to any positive integer for both *local execution and CI execution.
+
+For example:
+
+retries: 3 is valid. This means that Playwright will retry a failed test 3 times before marking it as failed.
+
+export default defineConfig({
+  retries: 3,  // Retry failed tests 3 times
+});
+
+*Note: Setting retries: 3 for local execution means that if a test fails, Playwright will attempt to rerun it up to 3 times before marking the test as failed. This is useful if you have flaky tests that occasionally fail.
+
+*2. What will happen if we use retries: process.env.CI ? 2 : 0?
+
+*In CI:
+	If you're running your tests in a CI environment, Playwright will check if process.env.CI is set (which usually happens automatically in CI tools like Jenkins, GitHub Actions, etc.).
+	If process.env.CI is set to true or any non-empty value, then retries: 2 will be applied.
+	This means that Playwright will retry failed tests 2 times before marking them as failed.
+
+*In Local Execution:
+	If you're running tests locally, process.env.CI is not set by default or is set to undefined. So the ternary expression process.env.CI ? 2 : 0 will evaluate to 0, which means retries: 0.
+	This means no retries will be attempted if a test fails when running locally.
+
+*To Simulate CI Locally:
+	You can manually set process.env.CI to true when running tests locally to simulate a CI environment:
+	CI=true npx playwright test  // This will simulate CI and retries will be set to 2
+	
+*3. What will be the default behavior in local execution if process.env.CI is false or not set?
+Default behavior in local execution:
+If process.env.CI is not set (or is false), the condition process.env.CI ? 2 : 0 will evaluate to 0. This means retries will be set to 0 in local execution.
+
+**8. workers
+*Purpose: 
+The workers option determines how many parallel workers Playwright will use to run tests. 
+This allows you to run tests in parallel across multiple processes, which speeds up test execution.
+
+How it works:
+
+By default, Playwright uses the number of available CPU cores for running tests.
+If you want to control the number of workers (e.g., use more or fewer workers), you can specify the number using the workers option.
+
+Example: If you have a large test suite and you want to run tests faster, you can increase the number of workers:
+
+export default defineConfig({
+  workers: 4,  // Use 4 workers to run tests in parallel
+});
+
+This means Playwright will run up to 4 tests in parallel.
+
+*Default behavior: 
+If you don’t specify workers, Playwright will automatically determine the number of workers based on the number of CPU cores available on your machine.
+
+*How it affects execution:
+	-> If you specify more workers than CPU cores, Playwright will still try to run the specified number of workers, 
+		but since your CPU can only handle so many concurrent processes, the tests will be queued up until a worker becomes available.
+
+	-> If you specify fewer workers than CPU cores, Playwright will run the tests using the specified number of workers, leaving some CPU resources unused.
+	
+
+* Example for large test suite:
+
+export default defineConfig({
+  workers: 8,  // Run tests using 8 workers in parallel
+});
+
+This can help you scale test execution if you need to run large suites faster by utilizing multiple workers.
+
+**9.What is reporter? [https://playwright.dev/docs/test-reporters#html-reporter]
+In Playwright, the reporter property defines how the test results will be output after the test execution. 
+Playwright provides several built-in reporters that allow you to generate various types of reports, such as HTML, JSON, or simple logs. 
+These reports can be useful for debugging, analyzing the test results, and integrating with CI/CD pipelines.
+
+*Default Reporter Behavior
+?
+
+*The easiest way to try out built-in reporters is to pass --reporter command line option. - npx playwright test --reporter=line
+
+
+For more control, you can specify reporters programmatically in the configuration file.
+
+playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: 'line',
+});
+
+**Multiple reporters
+You can use multiple reporters at the same time. 
+For example you can use 
+	'list' for nice terminal output and 
+	'json' to get a comprehensive json file with the test results.
+	
+
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: [
+    ['list'],
+    ['json', {  outputFile: 'test-results.json' }]
+  ],
+});
+
+**Reporters on CI
+You can use different reporters locally and on CI. For example, using concise 'dot' reporter avoids too much output. *This is the default on CI.
+
+playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  // Concise 'dot' for CI, default 'list' when running locally
+  reporter: process.env.CI ? 'dot' : 'list',
+});
+
+**Built-in reporters
+All built-in reporters show detailed information about failures, and mostly differ in verbosity for successful runs.
+
+***List reporter
+List reporter is default (except on CI where the dot reporter is default). It prints a line for each test being run.
+
+npx playwright test --reporter=list
+
+playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: 'list',
+});
+
+Here is an example output in the middle of a test run. Failures will be listed at the end.
+
+`PS D:\2025\playwright-test> npx playwright test tests/01-example.spec.ts --reporter=list
+
+Running 2 tests using 2 workers
+
+  ✓  1 [chromium] › 01-example.spec.ts:3:5 › First Test Case (7.9s)
+  ✓  2 [chromium] › 01-example.spec.ts:15:5 › Second Test Case (7.6s)
+
+You can opt into the step rendering via passing the following config option:
+
+***Line reporter
+Line reporter is more concise than the list reporter. It uses a single line to report last finished test, and prints failures when they occur. 
+Line reporter is useful for large test suites where it shows the progress but does not spam the output by listing all the tests.
+
+npx playwright test --reporter=line
+
+playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: 'line',
+});
+
+`PS D:\2025\playwright-test> npx playwright test tests/01-example.spec.ts --reporter=line
+
+Running 2 tests using 2 workers
+  2 passed (11.3s)
+  
+ ***Dot reporter
+Dot reporter is very concise - it only produces a single character per successful test run. 
+It is the default on CI and useful where you don't want a lot of output.
+
+npx playwright test --reporter=dot
+
+playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: 'dot',
+});
+
+Here is an example output in the middle of a test run. Failures will be listed at the end.
+
+npx playwright test --reporter=dot
+
+Running 124 tests using 6 workers
+······F·············································
+
+One character is displayed for each test that has run, indicating its status:
+
+`Character	Description
+·	Passed
+F	Failed
+×	Failed or timed out - and will be retried
+±	Passed on retry (flaky)
+T	Timed out
+°	Skipped
+
+**HTML reporter
+HTML reporter produces a self-contained folder that contains report for the test run that can be served as a web page.
+
+npx playwright test --reporter=html
+
+By default, HTML report is opened automatically if some of the tests failed. 
+You can control this behavior via the open property in the Playwright config or the PLAYWRIGHT_HTML_OPEN environmental variable. 
+The possible values for that property are always, never and on-failure (default).
+
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: [['html', { open: 'never' }]],
+});
+
+`You can also configure host and port that are used to serve the HTML report.
+
+By default, report is written into the playwright-report folder in the current working directory. 
+One can override that location using the PLAYWRIGHT_HTML_OUTPUT_DIR environment variable or a reporter configuration.
+
+In configuration file, pass options directly:
+
+playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  reporter: [['html', { outputFolder: 'my-report' }]],
+});
+
+A quick way of opening the last test run report is:
+
+*npx playwright show-report
+
+Or if there is a custom folder name:
+
+*npx playwright show-report my-report
+
+**Blob reporter
+Blob reports contain all the details about the test run and can be used later to produce any other report. 
+Their primary function is to facilitate the merging of reports from sharded tests.
+
+npx playwright test --reporter=blob
+
+**JSON reporter
+JSON reporter produces an object with all information about the test run.
+
+Most likely you want to write the JSON to a file. When running with --reporter=json, use PLAYWRIGHT_JSON_OUTPUT_NAME environment variable:
+
+PLAYWRIGHT_JSON_OUTPUT_NAME=results.json npx playwright test --reporter=json
+
+**JUnit reporter
+JUnit reporter produces a JUnit-style xml report.
+
+**GitHub Actions annotations
+You can use the built in github reporter to get automatic failure annotations when running in GitHub actions.
+
+**Custom reporters [https://playwright.dev/docs/api/class-reporter]
+You can create a custom reporter by implementing a class with some of the reporter methods. Learn more about the Reporter API.

@@ -1,0 +1,281 @@
+playwright.config.ts:
+
+In Playwright, the playwright.config.ts (or playwright.config.js if using JavaScript) file is used to define global configuration options for your Playwright test suite. 
+This file allows you to set up various options, such as test environments, timeouts, browsers, and other settings that apply to all tests, making it easier to manage and maintain your test suite.
+
+Purpose of playwright.config.ts:
+The purpose of this file is to centralize the configuration of Playwright tests. By defining settings in the config file, you can ensure that all your tests run under the 
+same conditions and maintain consistency across your test suite.
+
+1) Purpose of import { defineConfig, devices } from '@playwright/test';
+2) What is export default defineConfig(
+3) Can we have multiple playwright.config.ts files?
+4) testDir
+5) fullyParallel
+6) forbidOnly
+7) retries
+8) workers
+9) reporter
+10) timeout
+11) expect with {timeout}
+12) use with {trace, headless}
+13) projects with name and use
+14) headless
+
+
+**1. Purpose of import { defineConfig, devices } from '@playwright/test';**
+
+*defineConfig: 
+This is a utility function provided by Playwright to define your configuration object in a type-safe manner. 
+By using defineConfig, Playwright ensures that the configuration you provide follows the expected structure and types, helping to prevent errors. 
+It's also useful for autocompletion and provides better IDE support.
+
+*devices: 
+This is an import that lets you easily use predefined device configurations in Playwright. 
+For example, you can simulate mobile devices (iPhone, iPad, etc.) using the devices object, which provides settings like viewport size and user agent.
+
+**2. What is export default defineConfig(
+
+*export default: 
+This is a standard JavaScript (or TypeScript) feature that allows you to export a single value from a module. 
+When you export something as default, you can import it in another module without using curly braces.
+
+*defineConfig: 
+As explained earlier, defineConfig is a utility function provided by Playwright to help define the configuration object in a type-safe way. 
+When you use export default defineConfig({...}), you're exporting the configuration object defined inside defineConfig.
+
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  timeout: 60000,  // Timeout for tests
+});
+
+The export default ensures that this configuration is the default export of the file and can be imported without curly braces.
+
+**3. Can we have multiple playwright.config.ts files?
+
+Typically, one playwright.config.ts file is used in a Playwright project, which contains the global configurations for all tests. 
+
+However, there are ways to have multiple config files for different purposes:
+
+*Multiple Config Files for Different Environments*: You might want different configurations for different environments 
+(e.g., testing in staging vs. production). 
+In such cases, you can create separate config files, like playwright.config.staging.ts and playwright.config.prod.ts. 
+Then, you can use the -c or --config option when running Playwright tests to specify which config file to use:
+
+command - *npx playwright test -c playwright.config.staging.ts
+
+*Multiple Projects*: You can use projects in your playwright.config.ts file to handle different test configurations for different environments (e.g., different browsers or devices). 
+
+But this is still within the scope of a single playwright.config.ts.
+
+So, while Playwright supports multiple config files, it is usually better to manage multiple test configurations within a single file using the projects feature for better maintainability.
+
+
+
+**4. testDir
+testDir is a configuration option that specifies the directory where your test files are located. 
+This is useful if your test files are organized in a specific folder structure, or if you want to separate the tests from other files in your project.
+
+
+export default defineConfig({
+  testDir: './tests',  // All test files are located in the "tests" directory
+});
+
+If you don't specify testDir, Playwright will by default look for test files in the current directory.
+
+*In testDir, is config.ts at the root level? What is ./ and ./ vs ../?
+*Is config.ts at the root level?
+
+Yes, the playwright.config.ts file is typically placed at the root level of your project, alongside your package.json and other project files.
+
+*What is ./?
+
+./ is a relative path that refers to the current directory. 
+So, when you specify testDir: './tests', it means that Playwright will look for the test files in the tests folder that is located in the same directory as playwright.config.ts.
+Example:
+
+testDir: './tests',  // Looks for the "tests" folder in the current directory
+
+*What is ../?
+
+../ is a relative path that refers to the parent directory (one level up). If you specify testDir: '../tests', Playwright will look for the tests folder in the parent directory, one level above the current directory.
+Example:
+
+testDir: '../tests',  // Looks for the "tests" folder one level up from the current directory
+
+*Summary:
+
+./ points to the current directory.
+../ points to the parent directory.
+
+
+**5. fullyParallel
+fullyParallel is a configuration option that determines whether Playwright should run tests in parallel, but in a completely independent manner. 
+This means that all tests will run simultaneously in separate workers (which is useful for large test suites and faster execution).
+
+If set to true, all tests are run in parallel across multiple workers without any shared state between them.
+
+If set to false, Playwright will run tests serially.
+
+Example:
+
+export default defineConfig({
+  fullyParallel: true,  // Run tests in parallel across multiple workers
+});
+
+Why use this? It helps speed up the execution of tests, especially when you have multiple independent tests that do not need to interact with each other.
+
+*In fullyParallel: true, will all specs run in parallel and will tests inside a spec run in parallel or in serial?
+*What does fullyParallel: true do?
+When you set fullyParallel: true, all test files (specs) will run in parallel, meaning that each spec file will be executed independently of the others in separate workers. 
+However, the tests within each spec file will still run serially by default. 
+This means that the tests inside a single spec file are executed one after the other (in the order they're written), but multiple spec files will run in parallel across workers.
+Example: If you have 3 spec files (test1.spec.ts, test2.spec.ts, test3.spec.ts), and fullyParallel: true:
+
+Test files test1.spec.ts, test2.spec.ts, and test3.spec.ts will be run in parallel.
+But inside test1.spec.ts, the individual tests will run serially, in the order they're defined.
+
+*Note: 
+You can change the behavior of tests within a spec file to run in parallel by using fixtures or other Playwright concurrency tools, but this is not the default behavior.
+
+*How many workers are given by Playwright? If we have 10 specs, how many will run in parallel? Can we increase the parallel thread size, can we increase the workers size?
+*How many workers are given by Playwright?
+
+By default, Playwright uses the number of CPU cores available on your system for running tests in parallel. 
+This means that Playwright will try to utilize as many workers as your CPU allows, which can vary based on the machine you're using.
+
+*If we have 10 specs, how many will run in parallel?
+
+Playwright will run as many tests in parallel as there are workers available (i.e., the number of CPU cores). 
+If you have 10 spec files and the system has 4 CPU cores, Playwright will attempt to run 4 spec files in parallel at a time (one per worker). 
+The remaining 6 specs will be queued up and executed once a worker becomes available.
+If you want to control the number of workers, you can specify a custom number of workers in the config file.
+
+*Can we increase the parallel thread size, can we increase the workers size?
+
+Yes, you can adjust the number of workers by setting the workers option in the playwright.config.ts file. 
+This allows you to override the default behavior and specify the exact number of parallel workers you want Playwright to use.
+Example:
+
+export default defineConfig({
+  workers: 8,  // Use 8 workers to run tests in parallel
+});
+If you set workers to 8, Playwright will use 8 parallel workers, regardless of the number of CPU cores on your machine. 
+If you have more specs, the remaining specs will be queued up and executed once a worker becomes available.
+
+*Can we increase the parallel thread size?
+
+Playwright doesn't use "threads" in the traditional sense. Instead, it uses workers that execute test files in parallel. 
+You can increase the number of parallel workers (as shown above), but Playwright itself handles the concurrency using workers rather than threads.
+
+*I gave workeds:8 and my machine have 4 cpu cores then how will be execution?
+
+*Scenario:
+		You have specified workers: 8 in the playwright.config.ts file.
+		Your machine has 4 CPU cores.
+		How Will the Execution Work?
+
+Playwright will create 8 workers based on the workers: 8 setting. This means it will try to run up to 8 parallel tasks (spec files).
+
+Playwright will try to utilize your 4 CPU cores optimally:
+
+At first, Playwright will distribute the tasks across the available 4 cores.
+Since the machine has only 4 CPU cores, Playwright will start executing 4 tasks in parallel initially (one task per core).
+Once a worker completes a task, that worker becomes free and will pick up another task from the queue, so that it maintains up to 8 workers running simultaneously.
+
+The remaining 4 tasks (since there are 8 tasks in total) will be queued up and will be executed when any of the 4 workers becomes free after completing a task.
+
+In Simple Terms:
+During the execution, 4 tests will run in parallel because you have 4 CPU cores, but Playwright will queue up and run the remaining tests as workers become available.
+Even though you specified 8 workers, the physical limitation of having only 4 CPU cores means only 4 workers can be actively executing tasks at any given time. T
+he other 4 workers will be waiting for a free worker.
+
+* Can I Increase the Parallelism Beyond CPU Cores?
+Yes, you can specify more workers (like workers: 8), but the actual parallelism will be limited by the number of available CPU cores. 
+This can cause increased CPU usage and potentially slow down the execution if the system gets overwhelmed.
+If you run more workers than CPU cores, you might not get a significant speedup, and in some cases, it could even degrade performance due to context switching between workers.
+
+
+**6. forbidOnly
+forbidOnly is a configuration option that prevents you from accidentally running tests with .only. 
+When you use .only on a test (e.g., test.only()), it runs only that specific test, ignoring others. 
+This can be useful during development, but you may accidentally leave .only in the code, causing issues when running the full test suite.
+
+Setting forbidOnly: true will throw an error if .only is left in the test code, preventing this kind of mistake.
+
+Example:
+
+export default defineConfig({
+  forbidOnly: true,  // Throws an error if .only is used
+});
+
+Why use this? It ensures that when you run your tests, all of them are executed, preventing you from forgetting to remove .only, which might lead to missed tests in your final run.
+
+But in local config , u will see below
+
+*forbidOnly: !!process.env.CI - Explanation of forbidOnly: !!process.env.CI
+
+*process.env.CI: 
+	Ye ek environment variable hai. Jab aap apne code ko CI/CD pipeline (jaise Jenkins, GitHub Actions, GitLab CI, etc.) mein run karte ho, to wahan ye variable automatically set ho jata hai. 
+	Matlab jab aapka code CI environment mein run ho raha hota hai, to process.env.CI ka value true ya kuch non-empty ho jata hai. 
+	Agar ye local machine pe run ho raha ho, to ye variable set nahi hota, yani undefined hota hai.
+
+*!!process.env.CI: 
+	Ye JavaScript ka ek tareeka hai jisme hum kisi bhi value ko boolean (true/false) mein convert karte hain.
+
+Agar process.env.CI set hai (koi value hai, jaise true ya 1), to ye true ho jayega.
+Agar process.env.CI set nahi hai (ya undefined hai), to ye false ho jayega.
+
+*Behavior:
+
+*Agar CI set nahi hai (local machine pe run ho raha hai):
+		Jab aap local machine pe test run karte ho aur CI environment set nahi hai, tab process.env.CI undefined hoga, aur !!undefined se false milega. 
+		Iska matlab forbidOnly false ho jayega. Toh, aap apne tests mein .only ka use kar sakte ho (yani aap ek specific test ko hi run kar sakte ho).
+
+*Agar CI set hai (CI environment pe run ho raha hai):
+		Jab aap tests ko CI environment mein run karte ho (for example, Jenkins ya GitHub Actions), to process.env.CI ki value kuch set hoti hai (usually true), 
+		aur !!true se forbidOnly true ho jayega.
+		Iska matlab ye hai ki Playwright aapko .only use karne nahi dega. Agar aap .only use karte ho kisi test mein, to error aayega, aur ye test run nahi hoga.
+
+*Do you need to define any env variable for CI?
+Haan, agar aap CI environment mein run kar rahe ho, to aapko CI environment variable ko manually set karna nahi padta, 
+kyunki bahut se CI tools (Jenkins, GitHub Actions, GitLab CI, etc.) automatically CI variable ko set kar dete hain jab tests run ho rahe hote hain.
+
+Example:
+
+Jenkins, GitHub Actions, etc. automatically CI=true set karte hain jab aap tests run karte ho.
+Agar aap apne machine pe locally test kar rahe ho, to CI variable set nahi hota, isliye process.env.CI undefined hota hai, aur forbidOnly ka value false hota hai.
+
+So forbidOnly: true // true/false/!!process.env.CI
+
+*1. When Running Locally:
+
+forbidOnly: true: 
+		Agar aap forbidOnly: true set karte ho, toh agar aapne test.only() use kiya hai script mein 
+		(for example, test.only('test 1', async () => {...})), toh Playwright aapko error dega jab aap test run karenge. Matlab .only ka use forbidden hoga.
+
+forbidOnly: false: 
+		Agar aap forbidOnly: false set karte ho, toh aap test.only() ka use kar sakte ho. Matlab aap sirf us specific test ko run kar sakte ho aur baaki tests ko ignore kar sakte ho.
+
+*Command to run Playwright locally: - npx playwright test  // Default behavior (forbidOnly: false or undefined)
+
+*Agar aap forbidOnly: true test karna chahte ho locally (toh aap process.env.CI ko set kar sakte ho manually), toh aap environment variable ko set kar sakte ho:
+	CI=true npx playwright test  // This will simulate a CI environment locally
+	Isse forbidOnly true ho jayega, aur agar aapne .only use kiya hoga, toh error aayega.
+
+*Does the Testing Runner take configuration properties (config.ts)?
+Haan! Jab aap Playwright ka Test Runner use karte ho, toh wo automatically aapke playwright.config.ts file se configuration properties ko load kar leta hai.
+
+*Summary:
+Local execution ke liye aap forbidOnly: true/false set kar sakte ho. Agar true hai aur aap .only use karte ho, toh error aayega. Agar false hai, toh aap .only ka use kar sakte ho.
+
+Command to test forbidOnly locally:
+
+	-> Default (forbidOnly = false):
+         npx playwright test
+ 
+    -> If forbidOnly = true (simulating CI):
+	     CI=true npx playwright test
+	
+Playwright Testing Runner configuration properties (config.ts) ko automatically use karta hai jab aap tests run karte ho. Aapko manually kuch set karne ki zarurat nahi hoti.

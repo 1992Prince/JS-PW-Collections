@@ -1,0 +1,108 @@
+====NOTES====
+**Title:** Understanding `has` Locator in Playwright
+
+---
+
+**What is `has` in Playwright?**
+- `has` ka use tab hota hai jab hume **parent element** ko filter karna ho based on **child element** ki condition.
+- Yeh ensure karta hai ki parent element **tabhi match karega** jab uske andar ek specific child element exist kare jo condition satisfy kare.
+
+---
+
+**Example DOM:**
+<div class="card">
+  <h2>Card 1</h2>
+  <button>Click Me</button>
+</div>
+<div class="card">
+  <h2>Card 2</h2>
+  <button>Submit</button>
+</div>
+<div class="card">
+  <h2>Card 3</h2>
+</div>
+
+---
+
+**Use Case for `has`:**
+- Humko `div.card` locate karna hai jo **child button** ke saath text `Submit` contain karta ho.
+
+---
+
+**Code Example:**
+import { test, expect } from '@playwright/test';
+
+test('example for has in Playwright', async ({ page }) => {
+  await page.setContent(`
+    <div class="card">
+      <h2>Card 1</h2>
+      <button>Click Me</button>
+    </div>
+    <div class="card">
+      <h2>Card 2</h2>
+      <button>Submit</button>
+    </div>
+    <div class="card">
+      <h2>Card 3</h2>
+    </div>
+  `);
+
+  // Parent <div> filter karo jisme child <button> ho with text 'Submit'
+  const cardWithSubmitButton = page.locator('div.card', {
+    has: page.locator('button', { hasText: 'Submit' }),
+  });
+
+  // Check karo ki parent card visible hai
+  await expect(cardWithSubmitButton).toBeVisible();
+
+  // Heading text verify karo for matched card
+  const heading = cardWithSubmitButton.locator('h2');
+  await expect(heading).toHaveText('Card 2');
+});
+
+
+**Output:**
+- **Matched Element:** Second `<div>`:
+  <div class="card">
+    <h2>Card 2</h2>
+    <button>Submit</button>
+  </div>
+- Heading text assert hota hai: `Card 2`.
+
+---
+
+**If We Click on `cardWithSubmitButton`:**
+  - Agar aap directly `cardWithSubmitButton.click()` use karte ho:
+  - Ye parent `<div>` pe click karega, na ki `Submit` button pe.
+
+---
+
+**How to Click on the Button Instead?**
+- Use `locator()` to specifically target the `button` inside the card.
+
+const submitButton = cardWithSubmitButton.locator('button', { hasText: 'Submit' });
+await submitButton.click(); // Clicks on the 'Submit' button
+
+---
+
+**Key Differences:**
+| **Action**                                      | **What Happens**                                                              |
+|--------------------------------------|-----------------------------------------------------------------|
+| `cardWithSubmitButton.click()`      | `div.card` pe click karega.                                                       |
+| `submitButton.click()`                     | `Submit` button pe click karega jo `<div>` ke andar hai.       |
+
+---
+
+**Key Takeaways:**
+1. **Purpose of `has`:**
+   - Parent element ko filter karta hai based on child element ki condition.
+   - Useful for nested structures in dynamic DOM.
+
+2. **Click Behavior:**
+   - `has` se locate kiya hua parent element pe click karne ke liye `cardWithSubmitButton.click()` use karo.
+   - Agar child pe kaam karna hai toh `locator()` use karke child element ko specifically target karo.
+
+3. **Use Cases:**
+   - Nested card structures, dropdowns, forms with specific child elements.
+
+====END====

@@ -1,0 +1,16 @@
+1) make sure node and npm is installed
+2) then create a folder with project name and open in vscode
+3) open terminal in vscode and type playwright install command - npm init playwright@latest
+4) this command will create playwright directory in that folder
+5) once all folders are created, you can check the execution with command - npx playwright test
+6) to see the reports,use command - npx playwright show-report
+
+
+
+
+1) selenium arch vs playwright arch
+2) once u run npm init playwright@latest - what folder strcuture will be created
+3) Why we use async - await before pw actions or methods? What is purpose of them?
+4) What will happen if we don't use async and await before playwright actions or methods?
+
+

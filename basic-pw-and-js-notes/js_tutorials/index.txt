@@ -1,0 +1,27 @@
+JavaScript Fundamentals for Automation Testing: [referring gfg for topics - https://www.geeksforgeeks.org/javascript/]
+-----------------------------------------------
+
+1) JavaScript HelloWorld Program
+2) Declaring the variables in JavaScript
+3) Understanding the Datatypes in JavaScript
+4) Loops and Conditions in JavaScript
+5) Logical operators and Assignments in JS
+6) Arrays and its methods with detailed examples
+7) Functions in JavaScript
+8) Understanding var, let, Const keywords in JS
+9) String and its related functions in JS
+10) What are JavaScript Objects?
+11) Classes and its Properties, Methods in JavaScript
+
+Example File Names for Your Topics
+01_HelloWorld.js
+02_Variables.js
+03_DataTypes.js
+04_Loops_Conditions.js
+05_LogicalOperators.js
+06_Arrays_Methods.js
+07_Functions.js
+08_Var_Let_Const.js
+09_Strings.js
+10_Objects.js
+11_Classes_Properties_Methods.js

@@ -1,0 +1,166 @@
+====NOTES[https://playwright.dev/docs/test-fixtures]====
+**Title:** Playwright Fixtures - browser, browserName, and request
+
+**Section 1: browser Fixture**
+
+**Definition:**
+- The `browser` fixture provides a **shared browser instance** across all tests in the test suite.
+- Unlike `page` or `context` (which are isolated for each test), the `browser` instance is reused to optimize resource usage.
+
+**Purpose:**
+- To reduce the overhead of launching a new browser for every test.
+- Useful when multiple browser contexts or pages need to be created manually within a test.
+
+**How It Works:**
+- The `browser` instance is shared across tests, but tests themselves remain isolated because they typically work with unique `page` or `context` fixtures.
+
+**Example:**
+====CODE====
+import { test } from '@playwright/test';
+
+test('test using browser fixture', async ({ browser }) => {
+    // Create a new browser context manually
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await page.goto('https://example.com');
+    console.log(await page.title());
+
+    // Cleanup
+    await page.close();
+    await context.close();
+});
+====END====
+
+**Notes:**
+- You can manually create a new `BrowserContext` or `Page` using the `browser` fixture.
+- If tests work directly with the `browser` fixture without creating isolated contexts, they may inadvertently share state (not recommended).
+
+1. **What is the `browser` Fixture?**
+   - The `browser` fixture in Playwright provides a **shared browser instance** that is reused across all tests in a test suite.
+   - It is designed for resource optimization by avoiding launching a new browser instance for every test.
+
+2. **Default Behavior:**
+   - The `browser` instance is **not closed** after each test.
+   - It remains open and is reused for the next test in the suite.
+   - The browser instance is automatically closed **after all tests in the suite have completed**.
+
+3. **Manual Cleanup Responsibility:**
+   - If you manually create `BrowserContext` or `Page` objects using the `browser` fixture, you are responsible for closing them to release resources.
+   
+
+**Edge Cases:**
+- If you forget to clean up manually created `BrowserContext` or `Page` instances, they may remain open, consuming resources unnecessarily.
+- The shared `browser` instance itself will only close after all tests are completed.
+
+**Section 2: How to Force Browser Closure After Each Test**
+
+**Approach:**
+- Use the `context` fixture instead of the `browser` fixture to ensure that both the browser context and associated pages are isolated and automatically cleaned up after each test.
+
+**Code Example:**
+====CODE====
+test('test using context fixture', async ({ context }) => {
+    const page = await context.newPage();
+
+    await page.goto('https://example.com');
+    console.log(await page.title());
+
+    // No manual cleanup required as context is cleaned up automatically
+});
+====END====
+
+**Behavior:**
+- The `context` fixture provides a fresh browser context for every test.
+- Playwright Test automatically cleans up the `context` and its associated pages after the test completes.
+
+
+---
+
+**Section 2: browserName Fixture**
+
+**Definition:**
+- The `browserName` fixture indicates the name of the browser (`chromium`, `firefox`, or `webkit`) being used for the test.
+
+**Purpose:**
+- Helps write browser-specific logic when running tests across multiple browsers.
+
+**Example:**
+====CODE====
+import { test } from '@playwright/test';
+
+test('test using browserName fixture', async ({ browserName, page }) => {
+    console.log(`Running test on: ${browserName}`);
+
+    if (browserName === 'chromium') {
+        await page.goto('https://chromium-specific-site.com');
+    } else if (browserName === 'firefox') {
+        await page.goto('https://firefox-specific-site.com');
+    } else if (browserName === 'webkit') {
+        await page.goto('https://webkit-specific-site.com');
+    }
+
+    console.log(`Page title: ${await page.title()}`);
+});
+====END====
+
+**Notes:**
+- Use the `browserName` fixture to customize test behavior based on the browser type.
+- This is particularly useful when certain features or bugs are browser-specific.
+
+---
+
+**Section 3: request Fixture**
+
+**Definition:**
+- The `request` fixture provides an isolated `APIRequestContext` for making HTTP requests within a test.
+
+**Purpose:**
+- Enables testing of API endpoints without relying on browser interactions.
+- Isolates API requests for each test, ensuring no shared state.
+
+**Example:**
+====CODE====
+import { test } from '@playwright/test';
+
+test('test using request fixture', async ({ request }) => {
+    // Make a GET request
+    const response = await request.get('https://api.example.com/data');
+    console.log(`Status: ${response.status()}`);
+    console.log(`Response: ${await response.text()}`);
+
+    // Make a POST request
+    const postResponse = await request.post('https://api.example.com/create', {
+        data: { name: 'Playwright', type: 'testing' },
+    });
+    console.log(`POST Status: ${postResponse.status()}`);
+    console.log(`POST Response: ${await postResponse.json()}`);
+});
+====END====
+
+**Notes:**
+- The `request` fixture is particularly useful for testing APIs or preparing data for tests without using UI interactions.
+- Playwright’s `APIRequestContext` provides methods like `get`, `post`, `put`, and `delete`.
+
+---
+
+**Section 4: Key Takeaways**
+
+1. **browser Fixture:**
+   - Provides a shared browser instance to optimize resources.
+   - Use it to manually create browser contexts or pages if needed.
+
+2. **browserName Fixture:**
+   - Helps write browser-specific test logic.
+   - Values: `chromium`, `firefox`, or `webkit`.
+
+3. **request Fixture:**
+   - Allows isolated API requests in tests.
+   - Useful for validating backend endpoints or preparing test data programmatically.
+
+4. **Best Practices:**
+   - Use `browser` cautiously to avoid shared state issues.
+   - Leverage `browserName` for browser compatibility testing.
+   - Use `request` for API testing and avoid unnecessary UI overhead.
+
+====END====

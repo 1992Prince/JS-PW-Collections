@@ -1,0 +1,61 @@
+====NOTES====
+**Title:** Purpose of async and await in Playwright (TypeScript)
+
+**Approach:**
+1. **What is async and await?**
+   - `async`: Declares a function as asynchronous, allowing the use of `await` inside it.
+   - `await`: Pauses the execution of the function until the Promise resolves.
+
+2. **Purpose in Playwright:**
+   - Playwright APIs (e.g., `page.goto()`, `page.click()`) are asynchronous and return Promises.
+   - `await` ensures that the current action completes before moving to the next.
+   - Helps handle Promises in a cleaner, synchronous-like manner.
+
+3. **Steps to Use:**
+   - Mark the function as `async` if it contains `await`.
+   - Use `await` before Playwright functions like `page.goto()`, `page.click()`, etc.
+   - Handle errors with `try-catch` for reliable execution.
+
+**Edge Cases:**
+- **Without `await`:**
+  - Tests proceed before actions (like page loading) are completed, causing flaky or failing tests.
+  - Common errors: `TimeoutError`, `ElementNotVisibleError`, or uncaught Promise errors.
+
+**Code:**
+====CODE====
+async function testFunction() {
+    await page.goto('https://example.com'); // Waits for page to load
+    await page.click('text=Login'); // Waits for click action to complete
+}
+====END====
+
+====CODE====
+try {
+    await page.goto('https://example.com'); // Waits for navigation
+    await page.click('text=Get Started');  // Waits for the click
+} catch (error) {
+    console.error('Test failed with error:', error); // Logs errors if they occur
+}
+====END====
+
+**Output:**
+- Example:
+  - Input: Call `page.goto('https://example.com')` without `await`.
+  - Result: The next line (`page.click`) might fail if the page isn’t fully loaded.
+
+**Notes:**
+1. **Why Use async/await?**
+   - To ensure predictable execution and eliminate test flakiness.
+   - Makes the code cleaner compared to `.then()` chains.
+   - Simplifies error handling.
+
+2. **What Happens Without async/await?**
+   - Test steps execute out of order.
+   - Leads to unpredictable failures (e.g., elements not loaded, actions not completed).
+
+3. **Benefits of Correct Usage:**
+   - Stable and reliable test execution.
+   - Easy debugging with clear error messages.
+   - Better code readability and maintainability.
+
+====END====
