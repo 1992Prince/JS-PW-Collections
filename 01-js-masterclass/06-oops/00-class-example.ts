@@ -22,9 +22,9 @@ Syntax
 
 class LoginPage { //creating class
 
-    open(url: string): void {//creating method with input param
-      console.log(`Navigating to ${url}`); //priniting the input variable
-    }
+  open(url: string): void {//creating method with input param
+    console.log(`Navigating to ${url}`); //priniting the input variable
+  }
 
 }
 
@@ -37,12 +37,12 @@ console.log();
 
 class LoginPage2 { //creating class
 
-    static open(url: string): void { //creating method with input param
-      console.log(`Navigating to ${url}`); //priniting the input variable
-    }
+  static open(url: string): void { //creating method with input param
+    console.log(`Navigating to ${url}`); //priniting the input variable
+  }
 
 }
-   
+
 LoginPage2.open("Static method in Typescript URL");
 // Output: Navigating to Static method in Typescript URL
 console.log();
@@ -51,20 +51,19 @@ console.log();
 
 class LoginPage3 {
 
-    // Properties
-    url: string;
-  
-    constructor(url: string) {
-      this.url = url;
-    }
-  
-    open(): void {
-      console.log(`Navigating to ${this.url}`);
-    }
+  // Properties
+  url: string;
+
+  constructor(url: string) {
+    this.url = url;
   }
-  
-  const login3 = new LoginPage3("https://example.com/login");
+
+  open(): void {
+    console.log(`Navigating to ${this.url}`);
+  }
+}
+
+const login3 = new LoginPage3("https://example.com/login");
 login3.open(); // Output: Navigating to https://example.com/login
 console.log();
 
-   

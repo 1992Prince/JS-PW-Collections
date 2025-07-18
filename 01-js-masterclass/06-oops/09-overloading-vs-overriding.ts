@@ -1,4 +1,19 @@
 /**
+ * 
+Method Overloading in TS
+
+    ✅ Yes (with one implementation)
+    Multiple signatures, single body; manual type checking inside
+
+Method Overriding in TS
+    ✅ Yes
+    Subclass can redefine parent method; override keyword is recommended
+
+
+
+
+
+
 🔁 Difference Between Method Overloading and Method Overriding in TypeScript
 
 | Feature / Point          | **Method Overloading**                                        | **Method Overriding**                                    |

@@ -1,0 +1,156 @@
+Hoisting in simple words:
+Hoisting means JavaScript "moves" variable and function declarations to the top of their scope during compilation, 
+but only the declarations - not the values.
+
+Key points for your interview:
+
+1. Variable Hoisting:
+
+	console.log(x); // undefined (not error!)
+	var x = 5;
+
+	// JavaScript treats it like:
+	var x; // declaration hoisted
+	console.log(x); // undefined
+	x = 5; // assignment stays here
+	
+2. Function Hoisting:
+
+	sayHello(); // Works! Prints "Hello"
+
+	function sayHello() {
+		console.log("Hello");
+	}
+	// Entire function is hoisted
+	
+3. Let/Const Hoisting:
+
+	console.log(y); // ReferenceError
+	let y = 10;
+	// let/const are hoisted but in "temporal dead zone"
+	
+Simple explanation for interviewer:
+"Hoisting is JavaScript's behavior where variable and function declarations are moved to the top of their scope during compilation. 
+With var, you get undefined if you access before declaration. 
+With let/const, you get an error. 
+Functions are fully hoisted, so you can call them before they're declared."
+
+Remember: Only declarations are hoisted, not initializations!
+
+------------------------------------------------------------------------------------------
+
+Example
+
+getName();           // Line 1
+console.log(x);      // Line 2  
+console.log(getName); // Line 3
+function getName(){   // Line 4
+ console.log('Namaste JS!');
+}
+
+What happens when this code runs:
+
+	Line 1: getName();
+
+		Output: Namaste JS!
+		Works perfectly! Function declarations are fully hoisted
+
+	Line 2: console.log(x);
+
+		Output: ReferenceError: x is not defined
+		Variable x was never declared anywhere in the code
+
+	Line 3: console.log(getName);
+
+		Output: [Function: getName] (the entire function)
+		Shows the function object itself, not calling it
+
+	Line 4-6: Function declaration
+
+	    Gets hoisted to the top, that's why Line 1 worked
+		
+
+undefined vs not defined:
+--------------------------
+
+undefined - Variable exists but has no value assigned
+
+var y;
+console.log(y); // undefined
+
+not defined - Variable doesn't exist at all
+
+console.log(z); // ReferenceError: z is not defined
+
+
+For your interview:
+	"In this code, getName() works because function declarations are fully hoisted. 
+	console.log(x) throws 'not defined' error because x was never declared. 
+	console.log(getName) shows the function object. 
+	The key difference is undefined means the variable exists but has no value, 
+	while not defined means the variable doesn't exist in memory at all."
+	
+	
+
+----------------------------------------------------------------------
+
+Suppose if we are using arrow functions
+
+	getName();
+	console.log(getName);
+	var getName = () => {
+	  console.log("Namaste JS!!!")
+	}
+
+What actually happens:
+Due to hoisting, JavaScript treats this as:
+
+	var getName; // = undefined (hoisted)
+	getName();   // TypeError: getName is not a function
+	console.log(getName); // This line NEVER executes!
+	getName = () => { ... }; // This assignment never happens
+	
+Key points:
+
+	getName is treated like a variable, not a function name during hoisting
+	It gets undefined as its initial value
+	getName() throws TypeError because you're trying to call undefined as a function
+	Code execution STOPS at the TypeError - so console.log(getName) never runs
+
+If we change the order:
+
+	console.log(getName); // undefined (this runs first)
+	getName(); // TypeError (code stops here)
+	var getName = () => { ... }
+	
+
+For interview:
+	"Arrow functions and function expressions assigned to variables don't behave like function names during hoisting. 
+	The variable getName gets hoisted with undefined value. 
+	When we try to call getName(), it throws TypeError because we're calling undefined, and the code execution stops 
+	there - subsequent lines don't execute."
+	
+	
+Very similar behavior for this too:
+
+getName();
+console.log(getName);
+var getName = function() {
+  console.log("Namaste JS!!!")
+}
+
+
+Both arrow functions and regular function expressions assigned to variables behave exactly the same during hoisting - 
+they're treated as variables, not functions
+
+Key points:
+
+	getName is treated like a variable, not a function name during hoisting
+	It gets undefined as its initial value
+	getName() throws TypeError because you're trying to call undefined as a function
+	Code execution STOPS at the TypeError - so console.log(getName) never runs
+
+For interview:
+"Both arrow functions and function expressions assigned to variables behave identically during hoisting. 
+The variable getName gets hoisted with undefined value, causing TypeError when called, and code execution stops there."
+Same behavior, same result! 🎯

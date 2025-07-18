@@ -8,6 +8,7 @@
 
 ✅ Method Overloading — Kya Hai?
     Same method name, but used with different parameter types or count – in the same class.
+    Method Overloading means defining multiple method signatures with the same name but different parameter types or counts
 
 ❗ Why only one implementation?
     Because JavaScript (which TypeScript compiles to) doesn't support method overloading at runtime.
@@ -86,5 +87,12 @@ function fillInput(selector: string, value: string | number): void {
   // Playwright fill implementation
   console.log(`Filling ${selector} with ${value}`);
 }
+
+Why TypeScript Handles It Differently
+
+    - TypeScript is compiled to JavaScript, which does not support method overloading natively.
+
+    - So overloading is simulated at the type level only, and all logic must be handled manually 
+     inside a single function
  */
 

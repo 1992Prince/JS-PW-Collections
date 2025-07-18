@@ -6,17 +6,17 @@
  */
 
 class User2 {
-        name: string;
-      
-        constructor() {
-          this.name = "Guest"; // Default value
- 
-       }
+  name: string;
+
+  constructor() {
+    this.name = "Guest"; // Default value
+
+  }
 }
-      
+
 const u3 = new User2();
 console.log(u3.name); // Output: Guest
-      
+
 console.log();
 
 /**
@@ -26,23 +26,23 @@ to tum object banate waqt value de bhi sakte ho, aur chhodd bhi sakte ho.
  */
 
 class Employee {
-    name: string;
-  
-    constructor(name?: string) {
-      if (name) {
-        this.name = name;
-      } else {
-        this.name = "Default Employee";
-      }
+  name: string;
+
+  constructor(name?: string) {
+    if (name) { // here we are checking truthy value
+      this.name = name;
+    } else {
+      this.name = "Default Employee";
     }
   }
-  
+}
+
 const emp1 = new Employee("Ankush");
 console.log(emp1.name); // Output: Ankush
-  
+
 const emp2 = new Employee(); // No name given
 console.log(emp2.name); // Output: Default Employee
-  
+
 
 console.log();
 
@@ -51,20 +51,20 @@ console.log();
 // Ye aur bhi clean code deta hai.
 
 class Car {
-    brand: string;
-  
-    constructor(brand: string = "Honda") {
-      this.brand = brand;
-    }
+  brand: string;
+
+  constructor(brand: string = "Honda") {
+    this.brand = brand;
   }
-  
-  const c1 = new Car("BMW");
-  console.log(c1.brand); // Output: BMW
-  
-  const c2 = new Car(); // No brand passed
-  console.log(c2.brand); // Output: Honda
-console.log();  
-  
+}
+
+const c1 = new Car("BMW");
+console.log(c1.brand); // Output: BMW
+
+const c2 = new Car(); // No brand passed
+console.log(c2.brand); // Output: Honda
+console.log();
+
 /**
 ✅ Q: What is a Constructor in TypeScript?
 
