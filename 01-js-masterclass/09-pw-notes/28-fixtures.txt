@@ -1,0 +1,114 @@
+Fixture for normal tests vs fixture for workers
+--------------------------------------------------
+
+🔹 Normal Fixture (per-test fixture)
+
+👉 Definition:
+Ye har ek test ke liye naya instance banata hai.
+Matlab agar 10 tests hain → 10 baar fixture setup + teardown chalega.
+
+Example:
+
+import { test as base } from '@playwright/test';
+
+const test = base.extend<{ db: string }>({
+  db: async ({}, use) => {
+    console.log('Connecting DB...');
+    await use('DB-connection');
+    console.log('Disconnect DB...');
+  },
+});
+
+test('test 1', async ({ db }) => {
+  console.log('using', db);
+});
+
+test('test 2', async ({ db }) => {
+  console.log('using', db);
+});
+
+Output:
+
+Connecting DB...
+using DB-connection
+Disconnect DB...
+Connecting DB...
+using DB-connection
+Disconnect DB...
+
+➡️ Har test ke liye naya DB connect/disconnect hua.
+Good when you need isolation (like every test gets fresh state).
+
+
+🔹 Worker-Scoped Fixture
+
+👉 Definition:
+Ye fixture ek worker (parallel thread) ke liye ek hi baar banega, aur us worker ke andar jitne bhi tests chalenge, wo sab usi fixture ko share karenge.
+
+Matlab agar ek worker me 5 tests hain → ek hi baar setup hoga, aur sab me reuse hoga.
+
+Example:
+
+import { test as base } from '@playwright/test';
+
+const test = base.extend<{ db: string }>({
+  db: [async ({}, use) => {
+    console.log('Connecting DB once for worker...');
+    await use('DB-connection');
+    console.log('Disconnect DB once for worker...');
+  }, { scope: 'worker' }],
+});
+
+test('test 1', async ({ db }) => {
+  console.log('using', db);
+});
+
+test('test 2', async ({ db }) => {
+  console.log('using', db);
+});
+
+Output:
+
+Connecting DB once for worker...
+using DB-connection
+using DB-connection
+Disconnect DB once for worker...
+
+
+🔹 Difference in Code (Normal vs Worker)
+
+| Normal Fixture (per test)                         | Worker Fixture (per worker)                                 |
+| ------------------------------------------------- | ----------------------------------------------------------- |
+| Syntax: `fixtureName: async ({}, use) => { ... }` | Syntax: `[async ({}, use) => { ... }, { scope: 'worker' }]` |
+| Runs **before each test**                         | Runs **once before first test in worker**                   |
+| Teardown runs after each test                     | Teardown runs after all tests in that worker finish         |
+| Isolation: har test ke liye fresh                 | Shared: saare tests in worker reuse same resource           |
+
+
+🔹 When to Use What?
+
+✅ Normal (per-test):
+
+    Jab tumhe test isolation chahiye.
+
+    Example: har test ko alag page, alag temporary DB table, alag login session.
+
+✅ Worker (per-worker):
+
+    Jab resource heavy hai aur baar-baar banana waste hai.
+
+    Example:
+
+        Ek hi DB connection saare tests ke liye.
+
+        Server start karna once, saare tests usko hit karein.
+
+        API auth token jo same worker ke saare tests use karenge.
+
+        
+
+PENDING ITEMS:
+
+CUSTOM FIXTURE title
+Adding global beforeEach/afterEach hooks
+Adding global beforeAll/afterAllhooks

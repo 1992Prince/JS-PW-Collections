@@ -1,0 +1,390 @@
+🔴 Problem Statement
+
+When we register a dialog listener with:
+
+page.on('dialog', async dialog => {
+  console.log(dialog.message());
+  await dialog.accept();
+});
+
+and trigger multiple dialogs in one test (like alert → confirm → prompt), Playwright throws an error:
+
+Error: Target closed or Dialog already handled
+
+
+👉 Reason:
+
+.on registers a permanent listener.
+
+That listener will try to handle every dialog, even dialogs that are already resolved.
+
+As a result, Playwright complains that the dialog was "already handled".
+
+e.g.
+
+test('Dialogs Practice', async ({ page, browserName }) => {
+
+    await page.goto('http://127.0.0.1:5500/tests/09-dialogs.html');
+
+    // Alert
+    console.log('Alert Dialogs Practice');
+    page.on('dialog', async dialog => {
+        console.log(dialog.message()); // "This is an Alert dialog!"
+        await dialog.accept();
+    });
+    await page.getByText('Show Alert').click();
+    console.log();
+
+
+    // Confirm
+    console.log('Confirm Dialogs Practice');
+    page.on('dialog', async dialog => {
+        console.log(dialog.message()); // "Do you want to continue?"
+        await dialog.dismiss();        // Click Cancel
+    });
+    await page.getByText('Show Confirm').click();
+    console.log();
+
+});
+
+if u run above script it will throw error that - dialog is already handled 
+
+
+
+🟢 Resolution
+
+Instead of .on, we use .once:
+
+👉 .once ensures the listener is automatically removed after handling one dialog only.
+So each dialog has its own handler, preventing conflicts.
+
+so we rectified it with solution : i.e. replaced on with once
+
+
+test('Dialogs Practice', async ({ page, browserName }) => {
+
+    await page.goto('http://127.0.0.1:5500/tests/09-dialogs.html');
+
+    // Alert
+    console.log('Alert Dialogs Practice');
+    page.once('dialog', async dialog => {
+        console.log(dialog.message()); // "This is an Alert dialog!"
+        await dialog.accept();
+    });
+    await page.getByText('Show Alert').click();
+    console.log();
+
+
+    // Confirm
+    console.log('Confirm Dialogs Practice');
+    page.once('dialog', async dialog => {
+        console.log(dialog.message()); // "Do you want to continue?"
+        await dialog.dismiss();        // Click Cancel
+    });
+    await page.getByText('Show Confirm').click();
+    console.log();
+
+});
+
+
+
+✅ .on('dialog')
+
+Used when you want to handle all dialogs globally.
+
+Example: If your application triggers alerts frequently and you always want to dismiss them.
+
+page.on('dialog', dialog => dialog.dismiss());
+
+⚠️ Risky inside a single test with multiple dialog types → may cause "already handled" errors.
+
+
+✅ .once('dialog')
+
+Used when you know exactly one dialog will appear after a specific action.
+
+Cleaner for test automation.
+
+Example:
+
+await page.getByText('Submit').click();
+page.once('dialog', dialog => dialog.accept());
+
+
+📌 When to Use
+
+| Use Case                                                               | Use `.on()`            | Use `.once()`                     |
+| ---------------------------------------------------------------------- | ---------------------- | --------------------------------- |
+| Want a **global handler** for all dialogs (like always dismiss alerts) | ✅ Yes                  | ❌ No                              |
+| Expecting a **single dialog per action**                               | ❌ Not ideal            | ✅ Best choice                     |
+| Handling **multiple dialogs in one test**                              | ❌ Will cause conflicts | ✅ Use separate `.once` per dialog |
+| Debugging / logging all dialogs that appear                            | ✅ Good                 | ❌ Not useful                      |
+
+
+📝 Interview-ready Answer
+
+👉 In Playwright, dialogs like alert, confirm, and prompt block the page until handled. 
+If we use page.on('dialog'), the handler stays active for all dialogs, which can lead to 
+“dialog already handled” errors when multiple dialogs appear in one test.
+
+To avoid this, we use page.once('dialog'), which handles only the next dialog and then unregisters itself.
+
+    .on → global handler, good for continuous listening across tests.
+    .once → one-time handler, best when you know one specific dialog will appear after an action.
+
+
+    --------------------------------------------------------------
+
+
+Q - Y we are handing prompt before click and not after click?  
+
+    page.once('dialog', async dialog => {
+        console.log(dialog.message()); // "Enter your name:"
+        await dialog.accept("Playwright User");
+    });
+    await frame1.locator('#open-dialog').click();
+
+🔹 Browser dialogs (alert / prompt / confirm) kaise kaam karte hain?
+
+    Jab tum page pe alert / confirm / prompt trigger karte ho (like window.prompt()),
+    browser turant dialog block karke khada ho jaata hai.
+
+    Jab tak tum us dialog ko accept/dismiss nahi karte, page ka JS execution ruk jata hai.
+
+
+1️⃣ page.once('dialog', handler) pehle likhna
+
+    Is line ka matlab hai:
+      “Agar agle step mein koi dialog open hua, to is handler ko chalana.”
+    Matlab tum listener register kar rahe ho before the dialog actually appears.
+
+
+2️⃣ click() likhna
+
+    Jab tum click karte ho button pe (#open-dialog), tabhi window.prompt() fire hota hai.
+    Us samay Playwright turant dekhta hai ki tumne listener lagaya hai, to usko handle kar deta hai.
+
+
+❌ Agar tum listener ko baad mein lagate
+
+    await frame1.locator('#open-dialog').click();
+    page.once('dialog', async dialog => { ... }); // ❌ too late
+
+    Yahaan click ke turant baad browser dialog khol dega.
+
+    Lekin tum listener baad mein register kar rahe ho → dialog handle hi nahi hoga.
+
+    Result: test stuck ho jayega ya timeout dega, kyunki Playwright wait karega ke tum dialog ko accept/dismiss karo.
+
+
+🔑 Conclusion
+
+    👉 Isliye pehle listener lagana zaruri hai, phir woh action trigger karo jo dialog open kare.
+
+    Before: listener ready hai → dialog safely handle ho jaata hai.
+
+    After: dialog pehle aa gaya, listener baad mein → test atak jaata hai.
+
+
+
+
+Q1. What are listeners in Playwright?
+
+👉 In Playwright, listeners are callbacks attached to specific events (like dialog, console, request, etc.). 
+    Whenever that event occurs during test execution, the callback automatically executes. 
+    They are similar to JavaScript's addEventListener.
+
+
+Listener ka simple matlab hai: ek callback jo kisi specific event ke trigger hone par chal jata hai.
+
+Ye wahi concept hai jo tum JS mein addEventListener se sunte ho.
+
+Playwright mein bhi har object (page, browser, context, etc.) ke apne events hote hain, aur tum inko listen kar sakte ho.
+
+
+🔹 Listener in your code
+
+Tumne ye likha tha:
+
+page.once('dialog', async dialog => {
+  console.log(dialog.message()); // "Enter your name:"
+  await dialog.accept("Playwright User");
+});
+
+
+Yahaan:
+
+    page.once(...) hi ek listener hai.
+
+    'dialog' → ye event ka naam hai (jab alert/confirm/prompt dialog open hoga).
+
+    async dialog => { ... } → ye tumhara callback hai (jo event trigger hote hi chalega).
+
+    ⚡ Matlab:
+
+    Ye listener bol raha hai: “Jab page pe ek dialog event aaye, to is function ko ek baar chalana
+
+🔹 once vs on
+
+    page.on(event, handler) → har baar jab event fire hoga, handler chalega (multiple times).
+
+    page.once(event, handler) → sirf ek hi baar chalega, fir auto remove ho jayega.
+
+
+
+🔹 Different listeners in Playwright
+
+Playwright mein alag-alag objects ke alag-alag listeners hote hain.
+Kuch common Page events:
+
+| Event name       | Description                                                       |
+| ---------------- | ----------------------------------------------------------------- |
+| `dialog`         | Triggered when an alert/confirm/prompt appears.                   |
+| `console`        | Triggered when `console.log` (ya koi bhi console event) hota hai. |
+| `request`        | Jab bhi page se koi network request jaati hai.                    |
+| `response`       | Jab network response aata hai.                                    |
+| `requestfailed`  | Jab koi request fail hoti hai.                                    |
+| `framenavigated` | Jab ek frame navigate hota hai.                                   |
+| `load`           | Jab page ka load event fire hota hai (DOM loaded).                |
+| `pageerror`      | Jab page pe uncaught error aata hai.                              |
+| `worker`         | Jab ek new web worker start hota hai.                             |
+
+
+BrowserContext listeners:
+
+    page → Jab naya page open hota hai.
+
+    close → Jab context close hota hai.
+
+Browser listeners:
+
+    disconnected → Jab browser disconnect hota hai.
+
+
+
+🔹 Example: Listening to multiple events
+
+page.on('console', msg => {
+  console.log('PAGE LOG:', msg.text());
+});
+
+page.on('request', req => {
+  console.log('➡️ Request:', req.url());
+});
+
+page.on('response', res => {
+  console.log('⬅️ Response:', res.url(), res.status());
+});
+
+
+
+
+Q2. Can you show me an example of a listener in Playwright?
+👉 Example of listening to a dialog event:
+
+page.once('dialog', async dialog => {
+  console.log(dialog.message()); 
+  await dialog.accept("Playwright User");
+});
+await page.click('#open-dialog');
+
+
+Here:
+
+    'dialog' → event name
+
+    dialog => {...} → listener (callback function)
+
+    once means it will listen only once for this event.
+
+
+Q3. Why do we register a dialog listener before clicking the button that triggers it?
+👉 Because dialogs (alert/prompt/confirm) block JavaScript execution when they appear.
+If we click first and register listener later, the test will hang because the dialog is already blocking.
+So we must register the listener before the action that triggers it.
+
+
+Q4. What is the difference between page.on and page.once?
+👉
+
+    page.on(event, handler) → listens to an event every time it happens (multiple times).
+
+    page.once(event, handler) → listens only once, then automatically removes itself.
+
+    Example:
+
+    page.on('console', msg => console.log(msg.text())); // listens continuously
+    page.once('dialog', d => d.accept());              // listens only once
+
+
+Q5. What are some common listeners available in Playwright?
+👉 Some important event listeners:
+
+Page events:
+
+        dialog → when alert/confirm/prompt appears
+
+        console → when console.log/error/warn happens
+
+        request → when a network request is made
+
+        response → when a network response is received
+
+        requestfailed → when a request fails
+
+        framenavigated → when a frame navigates
+
+        pageerror → when an uncaught exception occurs in the page
+
+BrowserContext events:
+
+        page → when a new page is created
+
+        close → when context is closed
+
+Browser events:
+
+        disconnected → when browser gets disconnected
+
+
+Q6. Can you give an example of using multiple listeners in a test?
+
+
+page.on('console', msg => console.log('LOG:', msg.text()));
+
+page.on('request', req => console.log('➡️ Request:', req.url()));
+
+page.on('response', res => console.log('⬅️ Response:', res.url(), res.status()));
+
+page.once('dialog', async dialog => {
+  console.log('Dialog message:', dialog.message());
+  await dialog.accept();
+});
+
+
+This will log console messages, track network requests/responses, and handle a dialog.
+
+
+
+Q7. Why are listeners useful in automation tests?
+👉 Listeners help in:
+
+        Handling unexpected dialogs
+
+        Capturing console errors/warnings
+
+        Debugging network requests/responses
+
+        Monitoring navigation events
+
+        Validating app behavior beyond just UI interactions
+
+
+Q8. Can listeners be removed after adding them?
+👉 Yes, by using page.off(event, handler).
+
+const handler = msg => console.log(msg.text());
+page.on('console', handler);
+
+// Later if you want to stop listening:
+page.off('console', handler);

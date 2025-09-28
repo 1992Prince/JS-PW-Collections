@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Playwright + TypeScript Practice Site</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --txt:#e5e7eb; --accent:#22d3ee; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial; background: linear-gradient(135deg,#0f172a,#111827); color: var(--txt); }
+    header { padding: 32px 20px; text-align:center; }
+    h1 { margin: 0 0 8px; font-weight:800; letter-spacing:.3px; }
+    p.lead { margin: 0; color: var(--muted); }
+    main { max-width: 1100px; margin: 24px auto 60px; padding: 0 16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:16px; }
+    .card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; transition: transform .18s ease, border-color .18s ease; }
+    .card:hover { transform: translateY(-3px); border-color: rgba(34,211,238,.6); }
+    .card h2 { margin-top:0; font-size:20px; }
+    .card p { color: var(--muted); font-size:14px; }
+    .card a { margin-top:10px; display:inline-block; color: var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent); }
+    footer { text-align:center; color: var(--muted); padding: 20px; font-size: 12px; }
+    code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Playwright Automation Challenges</h1>
+  <p class="lead">Interview-grade practice tasks using web tables, tabs, calendars, frames, and forms.</p>
+</header>
+
+<main>
+  <div class="card">
+    <h2>1) Dynamic Web Table</h2>
+    <p>Pagination, sorting, checkboxes, and cell targeting by text.</p>
+    <a href="./table.html">Open Challenge</a>
+  </div>
+
+  <div class="card">
+    <h2>2) Tabs & Async Content</h2>
+    <p>Switch tabs, wait for delayed loads, and validate counts.</p>
+    <a href="./tabs.html">Open Challenge</a>
+  </div>
+
+  <div class="card">
+    <h2>3) Custom Calendar</h2>
+    <p>Navigate months, select specific dates (incl. leap year).</p>
+    <a href="./calendar.html">Open Challenge</a>
+  </div>
+
+  <div class="card">
+    <h2>4) Nested Frames & Alerts</h2>
+    <p>Handle frames within frames and JavaScript alerts.</p>
+    <a href="./frames.html">Open Challenge</a>
+  </div>
+
+  <div class="card">
+    <h2>5) Complex Form & Upload</h2>
+    <p>Conditional fields, validation, and upload interactions.</p>
+    <a href="./form.html">Open Challenge</a>
+  </div>
+</main>
+
+<footer>
+  Tip: Open DevTools to inspect selectors. Use robust locators (role, text, nth, has).
+</footer>
+</body>
+</html>

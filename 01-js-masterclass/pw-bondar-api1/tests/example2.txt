@@ -1,0 +1,40 @@
+🔎 Why adding await expect(page.locator('.tag-list')).toContainText('Playwright') makes the mock visible on UI?
+
+Conduit app ka flow
+
+App load hone ke baad https://conduit-api.bondaracademy.com/api/tags call karta hai.
+
+Us response ke basis pe tag-list render hoti hai.
+
+Playwright auto-wait
+
+Jab tu page.goto() karta hai, page to open ho jata hai, but API request + rendering thoda delay se hota hai.
+
+Agar tu uss waqt sirf .navbar-brand check karega, wo to turant milega (kyunki HTML me already hai), aur test wahi pe khatam ho jayega.
+
+Mocked API call aur UI rendering hone ka chance hi nahi milta.
+
+Why toContainText('Playwright') helps
+
+Jab tu await expect(locator('.tag-list')).toContainText('Playwright') likhta hai, Playwright internally auto-wait karta hai:
+
+Wait until .tag-list element exist kare.
+
+Wait until it contains "Playwright".
+
+Is wait ke dauraan actual API call hoti hai → tu usko mock kar chuka hai → mocked response UI pe render hota hai → assertion pass hota hai.
+
+⚡ In Simple Words for Interview
+
+👉 Agar tu mock verify nahi karta (sirf static element check karta), to test early exit ho jata hai aur API response UI pe reflect hone ka wait nahi hota.
+👉 Jab tu .tag-list me mocked data assert karta hai, Playwright ka auto-waiting mechanism ensure karta hai ki mocked response aake UI render ho tab tak test rukke.
+
+✅ Best Practice
+
+Always assert mocked data in UI to prove mock worked.
+Example:
+
+await page.goto('https://conduit.bondaracademy.com');
+
+// ✅ ensures mocked response rendered
+await expect(page.locator('.tag-list')).toContainText('Playwright');

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .scroll-container {
+      height: 150px;
+      width: 200px;
+      overflow-y: auto;
+      border: 2px solid black;
+      margin: 10px;
+      float: left;
+    }
+    .item {
+      height: 80px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #sidebar .item { background-color: lightblue; }
+    #chat .item { background-color: lightgreen; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Scroll -->
+  <div id="sidebar" data-testid="sidebar" class="scroll-container">
+    <div class="item">Sidebar Item 1</div>
+    <div class="item">Sidebar Item 2</div>
+    <div class="item">Sidebar Item 3</div>
+    <div class="item">Sidebar Item 4</div>
+    <div class="item">Sidebar Item 5</div>
+    <div class="item">Sidebar Item 6 🎯</div>
+  </div>
+
+  <!-- Chat Window Scroll -->
+  <div id="chat" data-testid="chat-window" class="scroll-container">
+    <div class="item">Chat Message 1</div>
+    <div class="item">Chat Message 2</div>
+    <div class="item">Chat Message 3</div>
+    <div class="item">Chat Message 4</div>
+    <div class="item">Chat Message 5</div>
+    <div class="item">Chat Message 6 🎯</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright Keyboard Practice</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { padding: 10px; margin: 10px 0; font-size: 16px; }
+    #log { margin-top: 20px; padding: 10px; border: 1px solid #aaa; height: 200px; overflow-y: auto; background: #f9f9f9; }
+    .highlight { background: yellow; }
+  </style>
+</head>
+<body>
+  <h2>Keyboard Events Playground</h2>
+
+  <label for="name">Type here:</label><br>
+  <input id="name" type="text" placeholder="Type and use shortcuts here" size="40"><br>
+
+  <button id="submitBtn">Submit</button>
+
+  <h3>Logs:</h3>
+  <div id="log"></div>
+
+  <script>
+    const nameInput = document.getElementById('name');
+    const submitBtn = document.getElementById('submitBtn');
+    const logBox = document.getElementById('log');
+
+    function log(message) {
+      const p = document.createElement('p');
+      p.textContent = message;
+      logBox.appendChild(p);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // 🔹 1) Enter on button
+    submitBtn.addEventListener('keydown', (e) => {
+      if (e.key === "Enter") {
+        log("✅ Enter pressed on Submit button -> Form Submitted!");
+      }
+    });
+
+    // 🔹 2) Control + ArrowRight
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === "ArrowRight") {
+        log("➡️ Control + ArrowRight pressed -> Move cursor one word right");
+      }
+    });
+
+    // 🔹 3) $ sign
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === "$") {
+        log("💲 '$' pressed inside input");
+      }
+    });
+
+    // 🔹 4) Shift + A (capital A)
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key === "A") {
+        log("🔠 Shift+A pressed -> Capital 'A'");
+      }
+    });
+
+    // 🔹 5) Shift + ArrowLeft
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key === "ArrowLeft") {
+        log("⬅️ Shift+ArrowLeft pressed -> Selecting text left");
+      }
+    });
+
+    // 🔹 6) Example: Control+o
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key.toLowerCase() === "o") {
+        e.preventDefault(); // prevent browser's default file-open shortcut
+        log("📂 Control+O pressed -> Custom open logic triggered");
+      }
+    });
+
+    // 🔹 7) Example: Control+Shift+T
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "t") {
+        e.preventDefault(); // prevent reopen tab
+        log("♻️ Control+Shift+T pressed -> Custom shortcut triggered");
+      }
+    });
+
+    // Generic log for any key
+    nameInput.addEventListener('keydown', (e) => {
+      log(`Key pressed: ${e.key}, Modifiers: [Ctrl=${e.ctrlKey}, Shift=${e.shiftKey}, Alt=${e.altKey}, Meta=${e.metaKey}]`);
+    });
+  </script>
+</body>
+</html>

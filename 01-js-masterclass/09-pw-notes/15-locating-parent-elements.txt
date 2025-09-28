@@ -1,0 +1,33 @@
+👉  Locating parent elements first
+
+test.only('locate parent element', async ({ page }) => {
+
+  await page.goto('http://127.0.0.1:5500/tests/21-complex-parent-element.html');
+
+  await page.pause();
+
+  // here we are locating nb-card which has text 'User Preferences' 
+  // 'User Preferences' can be anywhere inside dom of nb-card and 
+  // can be direct child or grand child or any level deep child
+  const parentEle = page.locator('nb-card', { hasText: 'User Preferences' });
+
+  // now we located parent element, now we can perform action on child element
+  await parentEle.locator('nb-radio :text-is("Option 1")').click();
+
+  // there are multiple options like has, hasNot, hasNotText and  hasText wch u can pass in line 27
+
+  // so also second parameter we can pass as locator also instead of text
+  // below we are locating parent element with its unique chile element wch have text 'Special Option'
+  const parentEle2 = page.locator('nb-card', { has: page.getByText('Special Option') });
+  await parentEle2.locator('nb-radio :text-is("Option 2")').click();
+
+  // also we can locate parent element by filterig with child element 
+  // very similar we can pass has, hasNot, hasText and  hasNotText parameters in filter method
+  // and find parent element 
+  const parentEle3 = page.locator('nb-card')
+    .filter({ has: page.getByText('Special Option') });
+
+  parentEle3.locator('nb-radio :text-is("Special Option")').click();
+
+
+});

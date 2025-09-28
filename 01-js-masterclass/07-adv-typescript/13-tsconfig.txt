@@ -1,0 +1,150 @@
+
+
+✔️  What is tsconfig.json?
+
+- It’s a configuration file for the TypeScript compiler (tsc).
+- It tells the compiler how to compile your TypeScript code.
+
+✔️  You define settings like:
+
+    - Which files/folders to include or exclude
+    - What JavaScript version to target (ES5, ES6, etc.)
+    - Module system to use (CommonJS, ES Modules, etc.)
+    - Enable strict type checking options
+    - Compiler behavior and output directory, and more
+
+
+✔️  Example snippet of tsconfig.json:
+
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"]
+}
+
+
+✔️  Why do we need tsconfig.json in TypeScript?
+
+    1) TypeScript needs to be compiled:
+
+        TypeScript is a superset of JavaScript with types.
+        Browsers and Node.js cannot run TypeScript directly.
+        tsconfig.json guides the compiler on how to convert .ts files into runnable .js.
+
+
+    2) Control over compilation behavior:
+
+        You decide target environment, strictness, module formats.
+        Helps ensure your code is compatible with the environment you want.
+
+    3) Project structure:
+
+        You specify which files are part of the project.
+        Helps large projects organize code and output.
+
+
+✔️  Why don’t we need it in JavaScript?
+
+        JavaScript is interpreted directly by browsers or Node.js.
+        No compilation step is needed (unless you use a bundler or transpiler like Babel).
+        No need to configure compilation options for plain JS.
+
+
+
+Summary
+Aspect                      TypeScript                              JavaScript
+--------------------------------------------------------------------------------
+Needs compilation?            Yes                                     No
+Configuration file?      tsconfig.json to control compile          Not required
+Runtime environment      JavaScript (compiled from TS)             Runs directly
+
+
+tsconfig.json Options Explained
+--------------------------------------------------------------------------------
+
+✅ 1. "strict": true → Super Safe Mode
+
+    Turns on all type safety checks.
+    Helps catch bugs early.
+
+What it enables under the hood:
+
+    strictNullChecks: null/undefined errors
+    noImplicitAny: must declare types
+    strictFunctionTypes: safer function checks
+    and more...
+
+🔴 Without strict:
+
+    function greet(name: string) {
+    console.log("Hello " + name.toUpperCase());
+    }
+
+    greet(null); // ❌ This will fail when "strict": true (null not allowed)
+
+🟢 Fix:
+
+
+    function greet(name: string | null) {
+    if (name) console.log("Hello " + name.toUpperCase());
+    }
+
+
+
+✅ Must-Know tsconfig.json Options (with examples)
+
+1. "strict": true
+        👉 Turns on full type safety
+
+            Catches null/undefined errors, missing types, unsafe usage.
+            Highly recommended.
+
+    
+        function greet(name: string) {
+         console.log("Hello " + name.toUpperCase());
+        }
+
+        greet(null); // ❌ Error if strict is true
+
+
+2. "noUnusedLocals": true & "noUnusedParameters": true
+    👉 Cleans dead code
+
+    function sayHello(name: string) {
+        const unused = "test"; // ❌ Error: unused variable
+    console.log("Hi");
+        }
+
+    ➡️ Helps keep code clean.
+
+
+3. "esModuleInterop": true
+👉 Import CommonJS modules like Node.js
+
+import fs from "fs"; // ✅ Works only with esModuleInterop
+
+Without it, you’d have to write: import * as fs from "fs"; // 😐 Old style
+
+
+4. "baseUrl" + "paths"
+👉 Shortcut imports
+
+"baseUrl": "./src",
+"paths": {
+  "@utils/*": ["utils/*"]
+}
+
+
+Now you can do: import { helper } from "@utils/math";
+
+5. "skipLibCheck": true
+
+    👉 Faster compile, fewer annoying errors
+
+    Skips checking types in node_modules
+
+    Good for larger apps

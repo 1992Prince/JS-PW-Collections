@@ -1,0 +1,14 @@
+{
+    "appName": "My Test App",
+    "base": { "url": "https://example.com", "timeout": 30000 },
+    "user": {
+      "id": 101,
+      "name": "Alice",
+      "address": { "city": "Pune", "zip": "411001" }
+    },
+    "users": [
+      { "id": 1, "name": "John", "roles": ["reader", "writer"] },
+      { "id": 2, "name": "Jane", "roles": ["admin"] }
+    ]
+  }
+  

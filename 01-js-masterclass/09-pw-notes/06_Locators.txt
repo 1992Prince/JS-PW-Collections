@@ -1,0 +1,178 @@
+👉 To sum up:
+
+filter() → refine by text/visibility etc.
+
+locator().locator() → nested search
+
+and() → element must satisfy both locators
+
+or() → element can satisfy either locator
+
+filter({ visible: true }) → ignore hidden elements
+
+check example in spec.js file
+
+
+-------------------------------------------
+
+
+👉  Lists
+
+<ul>
+  <li>apple</li>
+  <li>banana</li>
+  <li>orange</li>
+</ul>
+
+1. Count items in a list
+------------------------
+
+👉 List ke andar kitne items hain, usko check karne ke liye.
+
+await expect(page.getByRole('listitem')).toHaveCount(3);
+
+⚡ Ye bolega ki list me 3 items hain (apple, banana, orange).
+
+
+
+2. Assert all text in a list
+----------------------------
+
+👉 Poore list ka text verify karna.
+
+await expect(page.getByRole('listitem')).toHaveText([
+  'apple',
+  'banana',
+  'orange'
+]);
+
+⚡ Ye ensure karega ki list ke items isi order me aur isi text ke hain.
+
+
+
+
+3. Get a specific item - [There are many ways to get a specific item in a list.]
+--------------------------------------------------------------------------------
+
+(a) Get by text
+****************
+
+await page.getByText('orange').click();
+
+⚡ Ye directly orange list item pe click karega.
+
+(b) Filter by text
+*******************
+
+await page.getByRole('listitem')
+  .filter({ hasText: 'orange' })
+  .click();
+
+⚡ Ye pehle listitem role pakdega, phir usme se orange filter karega aur click karega.
+
+👉 Breakdown:
+
+a) page.getByRole('listitem') → saare <li> elements pakadta hai.
+   (yani: <li>apple</li>, <li>banana</li>, <li>orange</li>).
+
+b) .filter({ hasText: 'orange' }) → unme se sirf wo <li> choose karega jisme text "orange" likha hai.
+   Matlab: <li>orange</li>.
+
+c) .click() → ab ye us filtered <li> element pe click karega.
+
+⚡ Important point:
+
+Ye listitem (li) element khud pe click karega.
+
+Agar tu us <li> ke andar koi child element (jaise <button>) click karna chahta hai, toh tu chain karega.
+
+await page.getByRole('listitem')
+  .filter({ hasText: 'orange' })
+  .getByRole('button')
+  .click();
+
+
+👉 Is case me, pehle <li> choose hoga jisme "orange" hai, aur phir uske andar ka <button> click hoga.
+
+
+
+(c) Get by test id
+*********************
+
+Agar test id HTML me di ho:
+
+<ul>
+  <li data-testid="apple">apple</li>
+  <li data-testid="banana">banana</li>
+  <li data-testid="orange">orange</li>
+</ul>
+
+await page.getByTestId('orange').click();
+
+⚡ Ye seedha test id ke basis pe element click karega.
+
+(d) Get by nth item
+*********************
+
+Agar elements same hain aur bas position se differentiate karna hai:
+
+const banana = page.getByRole('listitem').nth(1); // index 0-based
+await banana.click();
+
+⚠️ Caution: Agar list change ho gayi, toh galat item select ho sakta hai. 
+Isliye better hai unique locator use karna.
+
+
+
+
+4. Chaining Filters
+-----------------------------
+
+Kabhi-kabhi ek hi naam ke multiple elements hote hain, tab filters chain karke sahi element milta hai.
+
+<ul>
+  <li>
+    <div>John</div>
+    <div><button>Say hello</button></div>
+  </li>
+  <li>
+    <div>Mary</div>
+    <div><button>Say hello</button></div>
+  </li>
+  <li>
+    <div>John</div>
+    <div><button>Say goodbye</button></div>
+  </li>
+  <li>
+    <div>Mary</div>
+    <div><button>Say goodbye</button></div>
+  </li>
+</ul>
+
+👉 Agar tu specifically Mary + Say goodbye row ka screenshot lena chahta hai:
+
+const rowLocator = page.getByRole('listitem');
+
+await rowLocator
+  .filter({ hasText: 'Mary' })  // sirf Mary wale rows
+  .filter({ has: page.getByRole('button', { name: 'Say goodbye' }) }) // aur us row me goodbye button hona chahiye
+  .screenshot({ path: 'screenshot.png' });
+
+⚡ Ab sirf Mary + Say goodbye wali row select hogi.
+
+
+✅ Summary
+
+    - toHaveCount() → list me kitne items hain check karo
+
+    - toHaveText() → list ka poora text verify karo
+
+    - getByText() → direct text se item pakdo
+
+    - filter({ hasText }) → role se locate karke text filter karo
+
+    - getByTestId() → test id use karke element pakdo
+
+    - nth(), first(), last() → order-based select karo
+
+    - Chaining filters → jab multiple similarities ho tab exact element pakadne ke liye

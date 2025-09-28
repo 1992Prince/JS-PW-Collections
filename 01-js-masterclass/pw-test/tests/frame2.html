@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body style="background:#eaf7ff; height:200px; padding:20px;">
+    <h3>Input Frame</h3>
+    <input type="text" id="name" placeholder="Enter your name">
+    <button id="submit-btn">Submit</button>
+
+    <script>
+      document.getElementById('submit-btn').addEventListener('click', () => {
+        const text = document.getElementById('name').value;
+        if (text) {
+          console.log('Iframe 2 - Name entered:', text);
+        } else {
+          console.log('Iframe 2 - No name entered!');
+        }
+      });
+    </script>
+  </body>
+</html>

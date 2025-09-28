@@ -1,0 +1,225 @@
+Network Options in use object
+------------------------------------
+
+| **Category**           | **Option**          | **Used for**                                                 |
+| ---------------------- | ------------------- | ------------------------------------------------------------ |
+| 🌐 **Network Options** | `acceptDownloads`   | Allow or block file downloads in tests.                      |
+|                        | `extraHTTPHeaders`  | Add custom headers like auth tokens or localization headers. |
+|                        | `httpCredentials`   | Provide HTTP basic auth credentials.                         |
+|                        | `ignoreHTTPSErrors` | Useful when testing self-signed certificates in dev.         |
+|                        | `proxy`             | Route browser traffic through a proxy.                       |
+
+
+
+
+1️⃣ acceptDownloads
+
+📌 Purpose:
+Enables or disables file downloads in browser context.
+
+🧠 Use Case:
+Suppose your app exports a PDF invoice, CSV report, or image file — this setting lets you allow 
+downloads and capture those files during tests.
+
+✅ Helps When:
+    - You want to validate downloaded file content.
+    - You need to test file-saving behavior in the app.
+    - You want to avoid download-related errors in tests.
+
+🧾 Syntax:
+
+use: {
+  acceptDownloads: true
+}
+
+This we don't use very often bcoz we this property becomes global for all tests and we don't
+want to download attachements of files for all tests.
+
+But if in scenario if u have multiple tests to validate file downloading then this could be used.
+
+✅ What acceptDownloads: true does:
+    It allows downloads triggered by your automation script 
+    (e.g., clicking a download link or submitting a form that returns a file).
+
+    When a download is triggered, Playwright intercepts it and lets you handle the download 
+    via code (e.g., save it to a path, track progress, etc.).
+
+ NOTE: Enabling acceptDownloads (in tools like Playwright) does not automatically 
+ download all attachments from all web pages
+
+ ✅ Goal of the Example:
+To show how acceptDownloads: true allows you to download a file using Playwright — but only when your script triggers a download, like clicking a download link.
+
+const { chromium } = require('playwright');
+
+(async () => {
+  // Launch a browser
+  const browser = await chromium.launch();
+
+  // Create a new browser context with downloads enabled
+  const context = await browser.newContext({ acceptDownloads: true });
+
+  // Open a new tab/page
+  const page = await context.newPage();
+
+  // Wait for a download to start and click the download link at the same time
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),         // 1️⃣ Waits for a download event
+    page.click('a#downloadLink')           // 2️⃣ Clicks a link with ID 'downloadLink'
+  ]);
+
+  // Once the file starts downloading, get its path
+  const path = await download.path();      // 3️⃣ Retrieves the path to the downloaded file
+
+  console.log(`Downloaded file path: ${path}`);
+})();
+
+
+
+
+
+2️⃣ extraHTTPHeaders
+
+📌 Purpose:
+Injects additional HTTP headers into every network request.
+
+🧠 Use Case:
+Let’s say your API needs:
+
+    - An auth token in a custom header (x-auth-token)
+    - A language or tenant ID in headers
+    - You can attach them automatically via extraHTTPHeaders.
+
+✅ Helps When:
+    - Testing multi-tenant apps (headers decide environment)
+    - Simulating authenticated or localized environments
+    - Avoiding manual header setting in every request
+
+🧾 Syntax:
+
+use: {
+  extraHTTPHeaders: {
+    'x-auth-token': 'abc123token',
+    'accept-language': 'en-US'
+  }
+}
+
+
+
+
+3️⃣ httpCredentials
+
+📌 Purpose:
+Provides basic HTTP authentication (username/password) for sites protected at the HTTP layer (not form-based login).
+
+🧠 Use Case:
+    Some dev/test/staging environments are behind HTTP Basic Auth — before hitting the app, 
+    a browser popup asks for username/password.
+
+    This setting automatically bypasses that prompt.
+
+✅ Helps When:
+    Your app is protected by server-level basic auth
+    You want seamless login during CI or automation
+
+🧾 Syntax:
+
+use: {
+  httpCredentials: {
+    username: 'admin',
+    password: 'secret'
+  }
+}
+
+🧪 Example:
+
+test('access protected site', async ({ page }) => {
+  await page.goto('https://protected.example.com');
+  await expect(page).toHaveTitle(/Dashboard/);
+});
+
+
+
+
+4️⃣ ignoreHTTPSErrors
+
+📌 Purpose:
+Skips SSL/TLS certificate errors — for example, self-signed certificates.
+
+🧠 Use Case:
+    In dev or staging, your server might have an invalid or self-signed certificate. Without this, 
+    Playwright throws a net::ERR_CERT_AUTHORITY_INVALID error.
+
+    This flag tells the browser to ignore that and continue.
+
+    Or u mocked prod env and but some http are giving errors in your mock and u want to ignore them.
+
+✅ Helps When:
+    - Testing internal apps with self-signed certs
+    - Running tests in air-gapped dev/test environments
+
+🧾 Syntax:
+
+use: {
+  ignoreHTTPSErrors: true
+}
+
+
+
+
+
+5️⃣ proxy
+
+📌 Purpose:
+Playwright mein proxy option ka use hum tab karte hain jab hume browser ke saare network requests ek specific proxy 
+server ke through route karne hote hain.
+    Sets a proxy server for the browser context — useful for geo-testing, security, or network simulation.
+
+🧠 Use Case:
+
+🧠 Real-World Corporate Use Cases 
+
+1️⃣ Geo-location testing
+    "Maan lijiye ki humari application kuch specific countries ke users ke liye different content dikhati 
+    hai — jaise India users ko INR prices, US users ko USD.
+    Toh Playwright ke proxy option se hum browser ka location simulate kar sakte hain, bina VPN ke, 
+    just by routing traffic through US proxy server."
+
+    📌 Why? Geo-specific features test karne ke liye
+    🧪 Kaise? US proxy lagao → app US content dikhayegi
+
+
+2️⃣ Corporate firewall / internal apps
+    "Kahi baar corporates ke andar internal apps sirf internal proxy ke through hi accessible hote hain, 
+    jaise dev environment ya intranet tools.
+    Toh Playwright se jab test run karte hain, toh proxy config dekar test us environment mein access le sakta hai."
+
+    📌 Why? Internal restricted environment access karne ke liye
+    🧪 Kaise? Internal proxy set karo in use.proxy
+
+3️⃣ Security Testing / Traffic Monitoring
+    "Agar mujhe traffic sniff karna hai, ya check karna hai ki kya sahi headers ja rahe hain ya nahi, 
+    toh main proxy ke through browser traffic ko Charles, Fiddler jaise tools se route kar leta hoon."
+
+📌 Why? Debugging headers, cookies, API payloads
+🧪 Kaise? Proxy lagao → monitor karo network tools mein
+
+
+
+✅ Helps When:
+    - Testing geo-restricted content
+    - Monitoring or debugging traffic in tools
+    - Automating apps behind secure proxies
+
+🧾 Syntax:
+use: {
+  proxy: {
+    server: 'http://my.proxy.server:3128',
+    username: 'proxyuser',     // optional
+    password: 'proxypass'      // optional
+  }
+}
+
+Toh Playwright ka proxy option hume real user conditions simulate karne mein madad karta 
+hai — especially jab hum geo-location test karte hain, corporate internal networks use karte hain, 
+ya secure debugging karte hain

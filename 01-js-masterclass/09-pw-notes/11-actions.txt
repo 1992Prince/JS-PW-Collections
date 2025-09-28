@@ -1,0 +1,196 @@
+⏭️ Actions
+
+Playwright can interact with HTML Input elements such as text inputs, checkboxes, radio buttons, select options, 
+mouse clicks, type characters, keys and shortcuts as well as upload files and focus elements.
+
+📌 Text input
+
+Using locator.fill() is the easiest way to fill out the form fields. 
+It focuses the element and triggers an input event with the entered text. 
+It works for <input>, <textarea> and [contenteditable] elements.
+
+// Text input
+await page.getByRole('textbox').fill('Peter');
+
+// Date input
+await page.getByLabel('Birth date').fill('2020-02-02');
+
+// Time input
+await page.getByLabel('Appointment time').fill('13:15');
+
+// Local datetime input
+await page.getByLabel('Local time').fill('2020-03-02T05:15');
+
+
+------------------------------------------------------------------------
+
+
+
+
+📌  Checkboxes and radio buttons
+
+Using locator.setChecked() is the easiest way to check and uncheck a checkbox or a radio button
+
+🔹 1. Check a Checkbox
+
+Checkbox ko check() ya setChecked(true) se select kar sakte ho.
+
+    // Simple way
+    await page.getByLabel('I agree to the terms above').check();
+
+    // Alternative way
+    await page.locator('#terms').setChecked(true);
+
+✅ Agar already checked hai toh dobara kuch nahi karega (safe hai).
+
+
+🔹 2. Uncheck a Checkbox
+
+    Checkbox ko uncheck() ya setChecked(false) se unselect karte hain.
+
+    await page.getByLabel('Subscribe to newsletter').uncheck();
+
+    // Alternative
+    await page.locator('#newsletter').setChecked(false);
+
+
+🔹 3. Assert Checkbox State
+
+    Use expect().toBeChecked() ya expect().not.toBeChecked().
+
+    // Assert checkbox is checked
+    await expect(page.getByLabel('Subscribe to newsletter')).toBeChecked();
+
+    // Assert checkbox is not checked
+    await expect(page.locator('#newsletter')).not.toBeChecked();
+
+
+🔹 4. Click Instead of Check/Uncheck
+
+.click() bhi use kar sakte ho, lekin yeh toggle karega:
+
+await page.getByLabel('I agree to the terms above').click();
+
+👉 Issue: Agar tumhe forcefully ensure karna hai ki checked ho ya unchecked ho, toh .check() / .uncheck() better hai.
+
+
+🔹 5. Radio Buttons
+
+    Radio button groups mein ek hi option select hota hai.
+    Use .check():
+
+
+    await page.getByLabel('XL').check();
+    await expect(page.getByLabel('XL')).toBeChecked();
+
+    ⚡ Note: Radio buttons ko .uncheck() nahi kar sakte (kyunki HTML spec ke hisaab se hamesha ek selected 
+    hota hai jab group hai).
+
+
+🔹 6. Check All Checkboxes at Once
+
+    Agar page pe multiple checkboxes hain, toh .all() karke loop laga sakte ho:
+
+    const checkboxes = page.locator('input[type="checkbox"]');
+    const count = await checkboxes.count();
+
+    for (let i = 0; i < count; i++) {
+    await checkboxes.nth(i).check();
+    }
+
+
+🔥 Quick Summary:
+
+    ✅ check() / setChecked(true) → checkbox or radio ko select karega (safe).
+
+    ❌ uncheck() / setChecked(false) → sirf checkbox ke liye.
+
+    🎯 click() → toggle karega (state-dependent).
+
+    🧪 toBeChecked() → assertion ke liye.
+
+    🗂️ Multiple elements ke liye loop use karo (locator.count() + .nth(i)).
+
+
+------------------------------------------------------------------------
+
+📌 Select options
+
+    Selects one or multiple options in the <select> element with locator.selectOption().
+    You can specify option value, or label to select. 
+    Multiple options can be selected.
+
+    // Single selection matching the value or label
+    await page.getByLabel('Choose a color').selectOption('blue');
+
+    // Single selection matching the label
+    await page.getByLabel('Choose a color').selectOption({ label: 'Blue' });
+
+    // Multiple selected items
+    await page.getByLabel('Choose multiple colors').selectOption(['red', 'green', 'blue']);
+
+
+🔹 1. Single Select Dropdown
+
+Agar <select> single option allow karta hai (<select> without multiple attribute):
+
+By value : 
+
+    await page.getByLabel('Choose a color').selectOption('blue');
+        👉 Yeh option ko uske value="blue" attribute ke basis pe select karega.
+        <select id="color">
+        <option value="red">Red</option>
+        <option value="blue">Blue</option> <!-- selected -->
+        <option value="green">Green</option>
+        </select>
+
+
+By label (visible text):
+
+    await page.getByLabel('Choose a color').selectOption({ label: 'Blue' });
+
+    👉 Yeh option ko uske visible text ("Blue") ke basis pe select karega
+
+
+By index
+
+    await page.getByLabel('Choose a color').selectOption({ index: 1 });
+    👉 Yeh second option select karega (0-based index).
+
+
+🔹 2. Multiple Select Dropdown
+
+    Agar <select multiple> hai, toh ek se zyada option select kar sakte ho:
+
+    await page.getByLabel('Choose multiple colors').selectOption(['red', 'green', 'blue']);
+
+
+    <select id="multi-colors" multiple>
+    <option value="red">Red</option>   <!-- selected -->
+    <option value="blue">Blue</option> <!-- selected -->
+    <option value="green">Green</option> <!-- selected -->
+    </select>
+
+
+🔹 3. Assertions
+
+    Check karne ke liye ki correct option selected hai:
+
+    await expect(page.locator('#color')).toHaveValue('blue');
+
+    Multiple ke case mein:
+
+    await expect(page.locator('#multi-colors')).toHaveValues(['red', 'green', 'blue']);
+
+
+🔥 Summary
+
+    selectOption('value') → value attribute se select.
+
+    selectOption({ label: '...' }) → visible text se select.
+
+    selectOption({ index: n }) → nth option select.
+
+    Multiple select ke liye array pass kar do.
+
+    Assertion: toHaveValue() ya toHaveValues().

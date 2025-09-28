@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright Keyboard Practice</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { padding: 10px; font-size: 16px; margin: 10px 0; }
+    #log { border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto; }
+    .shortcut { color: blue; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Keyboard Input & Shortcuts Practice</h1>
+
+  <!-- Input Box -->
+  <label for="name">Type here:</label><br>
+  <input id="name" type="text" placeholder="Enter text..." /><br>
+
+  <!-- Submit Button -->
+  <button id="submitBtn">Submit</button>
+
+  <!-- Logs -->
+  <h2>Logs:</h2>
+  <div id="log"></div>
+
+  <script>
+    const input = document.getElementById("name");
+    const logBox = document.getElementById("log");
+    const submitBtn = document.getElementById("submitBtn");
+
+    // Utility log function
+    function log(msg, isShortcut=false) {
+      const p = document.createElement("p");
+      p.textContent = msg;
+      if (isShortcut) p.classList.add("shortcut");
+      logBox.appendChild(p);
+      logBox.scrollTop = logBox.scrollHeight;
+      console.log(msg);
+    }
+
+    // Log each keydown
+    input.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.key === "ArrowRight") {
+        log("✅ Shortcut pressed: Control+ArrowRight", true);
+      } else if (e.shiftKey && e.key === "A") {
+        log("✅ Shortcut pressed: Shift+A (Capital A)", true);
+      } else if (e.shiftKey && e.key === "ArrowLeft") {
+        log("✅ Shortcut pressed: Shift+ArrowLeft (Select left)", true);
+      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "t") {
+        log("✅ Shortcut pressed: Control+Shift+T", true);
+      } else {
+        log(`Key pressed: ${e.key}`);
+      }
+    });
+
+    // Submit button with Enter key
+    submitBtn.addEventListener("click", () => {
+      log("✅ Submit button clicked");
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        submitBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>

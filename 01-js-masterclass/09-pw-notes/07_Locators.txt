@@ -1,0 +1,169 @@
+🔁 1. Do something with each element in the list
+
+Kabhi kabhi list ke saare elements ke saath kaam karna hota hai (jaise text print karna, click karna, screenshot lena etc).
+
+📝 Example HTML
+
+<!DOCTYPE html>
+<html>
+  <body>
+    <ul>
+      <li>apple</li>
+      <li>banana</li>
+      <li>orange</li>
+    </ul>
+    <button>Click me</button>
+    <button>Submit</button>
+  </body>
+</html>
+
+
+
+(a) for...of loop
+
+for (const row of await page.getByRole('listitem').all())
+  console.log(await row.textContent());
+
+👉 Yahan all() saare <li> elements return karega, phir har ek ka textContent print karega.
+
+e.g.
+
+const items = await page.getByRole('listitem').all();
+
+for (const item of items) {
+  console.log(await item.textContent());
+}
+
+Explanation:
+
+1) .all() saare matching locators ka ek array of Locator objects return karta hai.
+   👉 items ek array hoga: [Locator(li: apple), Locator(li: banana), Locator(li: orange)]
+
+2) Fir tu us array pe for...of loop laga ke har ek element pe action kar sakta hai.
+
+3) Lekin yaad rakh: Locator objects Playwright ke taraf se abstraction hai, ye DOM elements 
+   directly nahi dete, tu hamesha await item.textContent() ya await item.click() use karega.
+
+Return Type: Promise<Locator[]> (locator objects ka array).
+
+
+(b) Regular for loop [.count() + .nth(i)]
+
+const rows = page.getByRole('listitem');
+const count = await rows.count(); // total items
+
+for (let i = 0; i < count; ++i)
+  console.log(await rows.nth(i).textContent());
+
+👉 Isme tu .count() se total items nikalta hai aur .nth(i) se ek ek karke access karta hai.
+
+Explanation:
+
+        .count() total matching elements ki count deta hai (yahaan 3).
+
+        .nth(i) ek specific element ko index ke base pe access karta hai (0-based).
+        👉 .nth(0) → <li>apple</li>
+        👉 .nth(1) → <li>banana</li>
+        👉 .nth(2) → <li>orange</li>
+
+        Ye loop tab useful hai jab tu index ke base pe iterate karna chahta hai.
+
+Return Type:
+
+        count() → Promise<number>
+
+        nth(i) → ek single Locator
+
+
+
+(c) Evaluate in the page [evaluateAll]
+
+const rows = page.getByRole('listitem');
+const texts = await rows.evaluateAll(
+  list => list.map(element => element.textContent)
+);
+console.log(texts); // ['apple', 'banana', 'orange']
+
+
+👉 Isme jo function tu pass karta hai (list => ...), wo browser ke andar page ke DOM pe run hota hai. 
+Matlab tu direct DOM API use kar sakta hai.
+Ye fastest hai jab sirf values uthani ho.
+
+
+Explanation:
+
+    - .evaluateAll(callback) sab matching elements ko ek array ke form me browser ke andar 
+    (page context me) pass karta hai.
+
+    - Yahaan list ek array of real DOM elements hoga (not locators).
+
+    - Tu us function me koi bhi JavaScript DOM API use kar sakta hai 
+      (textContent, innerHTML, getAttribute, etc.).
+
+    - Return value Playwright ko wapas bheja jaata hai.
+
+Return Type: callback jo return karega uska JS value (yahaan Promise<string[]>).
+
+
+🔑 Differences in ek line:
+
+.all() → saare matching elements as Locator objects deta hai (har ek pe individually action kar sakta 
+hai).
+
+.count() + nth(i) → count nikalke specific index se ek ek element access karta hai.
+
+.evaluateAll() → sab elements ko ek saath browser ke andar evaluate karke ek plain JS array 
+return karta hai (fastest jab sirf values chahiye).
+
+
+⚡ Interview Tips
+
+Agar interviewer puche ki fastest kaunsa hai? → evaluateAll() 
+(kyunki ek hi roundtrip me saare values nikal leta hai).
+
+Agar puche kyun all() use karte ho? → Kyunki har ek element pe individually action karna hai 
+(click, hover, screenshot).
+
+Agar puche nth() kyu avoid karna chahiye? → Kyunki order badal jaaye toh galat 
+element pick ho sakta hai, best hai unique locator use karna.
+
+
+The code inside locator.evaluateAll() runs in the page, you can call any DOM apis there.
+
+
+⚖️ 2. Strictness
+
+Playwright ke locators strict hote hain.
+
+(a) ❌ Multiple match hone pe error
+
+await page.getByRole('button').click();
+
+👉 Agar page me 3 buttons hain, to Playwright 
+bolega “Arre bhai, kaunsa click karna hai?” aur error throw karega.
+
+(b) ✅ Multiple element operations me allowed
+
+await page.getByRole('button').count();
+
+👉 Agar page pe 5 buttons hain, ye count de dega: 5.
+
+(c) Strictness ko bypass karna
+
+Agar tu fir bhi click karna chahta hai bina unique locator banaye, toh tu use kar sakta hai:
+
+await page.getByRole('button').first().click();  // pehla button
+await page.getByRole('button').last().click();   // aakhri button
+await page.getByRole('button').nth(2).click();   // 3rd button (0-based)
+
+⚠️ Lekin yeh risky hai! Kyunki agar page ka order badal gaya toh galat button click ho jayega.
+Best practice: hamesha aisa locator banao jo ek hi element ko uniquely identify kare.
+
+✅ Summary
+
+    - all() → saare elements ek array me le aa.
+    - count() + nth(i) → index ke basis pe iterate kar.
+    - evaluateAll() → DOM ke andar run karke saare values le aa (fastest).
+    - Locators strict hote hain → ek se zyada mile toh .click() fail karega.
+    - Agar multiple ho toh .count(), .all(), .nth() use kar sakta hai.
+    - Best practice: hamesha unique locator banao, nth/first/last avoid karo.

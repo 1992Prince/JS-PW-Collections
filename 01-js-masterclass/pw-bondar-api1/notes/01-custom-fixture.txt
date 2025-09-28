@@ -1,0 +1,109 @@
+1. Type kya hota hai?
+TypeScript mein type ek keyword hai jo tumhe ek custom data structure define karne deta hai.
+
+Example:
+
+type Person = {
+  name: string;
+  age: number;
+};
+
+Ab jab bhi tum Person type ka object banao, usme ek name (string) aur ek age (number) hona chahiye.
+
+
+🔹 2. MyFixtures kya hai?
+
+MyFixtures ek custom type hai jo batata hai tumhare fixtures mein kya-kya cheezein available hongi aur 
+unka type kya hoga.
+
+type MyFixtures = {
+  myData: string;
+};
+
+Iska matlab:
+
+    Tum ek fixture banaoge jiska naam myData hoga.
+
+    Aur us myData fixture ka value string type ka hoga (jaise "hello", "abc", "123").
+
+Agar tumne bola myData: string, iska matlab hai fixture ek string hi return karega:
+
+
+
+🔑 Simple Explanation
+
+    - type = ek custom structure define karne ka tarika (jaise contract).
+    - MyFixtures = tumhare fixtures ka contract/blueprint.
+    - myData: string = iska matlab hai ek fixture banega jiska naam myData hoga aur uska 
+      value hamesha ek string hoga.
+
+
+👉 Matlab agar tum type MyFixtures = { myData: string } likhte ho, to tum keh rahe ho:
+"Mere paas ek fixture hoga jiska naam myData hai, aur uska value ek string hi hona chahiye."
+
+
+----------------------------------------------------
+
+How to use custom fixture in test?
+
+
+🔹 Step 1: Custom fixture banana
+
+import { test as base } from '@playwright/test';
+
+type MyFixtures = {
+  myData: string;  // fixture ka type
+};
+
+const test = base.extend<MyFixtures>({
+  myData: async ({}, use) => {
+    // 👉 Setup
+    console.log('Setting up myData...');
+    await use('Hello from custom fixture');  // fixture ka actual value
+
+    // 👉 Teardown (auto chalega after test)
+    console.log('Cleaning up myData...');
+  }
+});
+
+
+Yahaan tumne ek fixture banaya myData jo ek string return karta hai: "Hello from custom fixture".
+
+
+🔹 Step 2: Test mein use karna
+
+Jab tum test function likhte ho, uske async callback ke arguments mein fixtures destructure hote hain.
+Matlab jo naam tumne fixture ko diya (myData), wahi naam test mein as a variable aa jaata hai.
+
+test('example test using myData', async ({ myData, page }) => {
+  console.log(myData);   // 👉 "Hello from custom fixture"
+  await page.goto('https://playwright.dev/');
+});
+
+
+- { myData, page } → matlab test mein dono fixtures available hain: ek tumhara custom (myData), ek built-in (page).
+
+- Ab tum myData ko string ki tarah use kar sakte ho (kyunki tumne uska type string define kiya tha).
+
+
+🔹 Step 3: Output samajhna
+
+Jab tum test run karoge, output kuch aisa hoga:
+
+Setting up myData...
+Hello from custom fixture
+Cleaning up myData...
+
+
+Yeh confirm karta hai ki:
+
+    - Test shuru hone se pehle fixture setup hua.
+    - Test ke andar tumne uska value use kiya.
+    - Test khatam hote hi fixture cleanup (teardown) chal gaya.
+
+
+✅ Short mein:
+
+    - Fixture define karo with base.extend.
+    - Fixture ka naam test ke arguments mein destructure karo.
+    - Fir test ke andar usko normal variable ki tarah use karo.

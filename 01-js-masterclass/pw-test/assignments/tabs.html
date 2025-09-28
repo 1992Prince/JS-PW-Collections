@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Tabs Challenge</title>
+  <style>
+    .tab { display: inline-block; padding: 10px; margin: 5px; background: #ddd; cursor: pointer; }
+    .tab.active { background: #aaa; }
+    .tabContent { display: none; margin-top: 20px; padding: 10px; border: 1px solid #333; }
+    .tabContent.active { display: block; }
+  </style>
+</head>
+<body>
+  <h2>Tabs + Tasks Challenge</h2>
+  <p>
+    Tasks:<br>
+    1. Click on <b>Completed</b> tab and verify only completed tasks are shown.<br>
+    2. Add a new task "Write Playwright script" and mark it complete.<br>
+    3. Switch tabs and ensure persistence of task state.<br>
+    4. Delete a task and verify it disappears from all tabs.<br>
+    5. Count total pending tasks across tabs.<br>
+  </p>
+
+  <div id="tabs">
+    <div class="tab active" data-tab="all">All</div>
+    <div class="tab" data-tab="pending">Pending</div>
+    <div class="tab" data-tab="completed">Completed</div>
+  </div>
+
+  <div id="tabContents">
+    <div class="tabContent active" id="all"></div>
+    <div class="tabContent" id="pending"></div>
+    <div class="tabContent" id="completed"></div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <input type="text" id="newTask" placeholder="Enter task...">
+    <button id="addTask">Add Task</button>
+  </div>
+
+  <script>
+    let tasks = [
+      { text: "Buy groceries", done: false },
+      { text: "Pay bills", done: true },
+      { text: "Book tickets", done: false }
+    ];
+
+    function render() {
+      ["all","pending","completed"].forEach(tab => {
+        const container = document.getElementById(tab);
+        container.innerHTML = "";
+        tasks.forEach((t, i) => {
+          if (tab === "all" || (tab === "pending" && !t.done) || (tab === "completed" && t.done)) {
+            const div = document.createElement("div");
+            div.innerHTML = `
+              <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleTask(${i})">
+              ${t.text}
+              <button onclick="deleteTask(${i})">Delete</button>
+            `;
+            container.appendChild(div);
+          }
+        });
+      });
+    }
+
+    function toggleTask(i) {
+      tasks[i].done = !tasks[i].done;
+      render();
+    }
+
+    function deleteTask(i) {
+      tasks.splice(i, 1);
+      render();
+    }
+
+    document.getElementById("addTask").addEventListener("click", () => {
+      const val = document.getElementById("newTask").value.trim();
+      if (val) {
+        tasks.push({ text: val, done: false });
+        document.getElementById("newTask").value = "";
+        render();
+      }
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tabContent").forEach(c => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

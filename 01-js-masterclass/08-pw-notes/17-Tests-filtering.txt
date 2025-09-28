@@ -1,0 +1,214 @@
+🔹 1) Teen jagah filter ho sakta hai
+
+
+(A) Config level filtering
+
+    Ye tum playwright.config.ts me karte ho.
+
+    export default defineConfig({
+        // Sirf isi folder ke tests run honge
+        testMatch: '*todo-tests/*.spec.ts',
+
+        // In files/folders ko ignore karo
+        testIgnore: '*test-assets',
+    });
+
+
+➡️ Matlab by default jab bhi npx playwright test chalaye → sirf todo-tests folder ke tests chalenge aur test-assets 
+ignore honge.
+
+
+🔎 Playwright me File Filtering ke Levels
+1. Global (root config) level
+
+export default defineConfig({
+  testMatch: '**/*.spec.ts',
+  testIgnore: '**/helpers/**',
+});
+
+
+👉 Ye default rule hai saare projects ke liye.
+    Playwright jab start hota hai, pehle ye dekhta hai:
+
+    Kaunse files testMatch me fit baithe
+
+    Kaunse files testIgnore me aa gaye (toh skip kar dega)
+
+
+ Project level
+
+    projects: [
+    {
+        name: 'setup db',
+        testMatch: /global\.setup\.ts/,
+    },
+    {
+        name: 'chromium',
+        testMatch: /.*\.chromium\.spec\.ts/,   // sirf chromium specs
+        testIgnore: '**/slow/**',              // is project ke liye ignore
+    }
+    ]
+
+
+👉 Agar project me testMatch/testIgnore diye gaye hain,
+    toh project ke liye wahi rules apply honge (root ke rules override ho jaate hain).
+
+    For example:
+
+    Root kehta hai: run **/*.spec.ts
+
+    Project kehta hai: run only *.chromium.spec.ts
+    ➡️ Toh chromium project sirf *.chromium.spec.ts files hi run karega.
+
+
+
+
+
+(B) Command line filtering
+
+Ye tum run karte waqt decide karte ho:
+
+
+    # Sirf ek file run karna
+    npx playwright test tests/auth.spec.ts
+
+    # Sirf test jiska title "login" hai
+    npx playwright test --grep "login"
+
+    # Sare tests, except jinke naam me "slow" hai
+    npx playwright test --grep-invert "slow"
+
+    # Suite ka ek hissa chalana (parallel splitting)
+    npx playwright test --shard=1/3
+
+
+1) --grep "login"
+
+    Ye test title par filter karta hai.
+
+    Saare projects + saari spec files me dekhega.
+
+    Sirf wahi tests run honge jinke naam me "login" string hai.
+
+    Example:
+
+    test('user login successful', async () => {});  ✅ chalega
+    test('user logout', async () => {});            ❌ skip ho jayega
+
+
+    👉 Ye global hai → saari spec files me apply hota hai.
+
+2) --grep-invert "slow"
+
+    Ye ulta filter hai → jis test ke naam me "slow" aaya usko ignore karo.
+
+    Again, ye bhi global hai, matlab saari files + saare projects par apply hoga.
+
+    Example:
+
+    test('fast login', async () => {});   ✅ chalega
+    test('slow test case', async () => {}); ❌ skip ho jayega
+
+
+
+3) --shard=1/3
+
+        Ye test suite ko todta hai (parallel splitting ke liye).
+
+        Playwright pehle saare selected tests collect karta hai (jitni spec files filtering ke baad bachi).
+
+        Fir unko teen parts me divide karega → aur tumhe 1st part milega.
+
+        👉 Important:
+
+        Ye sirf ek file ke liye nahi hai.
+
+        Ye poore test run ke liye lagu hota hai → jitni files + tests collect huye, unko equally shards me tod dega.
+
+        Example:
+
+        Total 90 tests hain (sabhi specs me mila kar).
+
+        --shard=1/3 chalaya → tumhare run me sirf 30 tests chalenge (jo pehle 1/3rd part me aaye).
+
+        Agar --shard=2/3 chalate toh agle 30 tests.
+
+        Agar --shard=3/3 chalate toh last 30 tests.
+
+        🧠 Summary
+
+        --grep / --grep-invert → test titles par filtering, global across all specs.
+
+        --shard → collected test suite ko todta hai (sabhi specs + projects), sirf ek file tak limited nahi hota.
+
+
+
+(C) Test level filtering
+
+Direct test ke andar likh sakte ho:
+
+test.only('yehi test chalega', async ({ page }) => {
+  // only this test runs
+});
+
+test.skip('isko skip kar do', async ({ page }) => {
+  // skipped
+});
+
+
+
+
+🔹 2) Dependencies ke saath filtering
+
+Maan lo tumhare paas ek setup project hai jo DB banata hai, aur ek normal test project hai jo is DB ko use karta hai.
+
+npx playwright test tests/menu.spec.ts
+
+
+➡️ Pehle setup db chalega (dependency), uske baad menu.spec.ts.
+
+Agar tum chahte ho ki dependency na chale:
+
+npx playwright test tests/menu.spec.ts --no-deps
+
+
+
+
+🔹 3) Extra Config Options
+export default defineConfig({
+  outputDir: 'test-results',          // test artifacts store karne ka folder
+  globalSetup: './global-setup.ts',   // saare tests ke pehle chalega
+  globalTeardown: './global-teardown.ts', // saare tests ke baad chalega
+  timeout: 30000,                     // har test ka max time (30s)
+});
+
+
+
+
+🔹 4) Expect Options (assertion ka timeout & tolerance)
+export default defineConfig({
+  expect: {
+    timeout: 5000,  // expect(locator).toHaveText() ke liye wait karega max 5s
+
+    toHaveScreenshot: {
+      maxDiffPixels: 10,  // screenshot compare me 10 pixels difference allowed
+    },
+
+    toMatchSnapshot: {
+      maxDiffPixelRatio: 0.1, // snapshot compare me 10% difference allowed
+    },
+  },
+});
+
+
+
+
+🧠 Simple Yaad Rakhne ka Formula
+
+Config level → testMatch/testIgnore (file filtering)
+
+CLI level → --grep, --shard, file path (runtime filtering)
+
+Test level → test.only() / test.skip() (single test filtering)
+
+Dependencies → Hamesha saath chalenge unless --no-deps use kare

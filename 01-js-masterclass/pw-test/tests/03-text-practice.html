@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright getByText Practice</title>
+  <style>
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Playwright getByText Demo</h2>
+
+  <!-- 1. Strict text match -->
+  <button id="btn1">Login</button>
+
+  <!-- 2. Substring differences -->
+  <button id="btn2">Submit</button>
+  <button id="btn3">Submit Order</button>
+
+  <!-- 3. Regex test cases -->
+  <p id="txt1">Loading...</p>
+  <p id="txt2">loaded successfully</p>
+
+  <!-- 4. Nested text -->
+  <div id="nested">
+    Welcome, <span>User</span>!
+  </div>
+
+  <!-- 5. Hidden text (should not be found) -->
+  <p class="hidden" id="hiddenText">You cannot see me!</p>
+
+  <script>
+    document.getElementById('btn1').addEventListener('click', () => {
+      console.log("Login clicked!");
+      alert("Login clicked!");
+    });
+
+    document.getElementById('btn2').addEventListener('click', () => {
+      console.log("Submit clicked!");
+      alert("Submit clicked!");
+    });
+
+    document.getElementById('btn3').addEventListener('click', () => {
+      console.log("Submit Order clicked!");
+      alert("Submit Order clicked!");
+    });
+  </script>
+</body>
+</html>

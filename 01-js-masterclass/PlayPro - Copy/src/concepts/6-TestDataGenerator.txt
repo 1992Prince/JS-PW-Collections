@@ -1,0 +1,141 @@
+🔹 File Overview
+
+Ye ek utility/helper class hai jiska naam TestDataGenerator hai.
+
+Purpose = Test automation me tumhe jab random test data banana ho (string, email, number, date), 
+toh bar-bar code likhne ki zarurat na pade.
+
+Sab methods static hain → iska matlab tumhe class ka object banane ki zarurat nahi, 
+direct TestDataGenerator.methodName() call kar sakte ho.
+
+
+🔹 Concepts Used
+
+    Class → Blueprint for grouping related functions.
+
+    Static methods → Methods jo class ke sath directly use hote hain (object banane ki zarurat nahi).
+
+    Example: Math.random() → Math ek class hai, random ek static method.
+
+    Math.random() → 0 aur 1 ke beech ek random decimal deta hai.
+
+    Math.floor() → Decimal ko neeche round karta hai (integer banata hai).
+
+    Array.from() → Quickly ek array banata hai aur usme values fill karta hai.
+
+    Template literals (${}) → String ke andar variables insert karne ka tarika.
+
+
+    🔹 Code Breakdown
+    
+1. Random String Generator
+
+    static generateRandomString(length: number): string {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+    }
+    
+    
+    👉 Ye method ek random string banata hai sirf letters se (A–Z, a–z).
+    
+    Math.random() * characters.length → random index generate karega.
+    
+    charAt(index) → us index ka character pick karega.
+    
+    for loop jitni length pass karoge utni baar chalega.
+    
+    Example: TestDataGenerator.generateRandomString(5) → "AbxYz"
+
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+
+    🔹 Step 1: Math.random()
+
+        Ye hamesha ek random decimal number between 0 and 1 deta hai.
+
+        Example outputs: 0.1234, 0.9876, 0.4567
+
+🔹 Step 2: Math.random() * characters.length
+
+        characters.length = kitne characters available hain (e.g. "ABC..." ka length 52 hai).
+
+        Multiply karne se tumhe 0 se 52 ke beech ek random decimal milega.
+
+        Example: 0.4567 * 52 ≈ 23.73
+
+🔹 Step 3: Math.floor(...)
+
+        Math.floor() decimal ko neeche round karta hai.
+
+        23.73 → 23
+
+        Ab tumhare paas ek random integer index hai jo characters string ke kisi position pe point karta hai.
+
+🔹 Step 4: characters.charAt(index)
+
+        charAt(23) → characters string me 23rd position ka character nikalta hai.
+
+        Example: agar characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ..." hai, toh index 23 = "X".
+
+🔹 Step 5: result += ...
+
+        Ye us character ko result string ke aakhir me append kar deta hai.
+
+        Matlab har loop iteration me ek random character add hota jaata hai.
+
+🔹 Final Output
+
+        Agar loop 5 times chale, toh har baar ek random character add hoga:
+        
+        'A'
+        
+        'z'
+        
+        'M'
+        
+        'q'
+        
+        'B'
+        
+        Result = "AzMqB" 🎉
+
+        🔹 Multiply karne se kya hota?
+
+        Math.random() * characters.length → random number scale ho jaata hai 0 se length ke beech.
+
+2. Random Integer
+        static generateRandomInteger(min: number, max: number): number {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        
+        👉 Ye method min aur max ke beech ek random integer deta hai.
+        Example:
+        
+        generateRandomInteger(1, 10) → koi bhi number 1 se 10 ke beech.
+        
+        Formula explanation:
+        
+            (max - min + 1) → range calculate hoti hai.
+            Math.random() se 0–1 ka number milta hai.
+            Multiply + add karne se range shift ho jaati hai.
+
+3. Random Email
+            static generateRandomEmail(): string {
+              const username = this.generateRandomAlphanumeric(8);
+              const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'example.com'];
+              const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+              return `${username}@${randomDomain}`;
+            }
+            
+            
+            👉 Ye random email banata hai.
+            
+            username = ek random 8 character alphanumeric string.
+            domains = possible email providers ki list.
+            Randomly ek domain pick hota hai.
+            Dono ko jod ke email ban jaata hai.
+            Example: "xY7abz12@gmail.com"

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright AJAX Auto-wait Demo</title>
+  <script>
+    function fakeAjaxCall() {
+      // Simulate AJAX call with setTimeout (5s)
+      setTimeout(() => {
+        const div = document.createElement('div');
+        div.id = 'ajaxResult';
+        div.innerText = 'AJAX data loaded!';
+        document.body.appendChild(div);
+      }, 5000);
+    }
+  </script>
+</head>
+<body>
+  <h1>Playwright Auto-waiting with AJAX</h1>
+  <button onclick="fakeAjaxCall()">Load Data (AJAX)</button>
+</body>
+</html>

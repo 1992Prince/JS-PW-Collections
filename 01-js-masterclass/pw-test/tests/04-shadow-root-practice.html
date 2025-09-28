@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shadow DOM — Open vs Closed (Practice)</title>
+  <style>
+    body{font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial;line-height:1.5;padding:24px;background:#f6f8fa}
+    h1{font-size:20px}
+    .card{background:#fff;border-radius:8px;padding:16px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+    .row{display:flex;gap:12px;align-items:center}
+    .host{padding:12px;border-radius:6px;border:1px dashed #bbb}
+    pre{background:#0b1220;color:#d6f8ff;padding:12px;border-radius:6px;overflow:auto}
+    button{padding:8px 10px;border-radius:6px;border:1px solid #2b6;cursor:pointer;background:#e8f8ea}
+    code{background:#eef;padding:2px 4px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>Shadow DOM Practice — Open vs Closed</h1>
+  <p>Two custom elements below: one uses an <strong>open</strong> shadow root, the other a <strong>closed</strong> shadow root. Use DevTools or the buttons to experiment.</p>
+
+  <div class="card">
+    <h2>1) Open Shadow Root</h2>
+    <p>Host element: <code>&lt;open-counter&gt;</code></p>
+    <div class="row">
+      <open-counter id="open1" class="host"></open-counter>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="open-inspect">Show <code>shadowRoot</code> in console</button>
+        <button id="open-click-inner">Click inner button (via host.querySelector inside shadow)</button>
+        <div id="open-console" style="font-size:13px;color:#333"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2) Closed Shadow Root</h2>
+    <p>Host element: <code>&lt;closed-counter&gt;</code></p>
+    <div class="row">
+      <closed-counter id="closed1" class="host"></closed-counter>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="closed-inspect">Attempt to read <code>shadowRoot</code></button>
+        <button id="closed-click-inner">Attempt to click inner button (will fail)</button>
+        <div id="closed-console" style="font-size:13px;color:#333"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tips / Exercises</h2>
+    <ol>
+      <li>Open DevTools &gt; Elements and inspect each host; you will see <code>#shadow-root (open)</code> for the first element but <code>#shadow-root (closed)</code> will not be accessible via JS.</li>
+      <li>In console: <code>document.querySelector('open-counter').shadowRoot</code> returns the shadow root object.</li>
+      <li>In console: <code>document.querySelector('closed-counter').shadowRoot</code> returns <code>null</code> — you cannot access internal nodes.</li>
+      <li>Use Playwright's pierce selector to target open-shadow elements: <code>page.locator('open-counter >>> button')</code></li>
+    </ol>
+  </div>
+
+  <script>
+    // --------------------
+    // open-counter (open shadow root)
+    // --------------------
+    class OpenCounter extends HTMLElement{
+      constructor(){
+        super();
+        const root = this.attachShadow({mode:'open'});
+        root.innerHTML = `
+          <style>
+            :host{display:inline-block}
+            .box{background:#fff7e6;border-radius:8px;padding:12px;border:1px solid #ffd7a8}
+            button{padding:6px 8px;border-radius:6px;border:1px solid #c87;cursor:pointer}
+          </style>
+          <div class="box">
+            <div>Open Shadow Counter (<span id="count">0</span>)</div>
+            <button id="inc">Increment</button>
+          </div>
+        `;
+        this._countEl = root.querySelector('#count');
+        const btn = root.querySelector('#inc');
+        btn.addEventListener('click', ()=>{
+          const val = Number(this._countEl.textContent || 0) + 1;
+          this._countEl.textContent = String(val);
+        });
+      }
+    }
+    customElements.define('open-counter', OpenCounter);
+
+    // --------------------
+    // closed-counter (closed shadow root)
+    // --------------------
+    class ClosedCounter extends HTMLElement{
+      constructor(){
+        super();
+        // create closed shadow root: not reachable via .shadowRoot
+        const root = this.attachShadow({mode:'closed'});
+        root.innerHTML = `
+          <style>
+            :host{display:inline-block}
+            .box{background:#eef7ff;border-radius:8px;padding:12px;border:1px solid #cde}
+            button{padding:6px 8px;border-radius:6px;border:1px solid #39f;cursor:pointer}
+          </style>
+          <div class="box">
+            <div>Closed Shadow Counter (<span id="count">0</span>)</div>
+            <button id="inc">Increment</button>
+          </div>
+        `;
+        // NOTE: because the shadow is closed we keep an internal reference only
+        this.__internal = { root, countEl: root.querySelector('#count') };
+        const btn = root.querySelector('#inc');
+        btn.addEventListener('click', ()=>{
+          const val = Number(this.__internal.countEl.textContent || 0) + 1;
+          this.__internal.countEl.textContent = String(val);
+        });
+      }
+    }
+    customElements.define('closed-counter', ClosedCounter);
+
+    // --------------------
+    // Buttons to demonstrate JS access
+    // --------------------
+    document.getElementById('open-inspect').addEventListener('click', ()=>{
+      const host = document.getElementById('open1');
+      const root = host.shadowRoot; // accessible
+      document.getElementById('open-console').textContent = 'shadowRoot.present: ' + (root ? 'YES (see console object)' : 'NO');
+      console.log('Open shadowRoot:', root);
+    });
+
+    document.getElementById('open-click-inner').addEventListener('click', ()=>{
+      const host = document.getElementById('open1');
+      // show that we can query inside open shadow root
+      const btn = host.shadowRoot.querySelector('#inc');
+      if(btn){ btn.click(); document.getElementById('open-console').textContent = 'Clicked inner button via host.shadowRoot.querySelector'; }
+      else document.getElementById('open-console').textContent = 'Inner button not found';
+    });
+
+    document.getElementById('closed-inspect').addEventListener('click', ()=>{
+      const host = document.getElementById('closed1');
+      // this will be null for closed shadow
+      const root = host.shadowRoot;
+      document.getElementById('closed-console').textContent = 'shadowRoot.present: ' + (root ? 'YES' : 'NO (closed)');
+      console.log('Closed host.shadowRoot (should be null):', root);
+    });
+
+    document.getElementById('closed-click-inner').addEventListener('click', ()=>{
+      const host = document.getElementById('closed1');
+      // trying host.shadowRoot will return null; we cannot query internals.
+      // Demonstrate that direct JS access fails. We can't click inner button via DOM.
+      try{
+        const root = host.shadowRoot;
+        if(root){
+          const btn = root.querySelector('#inc');
+          if(btn){ btn.click(); document.getElementById('closed-console').textContent = 'Clicked inner button (unexpected)'; }
+          else document.getElementById('closed-console').textContent = 'No inner button found';
+        } else {
+          document.getElementById('closed-console').textContent = 'Cannot access closed shadowRoot — direct DOM access blocked';
+        }
+      }catch(e){
+        document.getElementById('closed-console').textContent = 'Error trying to access closed shadow: ' + e.message;
+      }
+    });
+
+    // Bonus: show how to still dispatch events to host to affect internals
+    // (works because event bubbles from shadow to host when composed: true)
+    // We'll add a listener on the host that forwards a custom event into the closed shadow.
+    // (This is only to show a possible pattern — the internals must implement a handler.)
+
+    // For demo: when host receives a 'host-inc' event, increment closed counter internally
+    (function addClosedHostHandler(){
+      const closedHost = document.getElementById('closed1');
+      // internal handler already wired — but we can also emit an event that closed shadow internal code might listen to.
+      closedHost.addEventListener('host-inc', ()=>{
+        // This handler runs in the outer page; the closed shadow internal code cannot be reached from here.
+        console.log('host-inc received on closed host (outer page)');
+      });
+    })();
+
+  </script>
+</body>
+</html>

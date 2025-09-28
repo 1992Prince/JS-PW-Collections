@@ -1,0 +1,192 @@
+✅ Hooks in Playwright Test
+
+    Playwright provides test hooks that let you run setup and teardown logic at different levels:
+
+    1. beforeAll / afterAll
+
+        Runs once per file (before/after all tests in that file).
+
+        Good for expensive setup (e.g., starting a server, seeding DB).
+
+
+import { test } from '@playwright/test';
+
+test.beforeAll(async () => {
+  console.log('🚀 Run once before all tests');
+});
+
+test.afterAll(async () => {
+  console.log('🛑 Run once after all tests');
+});
+
+
+
+
+2. beforeEach / afterEach
+
+Runs before/after every test in the file.
+
+Great for resetting state, opening fresh pages, or logging.
+
+
+        test.beforeEach(async ({ page }) => {
+        await page.goto('https://example.com');
+        });
+
+        test.afterEach(async ({ page }) => {
+        await page.close();
+        });
+
+
+🔁 Execution Order
+
+Let’s see how they run with two tests:
+
+import { test } from '@playwright/test';
+
+test.beforeAll(() => console.log('➡️ beforeAll'));
+test.afterAll(() => console.log('➡️ afterAll'));
+
+test.beforeEach(() => console.log('➡️ beforeEach'));
+test.afterEach(() => console.log('➡️ afterEach'));
+
+test('Test A', () => console.log('🧪 Test A'));
+test('Test B', () => console.log('🧪 Test B'));
+
+
+The order of logs will be:
+
+➡️ beforeAll
+➡️ beforeEach
+🧪 Test A
+➡️ afterEach
+➡️ beforeEach
+🧪 Test B
+➡️ afterEach
+➡️ afterAll
+
+✅ That’s the core of Playwright hooks — they’re just lifecycle functions around your tests.
+
+
+
+1) Can we have 2 beforeAll hooks in the same spec file?
+
+    👉 Yes. You can define multiple beforeAll (and afterAll, beforeEach, afterEach) hooks in the same spec file.
+
+    They will run in the order they are declared (top to bottom).
+
+    Same rule applies for multiple afterAll — they also run in declaration order.
+
+
+import { test } from '@playwright/test';
+
+test.beforeAll(() => console.log('beforeAll #1'));
+test.beforeAll(() => console.log('beforeAll #2'));
+
+test('sample test', () => console.log('test runs'));
+
+test.afterAll(() => console.log('afterAll #1'));
+test.afterAll(() => console.log('afterAll #2'));
+
+
+Execution order:
+
+beforeAll #1
+beforeAll #2
+test runs
+afterAll #1
+afterAll #2
+
+
+
+2) If we have 2 spec files, each with beforeAll and afterAll, and we run them together — what’s the execution order?
+
+👉 Playwright runs each spec file independently.
+So:
+
+Hooks in File A won’t affect File B.
+
+Within each file, the beforeAll → tests → afterAll order applies.
+
+The order in which spec files run depends on how the test runner schedules them 
+(can be parallel by default unless you configure fullyParallel: false in playwright.config.ts).
+
+
+Example:
+
+fileA.spec.ts
+
+import { test } from '@playwright/test';
+
+test.beforeAll(() => console.log('A beforeAll'));
+test('A test', () => console.log('A test'));
+test.afterAll(() => console.log('A afterAll'));
+
+
+fileB.spec.ts
+
+import { test } from '@playwright/test';
+
+test.beforeAll(() => console.log('B beforeAll'));
+test('B test', () => console.log('B test'));
+test.afterAll(() => console.log('B afterAll'));
+
+
+Possible execution (if sequential):
+
+A beforeAll
+A test
+A afterAll
+B beforeAll
+B test
+B afterAll
+
+⚠️ If tests are parallel, A and B may interleave, but inside each file order is guaranteed
+
+
+
+3) If we have 2 spec files, and only one has beforeAll/afterAll, what happens?
+
+👉 Hooks are local to their file.
+    If File A has hooks and File B doesn’t, then:
+
+    File A will run its beforeAll → tests → afterAll.
+
+    File B will just run its tests (no extra setup/teardown).
+
+    Example:
+
+    fileA.spec.ts
+
+import { test } from '@playwright/test';
+
+test.beforeAll(() => console.log('A beforeAll'));
+test('A test', () => console.log('A test'));
+test.afterAll(() => console.log('A afterAll'));
+
+
+fileB.spec.ts
+
+
+import { test } from '@playwright/test';
+
+test('B test', () => console.log('B test'));
+
+
+Possible execution:
+
+A beforeAll
+A test
+A afterAll
+B test
+
+(or B test could run first if in parallel).
+
+
+✅ Summary:
+
+Yes, multiple beforeAll/afterAll are allowed in the same file → executed in declaration order.
+
+Each spec file has its own hook lifecycle, independent of others.
+
+If only one file has hooks, they apply only to that file — other files just run their tests normally.

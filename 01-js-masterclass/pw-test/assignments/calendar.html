@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge 3: Custom Calendar</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto; background:#0b1220; color:#e5e7eb; margin:0; }
+    header, .container { max-width:900px; margin:0 auto; padding:16px; }
+    .calendar { width: 320px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; }
+    .cal-head { display:flex; justify-content:space-between; align-items:center; }
+    .cal-head button { background:#22d3ee; border:0; color:#0b1220; padding:6px 10px; border-radius:8px; cursor:pointer; }
+    .grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-top:8px; }
+    .day, .dow { text-align:center; padding:8px 0; }
+    .dow { color:#93c5fd; font-size:12px; }
+    .day { background:rgba(255,255,255,0.03); border-radius:8px; cursor:pointer; }
+    .day.muted { opacity:.4; }
+    .day.selected { outline:2px solid #22d3ee; }
+    .tasks { margin-top:16px; }
+    .hint { color:#93c5fd; font-size:13px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Challenge 3: Custom Calendar</h1>
+  <p class="hint">No &lt;input type="date"&gt;. Use arrows to navigate months and pick dates.</p>
+</header>
+<div class="container">
+  <div class="calendar" aria-label="custom date picker">
+    <div class="cal-head">
+      <button id="prev" aria-label="Previous month">&lt;</button>
+      <div id="monthLabel" aria-live="polite"></div>
+      <button id="next" aria-label="Next month">&gt;</button>
+    </div>
+    <div class="grid" id="dow">
+      <div class="dow">Sun</div><div class="dow">Mon</div><div class="dow">Tue</div><div class="dow">Wed</div><div class="dow">Thu</div><div class="dow">Fri</div><div class="dow">Sat</div>
+    </div>
+    <div class="grid" id="days"></div>
+  </div>
+
+  <section class="tasks">
+    <h2>Automation Tasks</h2>
+    <ol>
+      <li>Select the <strong>15th day of the next month</strong> (relative to initial load).</li>
+      <li>Select <strong>February 29, 2028</strong> (leap year) using only the prev/next buttons.</li>
+      <li>Verify the selected date text updates below with the correct ISO string.</li>
+    </ol>
+    <p>Selected Date: <strong id="selectedText">None</strong></p>
+  </section>
+</div>
+
+<script>
+  const monthLabel = document.getElementById('monthLabel');
+  const daysEl = document.getElementById('days');
+  const selectedText = document.getElementById('selectedText');
+
+  let view = new Date();
+  view.setDate(1);
+  let selected = null;
+
+  function render() {
+    const year = view.getFullYear();
+    const month = view.getMonth();
+    monthLabel.textContent = view.toLocaleString('default', { month:'long', year:'numeric' });
+
+    daysEl.innerHTML = '';
+    const firstDay = new Date(year, month, 1);
+    const startDayOfWeek = firstDay.getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const prevDays = new Date(year, month, 0).getDate();
+
+    // previous month padding
+    for (let i=0; i<startDayOfWeek; i++) {
+      const d = document.createElement('div');
+      d.className = 'day muted';
+      d.textContent = prevDays - startDayOfWeek + i + 1;
+      daysEl.appendChild(d);
+    }
+    // current month days
+    for (let d=1; d<=daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'day';
+      cell.textContent = d;
+      cell.setAttribute('data-date', new Date(year, month, d).toISOString().slice(0,10));
+      if (selected && selected.getFullYear()===year && selected.getMonth()===month && selected.getDate()===d) {
+        cell.classList.add('selected');
+      }
+      cell.addEventListener('click', ()=>{
+        selected = new Date(year, month, d);
+        selectedText.textContent = selected.toISOString().slice(0,10);
+        render();
+      });
+      daysEl.appendChild(cell);
+    }
+    // trailing padding to complete grid
+    const totalCells = startDayOfWeek + daysInMonth;
+    const trailing = (7 - (totalCells % 7)) % 7;
+    for (let i=1; i<=trailing; i++) {
+      const d = document.createElement('div');
+      d.className = 'day muted';
+      d.textContent = i;
+      daysEl.appendChild(d);
+    }
+  }
+
+  document.getElementById('prev').addEventListener('click', ()=>{ view.setMonth(view.getMonth()-1); render(); });
+  document.getElementById('next').addEventListener('click', ()=>{ view.setMonth(view.getMonth()+1); render(); });
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+🎯 Fixtures in Playwright (Complete Notes)
+
+
+🔹 What Are Fixtures?
+
+    - Fixtures are test environment setups that provide everything a test needs and nothing else.
+
+    - They ensure isolation between tests — every test gets a clean environment.
+
+    - Tests request fixtures explicitly in their arguments:
+
+    - test('example', async ({ page }) => { ... });
+
+
+    - You group tests based on their meaning, not setup code.
+
+
+
+🔹 Built-in Fixtures
+
+Playwright has pre-defined fixtures ready to use:
+
+| Fixture       | Type                | Description                                               |
+| ------------- | ------------------- | --------------------------------------------------------- |
+| `page`        | `Page`              | Isolated page for this test. Belongs to `context`.        |
+| `context`     | `BrowserContext`    | Isolated browser context for the test.                    |
+| `browser`     | `Browser`           | Shared browser instance to save resources.                |
+| `browserName` | `string`            | Name of current browser: `chromium`, `firefox`, `webkit`. |
+| `request`     | `APIRequestContext` | Isolated API request context for this test run.           |
+
+
+
+1️⃣ What Are Fixtures?
+
+Think of a fixture as a test resource: something your test needs to run (like a browser page, API client, login state, database connection, or even just a string).
+
+    - A fixture is created before the test runs.
+
+    - It is disposed after the test finishes.
+
+    - It is provided automatically to your test as an argument.
+
+👉 So instead of manually writing setup/teardown logic in every test, fixtures centralize that work.
+
+
+
+2️⃣ Existing (Built-in) Fixtures
+
+Playwright ships with a lot of built-in fixtures in @playwright/test.
+
+Here are the most commonly used ones:
+
+| Fixture       | Type                | What it gives you                                                 |
+| ------------- | ------------------- | ----------------------------------------------------------------- |
+| `page`        | `Page`              | A fresh browser tab for each test.                                |
+| `context`     | `BrowserContext`    | An isolated browser context (like a new incognito profile).       |
+| `browser`     | `Browser`           | The actual browser instance (Chromium, Firefox, WebKit).          |
+| `browserName` | `string`            | Name of the browser under test (`chromium`, `firefox`, `webkit`). |
+| `request`     | `APIRequestContext` | A preconfigured API client (for REST/GraphQL testing).            |
+| `baseURL`     | `string`            | If defined in config, every `page.goto()` can use it as prefix.   |
+| `viewport`    | `{ width, height }` | Default viewport size for your pages.                             |
+
+Example using a built-in fixture:
+
+import { test, expect } from '@playwright/test';
+
+test('built-in page fixture', async ({ page }) => {
+  await page.goto('https://playwright.dev');
+  await expect(page).toHaveTitle(/Playwright/);
+});
+
+Here:
+
+- Playwright creates a new page before the test. [this page is isolated for this test only]
+- You don’t need to write beforeEach or afterEach to manage it.
+
+3️⃣ Fixtures vs Hooks (Why Fixtures Are More Useful)
+
+Playwright also has hooks (beforeAll, beforeEach, afterEach, afterAll), just like Jest or Mocha.
+So why bother with fixtures? 🤔
+
+Let’s compare.
+
+🔹 Hooks Example
+*********************
+
+import { test, expect } from '@playwright/test';
+
+let page;
+
+test.beforeEach(async ({ browser }) => {
+  page = await browser.newPage();
+});
+
+test.afterEach(async () => {
+  await page.close();
+});
+
+test('test 1', async () => {
+  await page.goto('https://example.com');
+  expect(await page.title()).toBe('Example Domain');
+});
+
+Problems with hooks:
+
+    - You manually manage setup/teardown.
+    - Sharing state between hooks/tests requires variables (let page;).
+    - Harder to compose (e.g., “this test needs login, that test doesn’t”).
+
+
+🔹 Fixtures Example (Cleaner)
+*********************************
+
+import { test, expect } from '@playwright/test';
+
+test('test 1 with fixture', async ({ page }) => {
+  await page.goto('https://example.com');
+  await expect(page).toHaveTitle('Example Domain');
+});
+
+Benefits of fixtures:
+
+    - Automatic lifecycle → no need to close() manually.
+    - Type-safe injection → no global variables.
+    - Composable → you can extend fixtures, override them, or scope them (test vs worker).
+    - Cleaner tests → test just says “I need a page”, setup logic is hidden.
+
+
+🔹 Difference (Hooks vs Fixtures)
+
+    Hooks = tum khud setup/teardown likho.
+
+    Fixtures = Playwright khud setup/teardown manage karega.
+
+Fixtures zyada powerful isliye hain kyunki:
+
+    - Tumhe describe banake grouping karne ki zarurat nahi.
+    - Har test bas bole: "mujhe page ya loggedInPage chahiye".
+
+    - Ek hi fixture ko tum multiple test files me use kar sakte ho (reusable).
+
+    - Readability better hai — tests me sirf business logic dikhega, setup hidden rahega.
+
+
+✅ When to Prefer Fixtures Over Hooks
+
+    ✅ Use fixtures when setup/teardown involves resources (browser, API client, DB, login).
+    ✅ Use fixtures if you want to reuse setup logic across tests and files.
+    ✅ Use fixtures when you want parallelization and isolation (Playwright will auto-manage it).
+    ❌ Use hooks for very simple global setup (e.g., “print a log before all tests”).
+    ❌ Use hooks if the setup doesn’t return a resource (e.g., clear test data folder).
+
+
+
+
+
+
+✅ Explain line - Fixtures simplify grouping. You no longer need to wrap tests in describes that set up 
+their environment, and are free to group your tests by their meaning instead.
+
+
+That line basically means:
+
+👉 Hooks (beforeEach, afterEach) force you to group tests in describe blocks if you want them to share setup.
+👉 Fixtures remove that need, so now you can group tests based on what they test (their meaning),
+   not based on their technical setup.
+
+🔹 Example with Hooks (describe required)
+
+Suppose you have 2 dashboard tests that both need login.
+
+With hooks, you’d do:
+
+import { test, expect } from '@playwright/test';
+
+test.describe('Dashboard tests', () => {
+  let page;
+
+  test.beforeEach(async ({ browser }) => {
+    page = await browser.newPage();
+    await page.goto('/login');
+    await page.fill('#username', 'user');
+    await page.fill('#password', 'pass');
+    await page.click('button[type=submit]');
+    await page.waitForURL('/dashboard');
+  });
+
+  test.afterEach(async () => {
+    await page.close();
+  });
+
+  test('shows welcome message', async () => {
+    await expect(page.locator('h1')).toHaveText('Welcome');
+  });
+
+  test('shows profile button', async () => {
+    await expect(page.locator('#profile')).toBeVisible();
+  });
+});
+
+
+➡️ Here you’re forced to wrap in describe('Dashboard tests') just so the login setup can apply to both tests.
+➡️ The grouping is technical (about setup), not about test meaning.
+
+
+🔹 Example with Fixtures (no describe needed)
+
+Now with a loggedInPage fixture:
+
+import { test as base, expect } from '@playwright/test';
+
+const test = base.extend<{ loggedInPage: typeof base['fixtures']['page'] }>({
+  loggedInPage: async ({ page }, use) => {
+    await page.goto('/login');
+    await page.fill('#username', 'user');
+    await page.fill('#password', 'pass');
+    await page.click('button[type=submit]');
+    await page.waitForURL('/dashboard');
+    await use(page);
+  },
+});
+
+test('welcome message is visible', async ({ loggedInPage }) => {
+  await expect(loggedInPage.locator('h1')).toHaveText('Welcome');
+});
+
+test('profile button is visible', async ({ loggedInPage }) => {
+  await expect(loggedInPage.locator('#profile')).toBeVisible();
+});
+
+
+➡️ No describe needed.
+➡️ Each test asks directly for loggedInPage.
+➡️ Tests can now be grouped by business meaning:
+
+“welcome message test”
+
+“profile button test”
+
+instead of being forced to group under “dashboard tests” just to share setup.
+
+✨ So the line means:
+
+    With hooks: grouping is dictated by environment/setup.
+
+    With fixtures: grouping is dictated by test meaning/business logic.
+
+
+-----------------------------------------------------------------
+
+
+🔹 test.describe() kya karta hai?
+
+test.describe() ek grouping block hai. Ye tests ko logical group me organize karta hai.
+
+    Ye nested scopes allow karta hai (ek describe ke andar dusra).
+
+    Iske andar tum beforeAll, afterAll, beforeEach, afterEach hooks define kar sakte ho.
+
+    Iske andar tum tags / modifiers laga sakte ho (only, skip, fixme, parallel, etc.).
+
+
+
+🔹 Use cases of test.describe()
+    
+
+1. Organizing tests logically
+    
+    Bas ek folder/heading type group ban jaata hai.
+
+    import { test, expect } from '@playwright/test';
+
+    test.describe('Dashboard tests', () => {
+      test('welcome message is visible', async ({ page }) => {
+        await page.goto('/dashboard');
+        await expect(page.locator('h1')).toHaveText('Welcome');
+      });
+    
+      test('profile button is visible', async ({ page }) => {
+        await page.goto('/dashboard');
+        await expect(page.locator('#profile')).toBeVisible();
+      });
+    });
+
+
+    ➡️ Report me aur terminal output me ye tests Dashboard tests > ... ke naam se show honge.
+    ➡️ Sirf readability & grouping ke liye useful.
+
+
+2. Applying hooks to a group of tests
+
+Agar tumhe ek setup/teardown sirf ek hi test group pe chahiye, toh describe me hooks likh sakte ho.
+
+test.describe('With login', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/login');
+      await page.fill('#username', 'user');
+      await page.fill('#password', 'pass');
+      await page.click('button[type=submit]');
+    });
+  
+    test('can access dashboard', async ({ page }) => {
+      await page.goto('/dashboard');
+      await expect(page.locator('h1')).toHaveText('Welcome');
+    });
+  });
+
+  ➡️ Sirf iss group ke tests login ke sath run honge.
+
+
+3. Conditional test grouping (skip, only, tag, etc.)
+
+  Kabhi kabhi tum chahte ho ki ek group sirf ek condition pe chale.
+
+
+  test.describe('Mobile tests', () => {
+    test.use({ viewport: { width: 375, height: 667 } }); // iPhone size
+  
+    test('navbar collapses', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.locator('#hamburger')).toBeVisible();
+    });
+  });
+
+
+  Ya phir:
+
+  test.describe.skip('Feature not ready yet', () => {
+    test('some future test', async () => {
+      // will be skipped
+    });
+  });
+  

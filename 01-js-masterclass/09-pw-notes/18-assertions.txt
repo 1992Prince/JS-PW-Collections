@@ -1,0 +1,358 @@
+🎯 Playwright Auto-Retrying Assertions – Quick Notes
+
+1️⃣ Definition
+
+    Auto-retrying assertions = automatically retry until condition is met or timeout occurs.
+
+    Always async → must use await.
+
+    Suitable for dynamic web pages (AJAX, animations, delayed content).
+
+    Prevents flaky tests caused by async updates.
+
+
+2️⃣ await Usage
+
+    Mandatory: await required because these are Promises.
+
+    Without await: test may pass/fail incorrectly because Promise is not resolved.
+
+
+// Correct
+await expect(page.locator('#status')).toHaveText('Submitted');
+
+// Incorrect
+expect(page.locator('#status')).toHaveText('Submitted'); // ❌ won't wait
+
+
+3️⃣ What can be validated
+
+✅ Element state: visible, hidden, enabled, disabled, checked, focused, in viewport.
+
+✅ Element properties: text, class, attribute, value, role, ID, CSS, JS property, 
+    accessible name/description.
+
+✅ Page state: URL, title, screenshot.
+
+✅ Network response: response.toBeOK().
+
+Basically anything that can appear/appear later on page.
+
+
+
+4️⃣ Common Auto-Retrying Assertions
+| Assertion                            | Description                    | Example                                                    |
+| ------------------------------------ | ------------------------------ | ---------------------------------------------------------- |
+| `toBeAttached()`                     | Element is attached to DOM     | `await expect(locator).toBeAttached();`                    |
+| `toBeChecked()`                      | Checkbox is checked            | `await expect(locator).toBeChecked();`                     |
+| `toBeDisabled()`                     | Element is disabled            | `await expect(locator).toBeDisabled();`                    |
+| `toBeEnabled()`                      | Element is enabled             | `await expect(locator).toBeEnabled();`                     |
+| `toBeVisible()`                      | Element is visible             | `await expect(locator).toBeVisible();`                     |
+| `toBeHidden()`                       | Element is not visible         | `await expect(locator).toBeHidden();`                      |
+| `toHaveText()`                       | Element contains specific text | `await expect(locator).toHaveText('Submitted');`           |
+| `toHaveValue()`                      | Input has a value              | `await expect(locator).toHaveValue('John');`               |
+| `toHaveClass()` / `toContainClass()` | Element has CSS class          | `await expect(locator).toHaveClass('active');`             |
+| `toHaveAttribute()`                  | Element has specific attribute | `await expect(locator).toHaveAttribute('type', 'button');` |
+| `toHaveCount()`                      | Number of elements matches     | `await expect(locator).toHaveCount(3);`                    |
+| `toHaveScreenshot()`                 | Element matches screenshot     | `await expect(locator).toHaveScreenshot();`                |
+| `page.toHaveTitle()`                 | Page has title                 | `await expect(page).toHaveTitle('Home');`                  |
+| `page.toHaveURL()`                   | Page has URL                   | `await expect(page).toHaveURL('/dashboard');`              |
+| `response.toBeOK()`                  | Network response is OK         | `await expect(response).toBeOK();`                         |
+
+5️⃣ Key Points for Interview
+
+    Always async → must use await.
+
+    Auto-retry = dynamic content (AJAX, delayed updates, animations).
+
+    Non-retrying assertions = static values only.
+
+    Avoid flaky tests → use auto-retrying for page/element updates.
+
+    Can validate → element state, properties, page info, network responses.
+
+    Retry stops → success or timeout reached (default timeout = 5s unless configured)
+
+
+
+⚡ Non-Retrying vs Auto-Retrying Assertions – Comparison
+
+| Feature                      | Non-Retrying Assertions                                                             | Auto-Retrying Assertions                                                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Definition**               | Test JS values once, **no retry**                                                   | Retry until condition is met or timeout                                                                                                                                                                            |
+| **Use Case**                 | Static values (numbers, strings, booleans, objects, functions)                      | Dynamic web pages, async updates, delayed elements                                                                                                                                                                 |
+| **Async / Await**            | Usually **synchronous**, await only if value is a Promise                           | **Always async**, must use `await`                                                                                                                                                                                 |
+| **Examples**                 | `expect(5).toBe(5)`<br>`expect(user).toEqual({a:1})`<br>`expect(true).toBeTruthy()` | `await expect(locator).toHaveText('Submitted')`<br>`await expect(locator).toBeVisible()`<br>`await expect(page).toHaveURL('/dashboard')`                                                                           |
+| **Can Validate**             | Numbers, strings, booleans, arrays, objects, function outputs, regex                | Element state (visible, hidden, enabled, disabled, checked, focused)<br>Element properties (text, class, attribute, value, role, ID, CSS, JS property)<br>Page state (URL, title, screenshot)<br>Network responses |
+| **Cannot Validate Reliably** | Dynamic DOM updates / async content                                                 | Not applicable – auto-retry handles dynamic updates                                                                                                                                                                |
+| **Flakiness**                | High if used on async content                                                       | Low – auto-retry prevents timing issues                                                                                                                                                                            |
+| **Timeout**                  | Not applicable (runs once)                                                          | Stops retrying after default or configured timeout (default 5s)                                                                                                                                                    |
+| **Behavior without await**   | If value is Promise → fails / compares Promise object                               | Always fails – must `await`                                                                                                                                                                                        |
+
+
+
+⏳ Default Timeout
+
+Default timeout = 5000 ms (5 seconds)
+
+Agar assertion 5s me pass nahi hota → test fail.
+
+await expect(locator).toHaveText('Submitted'); // default 5s
+
+
+🔹 1️⃣ Assertion-level timeout
+
+        Har ek assertion ke liye specific timeout set kar sakte ho using { timeout: <ms> }.
+
+        Example:
+
+        await expect(locator).toHaveText('Submitted', { timeout: 10000 }); // 10s
+        await expect(locator).toBeVisible({ timeout: 15000 }); // 15s
+
+    Kya karta hai:
+
+        Ye auto-retrying assertion ka wait time set karta hai.
+
+        Matlab Playwright ye try karega ki assertion 15s tak pass ho jaaye (retries karte hue).
+
+    Important:
+
+        Ye locator find hone ke baad assertion retry ka timeout control karta hai.
+
+🔹 2️⃣ Page / locator-level timeout
+
+Locator operations can also take timeout:
+
+const myButton = page.locator('#submit', { timeout: 10000 });
+await expect(myButton).toBeVisible();
+
+Kya karta hai:
+
+    Ye locator ko resolve karne ke liye wait time set karta hai.
+
+    Matlab Playwright ye try karega ki 30s default ki jagah 10s tak element ko find kare.
+
+
+Important:
+
+    Sirf element identification ke liye hai.
+
+    Assertion ke retry timeout pe direct effect nahi hota.
+
+
+🔹 3️⃣ Global / Test-level timeout
+
+        3️⃣ Test level timeout in test():
+
+            test('my test', async ({ page }) => {
+            await expect(page.locator('#status')).toHaveText('Submitted');
+            }, { timeout: 20000 }); // 20s for entire test
+
+            Kya karta hai:
+
+                Ye entire test ka maximum timeout set karta hai.
+
+                Agar test me ye limit cross ho jaaye → test fail.
+
+
+        3️⃣ Global config (expect.timeout) testConfig.expect.timeout → configure default timeout for all assertions:
+
+        // playwright.config.js
+        expect: {
+        timeout: 15000, // 15s for all assertions globally
+        }
+
+        Kya karta hai:
+
+            Ye default timeout for all auto-retrying assertions globally set karta hai.
+
+            Overriding:
+
+                Agar assertion-level timeout diya → wo global timeout ko override karega.
+
+                Agar test-level timeout diya → wo test execution limit ko control karega, assertion 
+                timeout uske andar hona chahiye.
+
+
+🔑 Key Points
+
+    Default = 5 seconds
+
+    Increase timeout via:
+
+        Assertion-level { timeout: <ms> }
+
+        Locator-level { timeout: <ms> }
+
+        Test-level { timeout: <ms> }
+
+        Global config (expect.timeout)
+
+    Use higher timeout for slow-loading pages or async content.
+
+
+🔑 Summary Table
+
+| Level                     | Timeout Controls    | Effect                                                                     |
+| ------------------------- | ------------------- | -------------------------------------------------------------------------- |
+| Locator-level             | `{ timeout: <ms> }` | Element identification (finding) timeout                                   |
+| Assertion-level           | `{ timeout: <ms> }` | Auto-retrying assertion retry timeout                                      |
+| Test-level                | `{ timeout: <ms> }` | Entire test maximum duration                                               |
+| Global (`expect.timeout`) | `expect.timeout`    | Default retry timeout for all assertions (can be overridden per assertion) |
+
+
+
+
+
+
+
+-------------------------------------------------------------------
+
+
+⏳ Locator-Level Timeout in Playwright
+
+1️⃣ Default Timeout
+
+    Default locator timeout = 30 seconds
+
+    Matlab: Playwright 30s tak try karega element ko DOM me locate karne ke liye.
+
+    Agar element nahi milta → TimeoutError throw hota hai.
+
+
+
+const myButton = page.locator('#submit'); // default timeout 30s
+await myButton.click(); // waits up to 30s to find element
+
+
+2️⃣ Ways to Increase / Override Locator Timeout
+
+🔹 2.1 Directly in Locator -works only for this element
+
+        const myButton = page.locator('#submit', { timeout: 60000 }); // 60s
+        await myButton.click();
+
+
+        Effect: Locator waits up to 60s to find the element.
+
+        Assertion retry (auto-retry) timeout is separate, still defaults to 5s unless overridden.
+
+
+🔹 2.2 Using setDefaultTimeout for Page / Context
+
+        page.setDefaultTimeout(45000); // 45s for all locator actions on this page
+        await page.locator('#submit').click(); // waits up to 45s
+
+
+        Applies to all locators on this page unless individual locator has own timeout.
+
+
+
+🔹 2.3 Using Global config (timeout in playwright.config.js)
+
+
+            // playwright.config.js
+            use: {
+            timeout: 50000, // 50s default for all locators across tests
+            }
+
+
+            Applies to all tests and locators globally.
+
+            Can still override per-locator or per-test.
+
+
+
+
+3️⃣ Key Points
+
+| Option               | Effect                                                | Example                                    |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------ |
+| **Default**          | 30s locator timeout                                   | `page.locator('#id')`                      |
+| **Locator-specific** | Override per element                                  | `page.locator('#id', { timeout: 60000 })`  |
+| **Page / Context**   | Default timeout for all locators on that page/context | `page.setDefaultTimeout(45000)`            |
+| **Global / Config**  | Default for all locators in all tests                 | `timeout: 50000` in `playwright.config.js` |
+
+
+⚡ Summary
+
+    Default locator timeout = 30s
+
+    3 ways to increase it:
+
+        - Per-locator { timeout: <ms> }
+
+        - page.setDefaultTimeout(<ms>)
+
+        - Global timeout in playwright.config.js
+
+    Locator timeout ≠ Assertion retry timeout (ye alag hai)
+
+
+
+ERRORS:
+
+
+1. Locator timeout (default: 30 sec)
+
+👉 Ye tab fail hota hai jab element locate hi nahi hota (DOM me element hi nahi mila).
+
+// Locator timeout set to 5 sec
+const btn = page.locator('#non-existent', { timeout: 5000 });
+await btn.click();
+
+
+Error:
+
+TimeoutError: locator.click: Timeout 5000ms exceeded.
+=====================
+waiting for locator('#non-existent')
+
+
+✅ Yaha clearly likha hota hai waiting for locator(...).
+
+
+2. Assertion timeout (default: 5 sec)
+
+👉 Ye tab fail hota hai jab element mil gaya, lekin assertion condition satisfy nahi hui (e.g. text galat hai)
+
+Example:
+
+// Assertion timeout 5 sec
+const btn = page.locator('#submit');
+await expect(btn).toHaveText('Submitted', { timeout: 5000 });
+
+
+Error:
+
+Error: expect(received).toHaveText(expected)
+
+Expected string: "Submitted"
+Received string: "Pending"
+Call log:
+  - waiting for locator('#submit')
+  - locator resolved to <button id="submit">Pending</button>
+  - waiting for element to have text "Submitted"
+  - element did not match
+
+
+✅ Yaha error message assertion mismatch dikhata hai → “expected vs received”.
+
+
+
+
+🔑 Difference in Errors
+
+Locator timeout fail → TimeoutError: waiting for locator(...)
+
+Assertion timeout fail → Error: expect(locator).toHaveText(...) with Expected vs Received details
+
+
+
+💡 Interview me bolega to:
+
+    Locator timeout = element exist nahi karta / nahi mila → 30s default
+
+    Assertion timeout = element mila but condition match nahi hua → 5s default
+
+    Agar dono ka timeout alag set kiya ho → wohi respected value use hogi

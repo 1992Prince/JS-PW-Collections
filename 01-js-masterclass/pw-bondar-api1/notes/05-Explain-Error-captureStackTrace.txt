@@ -1,0 +1,104 @@
+We have this method to print logs if status code are not matching
+
+private statusCodeValidator(actualStatus: number, expectedStatus: number, callingMethod: Function) {
+        if (actualStatus !== expectedStatus) {
+            const logs = this.logger.getRecentLogs();
+            const errorMessage = new Error(`Expected status code ${expectedStatus}, but got ${actualStatus}\n\nAPI Logs:\n${logs}`);
+            Error.captureStackTrace(errorMessage, callingMethod);
+            throw errorMessage;
+        }
+    }
+
+But what is purpose of line Error.captureStackTrace(errorMessage, callingMethod);?
+
+
+🔎 What does Error.captureStackTrace do?
+
+Error.captureStackTrace(targetObject, constructorOpt) ek Node.js specific API hai jo error 
+ka stack trace customise karne ke kaam aata hai.
+
+Yahaan pe tu use kar raha hai: Error.captureStackTrace(errorMessage, callingMethod);
+
+Iska matlab:
+
+    - errorMessage object ke andar ek stack trace attach kar do.
+    - Lekin stack trace callingMethod ke upar ke frames se start ho (usse neeche ka include mat karo).
+
+🧩 Without Error.captureStackTrace
+
+Agar tu normally throw new Error(...) karta hai, to stack trace kuch aisa dikh sakta hai:
+
+    Error: Expected status code 200, but got 500
+        at statusCodeValidator (apiHelper.ts:25:15)
+        at getUsers (userApi.ts:10:5)
+        at Object.<anonymous> (test.spec.ts:15:3)
+
+👉 Yahan pe statusCodeValidator bhi dikhega jo internally use hua hai. 
+   Lekin user ke liye yeh implementation detail hai, unnecessary noise hai.
+
+
+🧩 With Error.captureStackTrace(errorMessage, callingMethod)
+
+Ab tu bol raha hai: "Bhaiya stack trace callingMethod se neeche ka mat dikhana."
+
+To stack trace clean ho jaayega, aur sirf user-facing method dikhega:
+
+    Error: Expected status code 200, but got 500
+        at getUsers (userApi.ts:10:5)
+        at Object.<anonymous> (test.spec.ts:15:3)
+
+
+👉 Notice karo, statusCodeValidator hata diya gaya hai stack trace se. 
+Isse error zyada readable lagta hai, aur tumhare API framework ka internal helper leak nahi hota.
+
+In this framework, if u comment this line then report down part will look like - 
+
+ at ..\utils\request-handler.ts:135
+
+  133 |         if (actualStatus !== expectedStatus) {
+  134 |             const logs = this.logger.getRecentLogs();
+> 135 |             const errorMessage = new Error(`Expected status code ${expectedStatus}, but got ${actualStatus}\n\nAPI Logs:\n${logs}`);
+      |                                  ^
+  136 |             // Error.captureStackTrace(errorMessage, callingMethod);
+  137 |             throw errorMessage;
+  138 |         }
+    at RequestHandler.statusCodeValidator (D:\2025\17-sid-pw-course\JS-PW-Collections\01-js-masterclass\pw-bondar-api1\utils\request-handler.ts:135:34)
+    at RequestHandler.getRequest (D:\2025\17-sid-pw-course\JS-PW-Collections\01-js-masterclass\pw-bondar-api1\utils\request-handler.ts:60:14)
+    at D:\2025\17-sid-pw-course\JS-PW-Collections\01-js-masterclass\pw-bondar-api1\tests\smokeTest.spec.ts:28:22
+
+
+but if don't comment it then - 
+
+  26 |
+  27 |
+> 28 |     const response = await api
+     |                      ^
+  29 |         //.url('https://random-api.bondaracademy.com/api')
+  30 |         .path('/articles')
+  31 |         .params({ limit: 10, offset: 0 })
+    at D:\2025\17-sid-pw-course\JS-PW-Collections\01-js-masterclass\pw-bondar-api1\tests\smokeTest.spec.ts:28:22
+
+    and u won't see statusCodeValidator method
+
+
+
+💬 Interview Style Answer
+
+👉 *“In Node.js, whenever we throw an error, it automatically comes with a stack trace that shows 
+the entire call chain. But sometimes in frameworks, we don’t want to expose our internal helper 
+methods in that trace because it adds noise. 
+
+Error.captureStackTrace lets us customise the stack trace.
+
+In my Playwright API framework, I use it inside my status code validator. 
+So if the API call fails, the error shows only the test method or API call where it failed, 
+not the internal validator. 
+
+This makes debugging much cleaner. 
+
+Basically, it hides the helper method from the trace and starts the trace from the user-facing method.”*
+
+⚡ One-liner (if they want crisp):
+
+"Error.captureStackTrace is used to clean the error stack trace by skipping internal helper methods, 
+so that only meaningful call locations are shown to the user."

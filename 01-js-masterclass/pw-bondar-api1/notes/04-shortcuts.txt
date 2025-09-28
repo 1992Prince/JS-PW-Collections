@@ -1,0 +1,6 @@
+                            Intellije                   VS-Code
+
+Go to Definition            Ctrl + Click                Ctrl + Click
+Go Back                     ctrl + alt + ←              Alt + ←
+Go Forward                                              Alt + →
+Go to Line                  Ctrl + G -> give line no    Ctrl + G -> give line no

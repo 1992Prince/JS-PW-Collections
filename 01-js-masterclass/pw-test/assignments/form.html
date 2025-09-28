@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge 5: Complex Form & Upload</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto; background:#0b1220; color:#e5e7eb; margin:0; }
+    header, .container { max-width:900px; margin:0 auto; padding:16px; }
+    form { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; display:grid; gap:12px; }
+    label { display:grid; gap:6px; }
+    input[type=text], input[type=email], select { padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:#0b1220; color:#e5e7eb; }
+    .row { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+    .muted { color:#93c5fd; font-size:13px; }
+    .error { color:#fca5a5; font-size:13px; display:none; }
+    .success { color:#34d399; margin-top:8px; }
+    button { background:#22d3ee; border:0; color:#0b1220; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Challenge 5: Complex Form & Upload</h1>
+  <p class="muted">Conditional fields, file uploads, and client-side validation.</p>
+</header>
+<div class="container">
+  <form id="regForm" enctype="multipart/form-data" novalidate>
+    <div class="row">
+      <label> Full Name
+        <input type="text" id="fullName" required placeholder="e.g., Priya Kapoor">
+        <span class="error" id="errName">Name is required</span>
+      </label>
+      <label> Email
+        <input type="email" id="email" required placeholder="e.g., priya@example.com">
+        <span class="error" id="errEmail">Valid email required</span>
+      </label>
+    </div>
+
+    <div class="row">
+      <label> Role
+        <select id="role" required>
+          <option value="">Select role</option>
+          <option value="qa">QA Engineer</option>
+          <option value="dev">Developer</option>
+          <option value="pm">Product Manager</option>
+        </select>
+        <span class="error" id="errRole">Role required</span>
+      </label>
+      <label> Experience (years)
+        <input type="text" id="exp" pattern="^[0-9]{1,2}$" placeholder="e.g., 5">
+        <span class="error" id="errExp">0-99 only</span>
+      </label>
+    </div>
+
+    <label><input type="checkbox" id="enableAdvanced"> Provide advanced profile</label>
+
+    <div id="advancedSection" class="hidden">
+      <div class="row">
+        <label> GitHub URL
+          <input type="text" id="github" placeholder="https://github.com/username">
+        </label>
+        <label> Portfolio (PDF only)
+          <input type="file" id="portfolio" accept="application/pdf">
+        </label>
+      </div>
+      <label> Bio
+        <input type="text" id="bio" placeholder="Short bio">
+      </label>
+    </div>
+
+    <div class="row">
+      <label><input type="checkbox" id="agree"> I agree to terms</label>
+      <span class="muted">Submit will be disabled until agreed & file chosen when advanced is enabled.</span>
+    </div>
+
+    <button id="submitBtn" type="submit" disabled>Submit</button>
+    <div id="result" class="success hidden"></div>
+  </form>
+
+  <section>
+    <h2>Automation Tasks</h2>
+    <ol>
+      <li>Fill the form and <strong>upload a PDF</strong> (can be any small file). Submit and verify confirmation message shows the name & role.</li>
+      <li>Ensure the <strong>Submit</strong> button stays disabled until <em>Agree to terms</em> is checked, and when the advanced section is enabled, a file is chosen.</li>
+      <li>Enter invalid email and verify inline error appears, then correct it and verify error disappears.</li>
+      <li>Toggle <em>Provide advanced profile</em> and verify the advanced fields appear/disappear accordingly.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+  const form = document.getElementById('regForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const agree = document.getElementById('agree');
+  const enableAdvanced = document.getElementById('enableAdvanced');
+  const advancedSection = document.getElementById('advancedSection');
+  const portfolio = document.getElementById('portfolio');
+  const email = document.getElementById('email');
+  const errEmail = document.getElementById('errEmail');
+  const nameEl = document.getElementById('fullName');
+  const errName = document.getElementById('errName');
+  const role = document.getElementById('role');
+  const errRole = document.getElementById('errRole');
+  const exp = document.getElementById('exp');
+  const errExp = document.getElementById('errExp');
+  const result = document.getElementById('result');
+
+  function validate() {
+    let valid = true;
+
+    if (!nameEl.value.trim()) { errName.style.display = 'block'; valid = false; } else { errName.style.display = 'none'; }
+    if (!email.validity.valid) { errEmail.style.display = 'block'; valid = false; } else { errEmail.style.display = 'none'; }
+    if (!role.value) { errRole.style.display = 'block'; valid = false; } else { errRole.style.display = 'none'; }
+    if (exp.value && !/^[0-9]{1,2}$/.test(exp.value)) { errExp.style.display = 'block'; valid = false; } else { errExp.style.display = 'none'; }
+
+    let advancedOk = true;
+    if (enableAdvanced.checked) {
+      advancedOk = portfolio.files.length > 0;
+    }
+
+    submitBtn.disabled = !(valid && agree.checked && advancedOk);
+  }
+
+  agree.addEventListener('change', validate);
+  enableAdvanced.addEventListener('change', ()=>{
+    advancedSection.classList.toggle('hidden', !enableAdvanced.checked);
+    validate();
+  });
+  portfolio.addEventListener('change', validate);
+  form.addEventListener('input', validate);
+
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    validate();
+    if (submitBtn.disabled) return;
+
+    result.classList.remove('hidden');
+    result.textContent = `Submitted: ${nameEl.value} (${role.options[role.selectedIndex].text})`;
+    setTimeout(()=> result.classList.add('hidden'), 1600);
+    form.reset();
+    advancedSection.classList.add('hidden');
+    validate();
+  });
+
+  // initial
+  validate();
+</script>
+</body>
+</html>

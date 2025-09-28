@@ -1,0 +1,190 @@
+🔵 Filtering Locators
+
+1️⃣ Filtering by Text
+
+Kabhi kabhi ek hi selector se multiple elements milte hain, 
+tab hum .filter({ hasText: "..." }) use karte hain.
+
+await page
+  .getByRole('listitem')
+  .filter({ hasText: 'Product 2' })
+  .getByRole('button', { name: 'Add to cart' })
+  .click();
+
+Samjhaye:
+
+1) page.getByRole('listitem')
+👉 Page pe saare <li> elements locate karta hai (jo by default role="listitem" hote hain).
+
+2) .filter({ hasText: 'Product 2' })
+👉 Sirf wahi <li> choose karega jisme "Product 2" likha hoga.
+
+<ul>
+  <li>Product 1 <button>Add to cart</button></li>
+  <li>Product 2 <button>Add to cart</button></li>
+  <li>Product 3 <button>Add to cart</button></li>
+</ul>
+
+🔎 To ab sirf ye match karega: <li>Product 2 <button>Add to cart</button></li>
+
+3) .getByRole('button', { name: 'Add to cart' })
+👉 Ab us filtered <li> ke andar jo button hai jiska accessible name = "Add to cart" hai, use select karega.
+
+4) .click()
+👉 Us button pe click ho jayega.
+
+⚡ Matlab: “Product 2” wale list item ka “Add to cart” button click karna.
+
+
+1.1️⃣ Filtering by Not Having Text
+
+await expect(
+  page.getByRole('listitem').filter({ hasNotText: 'Out of stock' })
+).toHaveCount(5);
+
+1) page.getByRole('listitem')
+👉 Sare <li> elements locate karega.
+
+<ul>
+  <li>Product A - In stock</li>
+  <li>Product B - Out of stock</li>
+  <li>Product C - In stock</li>
+  <li>Product D - In stock</li>
+  <li>Product E - In stock</li>
+  <li>Product F - In stock</li>
+</ul>
+
+2) .filter({ hasNotText: 'Out of stock' })
+👉 Sirf un <li> ko choose karega jisme “Out of stock” text nahi hai.
+
+🔎 Matlab yahan "Product B - Out of stock" exclude ho jayega.
+
+3) await expect(...).toHaveCount(5)
+👉 Ab verify karega ki 5 list items bache hain jo in-stock hain.
+
+
+
+💡 Why useful?
+
+🔑 Interview Punchline:
+
+"filter({ hasText }) helps narrow down locators to only those elements that contain the given text. 
+It makes selectors precise and avoids flakiness when there are multiple similar elements."
+
+"filter({ hasNotText }) excludes elements with a certain text. 
+This is especially useful in e-commerce style flows, where you want to validate or interact only with available items, ignoring disabled or out-of-stock ones."
+
+
+
+
+2️⃣ Filtering by Child/Descendant
+
+<ul>
+  <li>
+    <h3>Product 1</h3>
+    <button>Add to cart</button>
+  </li>
+  <li>
+    <h3>Product 2</h3>
+    <button>Add to cart</button>
+  </li>
+</ul>
+
+await page
+    .getByRole('listitem')   // saare <li> select karega
+    .filter({ has: page.getByRole('heading', { name: 'Product 2' }) })  // sirf wo <li> select hoga jisme <h3>Product 2</h3> hai
+    .getByRole('button', { name: 'Add to cart' })   // usi <li> ke andar ka button
+    .click();
+
+
+🧠 Explanation in Simple Hinglish:
+
+page.getByRole('listitem') → sabhi <li> elements ko locate karega.
+
+Lekin dono <li> ke andar same button text hai: "Add to cart". Agar aap seedha getByRole('button', { name: 'Add to cart' }) karoge, toh dono buttons milenge → ❌ ambiguous.
+
+Is problem ko solve karne ke liye hum filter({ has: ... }) use karte hain → iska matlab hai sirf us <li> ko choose karo jiske andar ek specific child/descendant match karta ho.
+
+Yaha hum keh rahe hain: "Sirf us <li> ko filter karo jisme <h3> heading = 'Product 2' ho".
+
+Ab us filtered <li> ke andar jaake button click karo ✅.
+
+
+
+3️⃣ Filtering by NOT Having Child/Descendant
+
+await expect(page
+    .getByRole('listitem')
+    .filter({ hasNot: page.getByText('Product 2') }))
+    .toHaveCount(1);
+
+
+🧠 Step-by-Step Hinglish Explanation:
+
+page.getByRole('listitem') → dono <li> elements ko locate karega.
+
+    <li> with Product 1
+    <li> with Product 2
+
+.filter({ hasNot: page.getByText('Product 2') }) → iska matlab hai:
+
+    Mujhe sirf wahi <li> chahiye jiske andar Product 2 text wala element NAHI hai.
+
+Ab filter apply hone ke baad:
+
+    ✅ <li> with Product 1 → mil jayega (kyunki isme Product 2 nahi hai).
+    ❌ <li> with Product 2 → exclude ho jayega.
+
+.toHaveCount(1) → ab ek hi <li> bacha hoga (sirf Product 1 wala).
+
+
+
+🎯 Interview Ready Punchline:
+
+"hasNot is the opposite of has. 
+It allows you to exclude parent elements that contain a particular child or descendant. 
+For example, if you want all list items except the one with 'Product 2', you can filter them using 
+hasNot."
+
+
+Doubt - 🔎 Playwright Filter Behavior
+
+await page
+    .getByRole('listitem')
+    .filter({ hasText: 'Product 2' })
+    .getByRole('button', { name: 'Add to cart' })
+    .click();
+
+isme filter child element ko locate karega ya parent element ko?
+
+await page
+  .getByRole('listitem')                   // ye sabhi <li> elements locate karega
+  .filter({ hasText: 'Product 2' })        // un <li> me se filter karega jisme text = "Product 2" ho
+  .getByRole('button', { name: 'Add to cart' }) // ab us <li> ke andar jaake button locate karega
+  .click();
+
+🔑 How Filter Works in Playwright
+
+- filter() kisi naye element ko locate nahi karta.
+
+- Agar multiple elements mile hain, to filter() unhi parent elements ke set ko narrow down karta hai 
+  based on unke child/descendant ki properties.
+
+- Matlab: check child element ke content ya property se hota hai, lekin return hamesha parent element 
+  locator hota hai.
+
+  🗣️ Interview-Ready Short Answer
+
+  In Playwright, filter() doesn’t find a new element — instead it filters multiple matching elements 
+  based on their child or descendant properties. Even after filtering, the locator still points to 
+  the parent element, and we must chain another locator to interact with the child.
+
+  You can chain multiple filters together to progressively narrow down to the desired parent, and then 
+  further chain to interact with its children.
+
+  await page
+  .getByRole('listitem')
+  .filter({ hasText: 'Product' })                      // jis li me "Product" word h
+  .filter({ has: page.getByRole('button') })           // aur usme ek <button> child bhi h
+  .getByRole('button', { name: 'Add to cart' })
+  .click();

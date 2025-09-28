@@ -1,0 +1,18 @@
+2️⃣ How to Run in VS Code with Live Server
+
+Install VS Code (if not already installed).
+
+Open VS Code and create a folder named playwright-practice.
+
+Inside that folder, create a file named locators-practice.html and paste the above HTML code.
+
+Install Live Server extension in VS Code:
+
+Go to Extensions (Ctrl+Shift+X), search "Live Server", and install it.
+
+Right-click on locators-practice.html → "Open with Live Server".
+
+It will open in your default browser at a URL like:
+http://127.0.0.1:5500/locators-practice.html
+
+Now you can use Playwright to write tests targeting this local page.

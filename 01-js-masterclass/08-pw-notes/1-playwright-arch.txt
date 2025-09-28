@@ -1,0 +1,73 @@
+✅ Playwright vs Selenium: Architecture Explained
+
+
+🔹 Playwright Architecture (Uses WebSocket)
+
+Playwright follows a Client–Server architecture with communication done via the WebSocket protocol, 
+which is faster and persistent compared to HTTP.
+
+	Client: Can be Java, JavaScript, Python, or C# based test code.
+
+	Server: Playwright Server which controls the browsers.
+
+	Browsers: Chromium-based (Chrome, Edge), Firefox, and WebKit (Safari engine).
+
+
+
+How it works:
+
+The client (e.g., Java or Python test script) initiates a connection to the Playwright server via WebSocket.
+Once the connection is established (called a handshake), it remains open.
+Multiple test commands (requests) and their corresponding responses flow through the same persistent connection.
+The Playwright server executes the commands directly on the target browser.
+
+Advantages of WebSocket:
+Low latency and high speed: Unlike HTTP, there's no need to re-establish a connection after every request.
+Real-time communication: Ideal for sending rapid, consecutive commands.
+Less flaky: Since connection remains open, chances of failure due to connection drops are reduced.
+
+
+
+🔹 Selenium Architecture (Uses HTTP)
+
+Selenium also uses a Client–Server model, but it communicates over the HTTP protocol.
+
+	Client: Selenium test scripts written in Java, Python, C#, etc.
+
+	Server: Selenium Server / WebDriver.
+
+	Browsers: ChromeDriver, GeckoDriver (Firefox), etc.
+
+How it works:
+
+Each test command(client code) is sent from the client to the Selenium server as an individual HTTP request.
+The server processes it, interacts with the browser, and sends back the response.
+After every request-response cycle, the connection is terminated.
+A new connection is created for the next command.
+
+Drawbacks of HTTP:
+
+Slower performance: Every test command requires a new connection.
+Higher flakiness: Repeated connect/disconnect cycles increase the chance of flaky tests.
+Not real-time: Commands are queued, adding delays between actions.
+
+⚖️ Summary: WebSocket vs HTTP in Test Automation
+
+Feature	             Playwright (WebSocket)	          Selenium (HTTP)
+-------------------------------------------------------------------------------------------------------------
+Protocol	             WebSocket	                       HTTP
+Connection	      Persistent (single connection)	Re-established for each request
+Speed	                 Faster	                          Slower
+Reliability	      High (less flakiness)	           Lower (more flaky due to repeated handshakes)
+Language Support	Java, Python, JS/TS, C#	        Java, Python, JS, C#, Ruby, etc.
+Browser Control	  Chromium, Firefox, WebKit	        Chrome, Firefox, Safari, Edge
+
+Note - Prince u know execution time is less if u r using playwright and will be more if u r using selenium.
+       In Orion already you have seen it.
+
+
+🎯 Interview-Friendly Summary
+"Playwright uses a WebSocket-based architecture which enables persistent, high-speed communication between the client and the Playwright server. 
+This makes it faster and more reliable than Selenium, which uses HTTP where the connection is recreated for every request. 
+As a result, Playwright offers better performance, less flakiness, and supports modern browser features like handling popups and 
+multiple tabs more effectively."

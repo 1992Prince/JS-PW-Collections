@@ -1,0 +1,155 @@
+🔹 1. Simple Fixture (constant data dena)
+
+Fixtures sirf browser/page hi nahi, data bhi provide kar sakte hain.
+
+Example: ek base URL har test me chahiye.
+
+import { test as base, expect } from '@playwright/test';
+
+// fixture banaya
+const test = base.extend<{ baseURL: string }>({
+  baseURL: async ({}, use) => {
+    await use('https://example.com'); // data provide kiya
+  },
+});
+
+test('use baseURL fixture', async ({ page, baseURL }) => {
+  await page.goto(baseURL);
+  await expect(page).toHaveTitle(/Example/);
+});
+
+
+➡️ Yahan baseURL ek fixture hai jo sirf string return kar raha hai.
+➡️ Test me directly { baseURL } le sakte ho, alag se import/variable ki zarurat nahi.
+
+
+
+🔹 2. Async Fixture (setup + teardown logic)
+
+Kabhi resource create karke dispose karna padta hai (jaise DB connection).
+
+
+type DB = { query: (sql: string) => Promise<string> };
+
+import { test as base } from '@playwright/test';
+
+const test = base.extend<{ db: DB }>({
+  db: async ({}, use) => {
+    console.log('Connecting to DB...');
+    const db: DB = {
+      query: async (sql) => `Result for: ${sql}`
+    };
+
+    await use(db); // pass to test
+
+    console.log('Closing DB connection...');
+  },
+});
+
+test('fetch users from db', async ({ db }) => {
+  console.log(await db.query('SELECT * FROM users'));
+});
+
+➡️ use(db) ke baad fixture ka cleanup code run hota hai.
+➡️ Ye har test ke liye fresh DB connection de sakta hai.
+
+
+🔹 3. Fixture for Login Flow (common web usecase)
+
+Instead of login har test me likhne → ek loggedInPage fixture bana do.
+
+import { test as base, expect } from '@playwright/test';
+
+const test = base.extend<{ loggedInPage: typeof base['fixtures']['page'] }>({
+  loggedInPage: async ({ page }, use) => {
+    await page.goto('/login');
+    await page.fill('#username', 'user');
+    await page.fill('#password', 'pass');
+    await page.click('button[type=submit]');
+    await page.waitForURL('/dashboard');
+
+    await use(page); // test ko logged-in page diya
+  },
+});
+
+test('dashboard visible', async ({ loggedInPage }) => {
+  await expect(loggedInPage.locator('h1')).toHaveText('Welcome');
+});
+
+➡️ Har test directly loggedInPage lega, login logic hidden rahega
+
+
+🔹 4. Fixture for API Token (data injection)
+
+API tests me aksar token chahiye hota hai. Fixture se generate karke pass kar sakte ho.
+
+
+import { test as base } from '@playwright/test';
+
+const test = base.extend<{ authToken: string }>({
+  authToken: async ({}, use) => {
+    const token = 'token-' + Date.now(); // generate token
+    await use(token);
+  },
+});
+
+test('api request with token', async ({ request, authToken }) => {
+  const response = await request.get('/users', {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  console.log(await response.json());
+});
+
+
+➡️ Fixture automatically data generate karke test me inject kar raha hai
+
+
+
+
+🔹 6. Fixture Composing (fixture using another fixture)
+
+Fixtures ek dusre pe depend bhi kar sakte hain.
+
+Example: apiClient fixture ko authToken fixture chahiye.
+
+
+import { test as base } from '@playwright/test';
+
+const test = base.extend<{
+  authToken: string;
+  apiClient: (url: string) => Promise<Response>;
+}>({
+  authToken: async ({}, use) => {
+    await use('token-' + Date.now());
+  },
+
+  apiClient: async ({ request, authToken }, use) => {
+    const client = (url: string) =>
+      request.get(url, { headers: { Authorization: `Bearer ${authToken}` } });
+
+    await use(client);
+  },
+});
+
+test('fetch users with apiClient', async ({ apiClient }) => {
+  const res = await apiClient('/users');
+  console.log(await res.json());
+});
+
+
+➡️ apiClient fixture automatically authToken fixture use kar raha hai.
+➡️ Tests ko bas apiClient chahiye, token ka setup hidden hai.
+
+
+✅ Summary
+
+Fixtures = reusable setup + teardown + data providers.
+
+They can:
+
+    - Provide resources (page, db connection, API client).
+    - Provide data (strings, tokens, config).
+    - Be per-test (default) or per-worker (shared).
+    - Compose (ek fixture dusre ko use kar sakta hai).
+
+👉 Big win: Tests clean ho jaate hain — directly bol do "mujhe ye chahiye", fixture provide kar dega

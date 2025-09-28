@@ -1,0 +1,832 @@
+https://playwright.dev/docs/locators
+https://docs.google.com/document/d/1fwdOZeaIQ8BKxZtLPxR-0OQnR2dpu9WfuDGNRM1G1Bw/edit?tab=t.0
+
+🔵 Locators
+
+🧠 Introduction
+
+Locators are the central piece of Playwright's auto-waiting and retry-ability. 
+In a nutshell, locators represent a way to find element(s) on the page at any moment.
+
+
+These are the recommended built-in locators.
+
+- page.getByRole() to locate by explicit and implicit accessibility attributes.
+- page.getByText() to locate by text content.
+- page.getByLabel() to locate a form control by associated label's text.
+- page.getByPlaceholder() to locate an input by placeholder.
+- page.getByAltText() to locate an element, usually image, by its text alternative.
+- page.getByTitle() to locate an element by its title attribute.
+- page.getByTestId() to locate an element based on its data-testid attribute 
+                     (other attributes can be configured).
+
+
+
+🖥️ What is a Locator in Playwright?
+
+  - In Playwright, a locator is an object that represents a way to find and interact with 
+    one or more elements on a page.
+
+  - Think of it as a "live pointer" to elements in the DOM — it doesn’t fetch the element 
+    immediately; instead, it knows how to find it when you need it.
+
+  - Important: page.locator() does not actually go and find the element right away.
+    It only finds the element when an action (like .click(), .fill(), .hover(), .textContent()) 
+    is executed.
+
+
+Example
+
+  // Create a locator for a button
+  const loginBtn = page.locator('#login');
+
+  // No element is located yet ❌
+
+  // Element is located here when action is performed ✅
+  await loginBtn.click();
+
+
+
+⏳ Auto-Waiting & Retry-ability [WHAT IS THIS?]
+
+    Playwright locators come with built-in waiting:
+
+    - Auto-waiting: Before performing actions, Playwright waits for the element to exist, 
+                    be visible, and be ready (e.g., clickable).
+
+    - Retry-ability: If the element isn’t immediately ready (e.g., DOM changes), Playwright 
+                      retries until the timeout is reached.
+
+    Example: await page.locator('#submit').click();
+    // Playwright will automatically wait for #submit to appear, be visible, and be enabled 
+    // before clicking.
+
+    No need for manual waits like waitForSelector() in most cases.
+
+
+
+📌 Key Interview Points:
+
+    - Locators are declarative handles, not immediate element fetchers.
+    - page.locator() does not find the element until you use an action or assertion.
+    - Locators make scripts more stable and less flaky because of auto-wait & retry-ability.
+    - Prefer locators over raw selectors for maintainability in modern automation
+
+
+
+
+
+🧠 What is a Selector?
+
+  A selector is simply a string pattern that tells Playwright how to find an element in the DOM.
+
+  It’s like an address for an element —
+  you describe where it is, and Playwright/JavaScript will try to fetch it.
+
+  Types of Selectors in Playwright
+
+  Playwright supports multiple selector engines, not just CSS.
+
+
+
+1️⃣ CSS Selectors
+
+  Classic way to match elements based on tag, class, ID, attributes.
+
+  await page.click('#login');          // by ID
+  await page.click('.btn-primary');    // by class
+  await page.click('button[type="submit"]'); // by attribute
+
+
+
+2️⃣ Text Selectors
+
+  Find elements by visible text.
+
+  await page.click('text=Login');
+
+
+3️⃣ XPath Selectors
+
+  Locate elements by XML-like path.
+
+  await page.click('//button[@id="login"]');
+
+
+4️⃣ ARIA Selectors (Accessibility Tree)
+
+  Find by role, name, or other ARIA properties.
+
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+
+5️⃣ Custom Selector Engines
+
+  Playwright also supports:
+
+      :has() — Find an element containing another element.
+      :nth-match() — Match nth occurrence.
+      :visible, :text, :has-text() — Filtering.
+
+
+Selector Example:
+
+    // Select by CSS
+    await page.click('input[name="username"]');
+
+    // Select by text
+    await page.click('text=Forgot password?');
+
+    // Select by ARIA role & name
+    await page.getByRole('button', { name: 'Sign in' }).click();
+
+
+Selectors vs Locators
+
+    Selector = the string expression describing how to find an element.
+
+    Locator = an API wrapper around a selector that adds:
+
+        - Auto-wait
+        - Retry-ability
+        - Chaining
+        - Filters
+
+Example:
+
+  // Selector only
+  await page.click('#login');
+
+  // Locator using selector
+  const loginBtn = page.locator('#login');
+  await loginBtn.click(); // with auto-wait + retry
+
+
+
+
+
+🔵 What is getByRole()?
+
+    getByRole() works on the Accessibility Tree (not raw DOM).
+
+    It identifies elements by their ARIA role (explicit or implicit) + 
+    accessible name (from aria-label, aria-labelledby, or inner text).
+
+
+
+📌 Implicit vs Explicit Roles
+
+    Implicit Role: Comes from the element type.
+
+        Example: <button> → role = button (even if role not written).
+
+    Explicit Role: Developer sets it via role attribute.
+
+        Example: <div role="navigation"> → role = navigation.
+
+
+💡 Key Tip
+
+    If the element has role="navigation", then you must use: page.getByRole('navigation')
+    Not getByRole('div'), because Playwright ignores HTML tags and only cares about the role + accessible name.
+
+
+    In Playwright, getByRole() supports not only role + name, but also state filters like checked, 
+    disabled, expanded, pressed, etc.
+    These states come from ARIA or from the element’s native properties (disabled, checked, etc.).
+
+
+
+
+📝 Using State in getByRole()
+
+✅ Example 1: Disabled button
+
+  <button disabled>Checkout Button</button>
+  <button>Checkout Button</button>
+
+  Playwright:
+
+  // Get only the disabled one
+  const disabledBtn = page.getByRole('button', { name: 'Checkout Button', disabled: true });
+
+  // Get only the enabled one
+  const enabledBtn = page.getByRole('button', { name: 'Checkout Button', disabled: false });
+
+
+✅ Example 2: Checkbox with checked state
+
+    <label>
+      <input type="checkbox" checked> Subscribe
+    </label>
+    <label>
+      <input type="checkbox"> Subscribe
+    </label>
+
+    Playwright:
+
+    // Checked version
+    const checkedBox = page.getByRole('checkbox', { name: 'Subscribe', checked: true });
+
+    // Unchecked version
+    const uncheckedBox = page.getByRole('checkbox', { name: 'Subscribe', checked: false });
+
+
+✅ Example 3: Expandable menu (aria-expanded)
+
+    <button aria-expanded="true">Menu</button>
+    <button aria-expanded="false">Menu</button>
+
+    Playwright:
+
+    // Expanded
+    const expandedMenu = page.getByRole('button', { name: 'Menu', expanded: true });
+
+    // Collapsed
+    const collapsedMenu = page.getByRole('button', { name: 'Menu', expanded: false });
+
+
+  ⚡ Pro Tip:
+  👉 These states (checked, disabled, expanded, pressed, selected) map directly to ARIA states or native 
+      element properties.
+  👉 That makes your locator super precise and future-proof, even if the HTML structure changes.
+
+Practice - check code of 3-locators-spec.js 
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+
+
+🖼️ Iframes in Playwright
+
+🔵 What is an iframe?
+
+    - An iframe (inline frame) is like a webpage inside another webpage.
+    - It loads separate HTML (even from different domains) inside your main page.
+    - Example: Payment gateways, ads, or embedded YouTube videos are often iframes.
+
+<iframe src="payment.html"></iframe>
+
+⚠️ Challenge in automation
+
+- Elements inside an iframe are not part of the main DOM.
+- If you try page.locator('#payBtn') directly, Playwright won’t find it.
+- You need to switch context into the iframe first.
+
+✅ Playwright solution
+
+Playwright gives frameLocator() to directly target elements inside iframes.
+
+// Example: click button inside iframe
+await page.frameLocator('iframe[src="payment.html"]').locator('#payBtn').click();
+
+👉 This avoids manually switching frames.
+👉 Works with nested iframes also.
+
+
+🔗 Locator Chaining in Playwright
+
+🔵 What is it?
+
+Locator chaining = finding an element relative to another element.
+Instead of writing long selectors, you scope down step by step.
+
+✅ Example: Without chaining 
+
+await page.locator('div.card button:has-text("Buy")').click();
+
+✅ Example: With chaining
+
+const card = page.locator('div.card');        // Parent
+await card.locator('button:has-text("Buy")').click();  // Child
+
+- Here, we first locate the parent, then chain the child locator.
+- This improves readability and reduces brittle selectors.
+
+
+🔄 Iframes + Chaining Together [Best example of chaining locators]
+
+If the button is inside a card which itself is inside an iframe:
+
+await page
+  .frameLocator('iframe#checkoutFrame')     // Switch to iframe
+  .locator('div.card')                      // Parent
+  .locator('button:has-text("Checkout")')   // Child
+  .click();
+
+
+Example:
+
+test.only('iframe', async ({ page, browserName }) => {
+
+  await page.goto('https://letcode.in/frame#google_vignette');
+
+  // below is best example of locator chaining -
+  // first we locate the iframe using its id, then we use frameLocator to get the frame inside the page
+  // then we can use the frame locator to find elements inside the iframe
+  // note that we are using the id of the iframe, not the src or name
+  const iframeLoc = page.frameLocator('#firstFr');
+  const inputBxLoc = iframeLoc.getByPlaceholder('Enter name');
+  await inputBxLoc.fill('John Doe');
+
+});
+
+Practice - 3-locators.spec.ts
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+
+
+🔵 What is getByLabel()?
+
+It locates a form control element (like input, textarea, select, checkbox, radio, etc.) 
+by its associated label’s text.
+
+Association between <label> and form control can be:
+
+    1) Explicit association (using for + id)
+    2) Implicit association (wrapping input inside <label> tag)
+
+🖥️ How to Use getByLabel() in Playwright [check 02-label-practice.html for html source code]
+
+// Explicit association
+await page.getByLabel('Username').fill('john_doe');
+
+// Explicit association
+await page.getByLabel('Password').fill('secret123');
+
+// Implicit association (checkbox wrapped in label)
+await page.getByLabel('Remember Me').check();
+
+// Dropdown by label
+await page.getByLabel('Country').selectOption('USA');
+
+⚠️ Where getByLabel() Works
+
+✔️ Works when:
+    - There is a <label> with for attribute linking to input.
+    - The input is wrapped inside <label>.
+    - Label text is visible & readable.
+
+🚫 Where it Doesn’t Work
+
+If the field has no <label> (only placeholder).
+
+<input type="text" placeholder="Enter email">
+
+👉 Use getByPlaceholder() instead.
+If the label is present but not linked properly (no for and input not inside label).
+If the label text is hidden with CSS (display: none), Playwright may fail unless force option 
+is used.
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+
+
+🔵 What is getByPlaceholder()?
+
+It locates form input fields (<input>, <textarea>) by their placeholder text.
+Placeholders are those light gray hints you see inside input boxes before typing.
+
+Example: <input type="text" placeholder="Enter your email">
+
+👉 You can locate it in Playwright with:
+
+await page.getByPlaceholder('Enter your email').fill('john@example.com');
+
+
+⚠️ When to Use getByPlaceholder()
+
+✔️ Best when:
+    - Inputs don’t have labels but do have placeholder text.
+    - Quick way for short forms (like login/signup).
+
+🚫 Not recommended when:
+    - Placeholders are missing or generic like "Type here...".
+    - Placeholders change dynamically (localization, JS).
+    - Accessibility → placeholders are not read by screen readers (so getByLabel() is preferred).
+
+📝 Interview-Ready Note
+getByLabel() > getByPlaceholder() because labels are semantic & accessibility-friendly.
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+
+🔵 What is getByText()?
+
+    It finds elements based on visible text content inside them.
+
+    Works for any element (<button>, <div>, <span>, <p> etc.).
+
+    Example:
+
+    <button>Login</button>
+
+    Locator: await page.getByText('Login').click();
+
+
+✅ exact: true
+
+    ✔️ exact: true → strict string match only, no regex.
+
+    await page.getByText("Submit", { exact: true }).click();
+
+    👉 Matches only "Submit" (not "Submit Form", not "Submit Order")
+
+    ⚠️ What Will NOT Work
+
+    ❌ If text is hidden with CSS (display:none, visibility:hidden) → Playwright ignores it.
+    ❌ If text comes from placeholder/label attributes → use getByPlaceholder() or getByLabel() instead.
+    ❌ If text is dynamically changing too fast without waiting → need await page.waitForSelector() or auto-wait.
+
+    📝 Interview Notes
+
+    - getByText() → visible text only (ignores hidden).
+    - Supports string match, substring, regex.
+    - For accessibility & maintainability, prefer getByRole({ name: '...' }) when possible.
+    - Example: getByRole('button', { name: 'Login' }) is more stable than getByText('Login').
+
+    Perfect 👌 I’ll give you a single HTML page that covers:
+    ✔️ Strict text match
+    ✔️ Substring match
+    ✔️ Regex match (case-insensitive, startsWith, endsWith)
+    ✔️ Hidden text (won’t be matched by Playwright)
+    ✔️ Nested text
+
+
+🔵 Key Notes
+
+    - Strict text match → must match exactly, including spaces/punctuation.
+    - Substring → works if text matches exactly within an element.
+    - Regex → flexible (case-insensitive, startsWith, endsWith).
+    - Hidden text → ignored automatically.
+    - Nested text → Playwright merges visible text from children.
+
+
+
+
+
+🔎 Regex in getByText()
+
+  page.getByText() normally matches exact text inside an element.
+
+  But sometimes text on the page is:
+      - Case-sensitive (Login vs login)
+      - Contains extra spaces
+      - Partially dynamic (Submit Form, Submit Order, Submit Request)
+
+  👉 In such cases, Regex is useful.
+
+
+
+
+✅ 1. Case-Insensitive Matching
+
+    await page.getByText(/login/i).click();
+
+    - /login/i → i means ignore case.
+    - Matches: Login, LOGIN, LoGiN, etc.
+
+    🧠 Interview Tip:
+
+    If the interviewer asks, “How do you handle case differences in text locators?”, answer:
+    “I use regex with /text/i inside getByText() to make it case-insensitive.”
+
+
+✅ 2. Starts With
+
+    await page.getByText(/^Submit/).click();
+
+    - ^ → matches text that starts with “Submit”.
+    - Matches: Submit Form, Submit Request, Submit, but NOT Form Submit.
+
+
+
+✅ 3. Ends With
+
+    await page.getByText(/Now$/).click();
+
+    - $ → matches text that ends with “Now”.
+    - Matches: Pay Now, Checkout Now, but NOT Now Pay.
+
+
+
+✅ 4. Contains / Partial Match
+
+🔍 getByText — Exact vs Contains Match
+
+1. Exact Match (default behaviour)
+
+    By default, Playwright getByText("Error") poore element ke text ko exact match karta hai.
+
+      await page.getByText("Error").click();
+
+    👉 Ye sirf tab chalega jab element ka text exactly "Error" ho.
+
+      ✔ Matches: <div>Error</div>
+      ❌ Does not match: <div>Error occurred</div>
+
+
+2. Partial Match (Regex or Substring)
+
+(a) Regex Match
+
+  Agar tu substring / contains dhoondhna chahta hai, toh regex use kar:
+
+  await page.getByText(/error/).click();
+
+  👉 Ye case-insensitive banane ke liye /error/i use kar:
+
+      await page.getByText(/error/i).click();
+
+  ✔ Matches: Error Occurred, Critical Error, error in input
+
+  ❌ Does not match: Success, Warning
+
+
+(b) Substring Match (exact: false)
+
+    Playwright me getByText ke options me exact: false pass kar sakta hai. 
+    Ye internally substring match karta hai.
+
+      await page.getByText("error", { exact: false }).click();
+
+
+    👉 Ye bhi "error" ko anywhere in text match karega.
+
+      ✔ Matches: "Error Occurred", "Some error in input"
+      ❌ Does not match: "Success"
+
+
+
+
+✅ 5. Multiple Options
+
+    await page.getByText(/(Submit|Save|Confirm)/).click();
+
+    - Matches if element has text Submit OR Save OR Confirm.
+
+    🧠 This is great for dynamic UIs where button text changes.
+
+
+
+
+✅ 6. Whitespace Tolerant
+
+    await page.getByText(/Sign\s+Up/).click();
+
+    \s+ → matches any number of spaces/tabs.
+
+    Matches: Sign Up, Sign Up, Sign Up.
+
+
+
+✅ 7. Dynamic Numbers / Values
+
+    await page.getByText(/Items in cart: \d+/).click();
+
+    \d+ → matches one or more digits.
+
+    Matches: Items in cart: 3, Items in cart: 15.
+
+
+
+
+⚡ Why Regex is Useful in Playwright
+
+    UI text often changes slightly (Pay Now → Checkout Now).
+    Regex makes locators resilient (not breaking for small wording changes).
+    Handles case insensitivity without writing multiple locators.
+    Helps with dynamic content (numbers, changing labels, etc.).
+
+❓ Q: When would you use regex in Playwright locators like getByText()?
+
+    ✔️ A: I use regex when I want flexibility in matching text. For example: case-insensitive 
+    matches (/login/i), partial matches (/Submit/), starts/ends with (/^Submit/, /Now$/), or 
+    handling dynamic values (/Items in cart: \d+/). This keeps my locators stable and prevents 
+    flakiness when UI text changes slightly.
+
+
+1. [A-Z] → koi bhi ek uppercase character
+
+<div>A</div>
+<div>Z</div>
+<div>Submit</div>
+
+
+Code:
+
+await page.getByText(/[A-Z]/).first().click();
+
+
+👉 Explanation:
+
+  - [A-Z] ka matlab hai: ek bhi uppercase letter (A se Z tak).
+  - Matches: "A", "Z".
+  - ⚠️ "Submit" bhi match karega, kyunki S capital hai.
+  - Matlab regex ne check kiya: "Submit" ke andar uppercase letter hai? → haan → match.
+
+
+
+2. [a-z] → koi bhi ek lowercase character
+
+
+<div>a</div>
+<div>z</div>
+<div>Login</div>
+
+
+Code: await page.getByText(/[a-z]/).first().click();
+
+👉 Explanation:
+
+- [a-z] ka matlab hai: ek bhi lowercase letter (a se z tak).
+- Matches: "a", "z".
+- "Login" bhi match karega, kyunki "o", "g", "i", "n" sab lowercase letters hain.
+- Matlab regex ke liye poore string ka lowercase hona zaroori nahi hai, bas kahin bhi ek lowercase letter ho 
+  toh match ho jaata hai.
+
+
+
+3. [A-Za-z]{4} → exactly 4 letters in sequence
+
+
+<div>Test</div>
+<div>Play</div>
+<div>Login</div>
+<div>Go</div>
+
+
+Code: await page.getByText(/[A-Za-z]{4}/).click();
+
+
+👉 Explanation:
+
+- [A-Za-z]{4} ka matlab: lagataar 4 letters hone chahiye (uppercase/lowercase mix allowed).
+- Matches:
+    "Test" → 4 letters ✅
+    "Play" → 4 letters ✅
+    ❌ "Login" → 5 letters hai, so 4 ka pattern isme fit nahi hota.
+    ❌ "Go" → sirf 2 letters hai.
+
+⚡ Lekin dhyaan: agar text me 4 letters ka substring hai toh wo bhi match karega. Example: "Login" ke pehle 4 
+letters "Logi" 4 letters hai → toh isko bhi match kar lega. Agar tu chaahta hai ki poore word hi 4 letters ke ho,
+ toh anchor use karna hoga (neeche samjhata hoon).
+
+
+ 4. Anchors ^ aur $ → strict match
+
+^ → string ki shuruaat
+$ → string ka end
+
+await page.getByText(/^[A-Za-z]{4}$/).click();
+
+
+👉 Explanation:
+
+/^[A-Za-z]{4}$/ ka matlab:
+
+  ^ = start se hi letters
+  [A-Za-z]{4} = total 4 letters
+  $ = uske baad kuch nahi hona chahiye
+
+Matches sirf wahi text jisme poora content exactly 4 letters ho.
+  "Test", "Play" ✅
+  "Login" ❌ (5 letters)
+  "Go" ❌ (2 letters)
+  "Play123" ❌ (extra characters hain)
+
+
+
+👉 difference between
+
+/[A-Za-z]{4}/
+
+/^[A-Za-z]{4}$/
+
+
+1. /[A-Za-z]{4}/ → substring match
+
+Isme anchors (^ aur $) nahi hain.
+Matlab regex poore string ke andar kahin bhi 4 lagataar letters dhoondhega.
+Agar mil gaya → match ✅.
+
+Example:
+
+<div>Test</div>
+<div>Play</div>
+<div>Login</div>
+<div>Go</div>
+
+await page.getByText(/[A-Za-z]{4}/).click();
+
+
+👉 Matches:
+
+  "Test" ✅ (poore hi 4 letters)
+  "Play" ✅ (poore hi 4 letters)
+  "Login" ✅ (kyunki "Logi" first 4 letters match kar rahe hain)
+  "Go" ❌ (sirf 2 letters)
+
+⚠️ Dhyaan: "Login" bhi match ho gaya, kyunki uske pehle 4 letters "Logi" pattern ko satisfy karte hain.
+
+
+2. /^[A-Za-z]{4}$/ → whole string match
+
+^ = start of string
+[A-Za-z]{4} = exactly 4 letters
+$ = end of string
+Matlab poora text hi sirf 4 letters ka hona chahiye, na kam na zyada.
+
+await page.getByText(/^[A-Za-z]{4}$/).click();
+
+
+👉 Matches:
+
+  "Test" ✅ (4 letters, poora match)
+  "Play" ✅ (4 letters, poora match)
+  "Login" ❌ (5 letters)
+  "Go" ❌ (2 letters)
+
+🎯 Simple Difference in One Line
+
+  /[A-Za-z]{4}/ → check karta hai ki kahin bhi 4 continuous letters ho. (Substring match)
+  /^[A-Za-z]{4}$/ → check karta hai ki poora text hi exactly 4 letters ka ho. (Exact match)
+
+
+1. [0-9]{4} → substring me kahin bhi 4 continuous digits
+
+
+
+<div>1234</div>
+<div>912345</div>
+<div>99</div>
+
+
+await page.getByText(/[0-9]{4}/).click();
+
+👉 Matches:
+
+  "1234" ✅ (exact 4 digits)
+  "912345" ✅ (kyunki "9123" ya "1234" substring match ho jata hai)
+  "99" ❌ (sirf 2 digits hai)
+
+
+
+2. /^[0-9]{4}$/ → poora text hi exactly 4 digits hona chahiye
+
+  await page.getByText(/^[0-9]{4}$/).click();
+
+
+👉 Matches:
+
+    "1234" ✅ (poora text 4 digits ka hai)
+    "912345" ❌ (6 digits)
+    "99" ❌ (2 digits)
+
+
+
+
+3. Mixed case (letters + numbers)
+
+<div>Order1234</div>
+<div>AB12</div>
+<div>5678</div>
+
+
+// substring 4 digits kahin bhi
+await page.getByText(/[0-9]{4}/).click(); 
+// ✅ Matches "Order1234" (last 4 digits), "5678"
+
+// exactly 4 digits aur kuch nahi
+await page.getByText(/^[0-9]{4}$/).click(); 
+// ✅ Matches only "5678"
+
+
+
+
+📌 Summary
+
+exact: true → strict string match.
+Regex [A-Z] → matches any uppercase letter inside text.
+Regex [a-z] → matches any lowercase letter inside text.
+Regex [A-Za-z]{4} → matches exactly 4-letter words.
+^...$ → anchors to match the whole string exactly.
+
+
+🎯 Summary
+
+[0-9] → ek digit (0 se 9)
+[0-9]{4} → lagataar 4 digits kahin bhi text ke andar
+/^[0-9]{4}$/ → poora text sirf aur sirf 4 digits ka ho
+
+
+⚡ Example use case in testing:
+PIN code validation → /^[0-9]{4}$/ (sirf 4 digits allowed, aur kuch nahi)
+Order number search → /[0-9]{4}/ (text me kahin bhi 4 digits aa jaye toh chalega)

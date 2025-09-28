@@ -1,0 +1,183 @@
+🏷️ What is Test Tagging in Playwright?
+
+Tagging ka matlab hota hai ki aap test cases ya test groups ko ek label de sakte ho jaise:
+
+    @fast → Jaldi chalne wale tests
+    @slow → Lambey time lene wale tests
+    @api, @ui, @mobile → Test type ke hisaab se
+
+
+✅ Tag Lagane ke 2 Tarike:
+----------------------------------
+
+1️⃣ Test title me @ token:
+
+    test('test login page @fast', async ({ page }) => {
+    // fast test logic
+    });
+
+
+2️⃣ tag: option ke through:
+
+    test('test full report', {
+    tag: '@slow',
+    }, async ({ page }) => {
+    // slow test logic
+    });
+
+✅ Note: Tags always start with @ symbol.
+
+
+🧪 Group level tags with test.describe:
+
+test.describe('Reports module', {
+  tag: '@report',
+}, () => {
+
+  test('report header', async ({ page }) => {
+    // Inherits @report tag
+  });
+
+  test('test full report', {
+    tag: ['@slow', '@vrt'],
+  }, async ({ page }) => {
+    // Has @slow + @vrt
+  });
+
+});
+
+
+
+
+🚀 Run Tests by Tag — --grep
+-----------------------------------------------
+
+✅ Only run tests with a specific tag: npx playwright test --grep @fast
+
+e.g. - npx playwright test tests/example.spec.ts --grep "@slow"
+
+This command will only run test with slow tag and in report for that test slow tag will also appears
+
+❌ Skip tests with a tag: npx playwright test --grep-invert @fast
+
+e.g. - npx playwright test tests/example.spec.ts --grep-invert "@slow"
+
+This will run tests that are not marked as slow
+
+
+
+✅ Run tests that have either of two tags (OR logic): npx playwright test --grep "(?=.*@fast)(?=.*@slow)"
+
+
+⚙️ Tag Filter in playwright.config.ts
+Aap ye filter config file me bhi de sakte ho:
+
+// Run only @api tests
+export default defineConfig({
+  grep: /@api/,
+});
+
+Project level pe:
+
+projects: [
+  {
+    name: 'API',
+    grep: /@api/,
+  },
+  {
+    name: 'UI',
+    grep: /@ui/,
+  }
+]
+
+
+
+💡 Real Use Cases:
+
+
+| Tag     | Kab use karein                                |
+| ------- | --------------------------------------------- |
+| `@fast` | Smoke tests, login checks, simple validations |
+| `@slow` | Visual comparisons, report downloads          |
+| `@api`  | Backend-only tests                            |
+| `@ui`   | End-to-end with UI interactions               |
+| `@vrt`  | Visual regression tests                       |
+
+💬 Interview Ready Line:
+
+We use tagging to logically group and selectively run tests. 
+With --grep, we can target fast, slow, or feature-specific tests. 
+It’s extremely useful in CI pipelines where we want to run only a subset of tests
+
+
+
+✅ Custom Tags Allowed
+Jaise aap chahe waise tag bana sakte ho:
+
+    - @regression
+    - @mobile
+    - @checkout
+    - @smoke
+    - @sanity
+    - @loginFeature
+    - @critical
+
+Even @yourname, @jira-1234, etc.
+
+Bas ek rule hai: Tag hamesha @ se start hona chahiye.
+(Ye Playwright ka requirement hai for identifying it as a tag.)
+
+
+********************************************************************************8
+
+
+✅ Conditionally skip a group of tests
+
+For example, you can run a group of tests just in Chromium by passing a callback.
+
+example.spec.ts
+
+test.describe('chromium only', () => {
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Chromium only!');
+
+  test.beforeAll(async () => {
+    // This hook is only run in Chromium.
+  });
+
+  test('test 1', async ({ page }) => {
+    // This test is only run in Chromium.
+  });
+
+  test('test 2', async ({ page }) => {
+    // This test is only run in Chromium.
+  });
+});
+
+
+**********************************************************************
+🔴 pending items
+
+- Use fixme in beforeEach hook
+- Runtime annotations
+
+
+***********************************************************************
+
+✅ List of Common Playwright Test APIs:
+
+| Keyword / Function  | Purpose & Use Case                                                           |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `test`              | Define a test case.                                                          |
+| `test.describe()`   | Group multiple related tests.                                                |
+| `test.beforeAll()`  | Run **once** before all tests in a group or file.                            |
+| `test.afterAll()`   | Run **once** after all tests in a group or file.                             |
+| `test.beforeEach()` | Run **before every test** (for common setup like login, navigation, etc).    |
+| `test.afterEach()`  | Run **after every test** (for cleanup like logout, clear storage, etc).      |
+| `test.skip()`       | Skip a test conditionally or unconditionally.                                |
+| `test.only()`       | Run **only** this test (used for debugging).                                 |
+| `test.fixme()`      | Mark a test that is broken or needs work.                                    |
+| `test.fail()`       | Mark test as expected to fail (e.g., known bug).                             |
+| `test.slow()`       | Tells Playwright to **increase timeout** for this test.                      |
+| `test.step()`       | Used to **log logical steps** inside a test in trace viewer or report.       |
+| `expect()`          | Assertion API (comes from `@playwright/test`)                                |
+| `test.use()`        | Temporarily override fixtures or context options per test or describe group. |

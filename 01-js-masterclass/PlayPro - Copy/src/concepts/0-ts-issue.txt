@@ -1,0 +1,57 @@
+You created a folder and installed pw framework inside it.
+After that u want to create raw ts files and run some scripts as ts files and when u run them u will get below error - 
+
+TypeError: Unknown file extension ".ts" 
+for D:\2025\17-sid-pw-course\JS-PW-Collections\01-js-masterclass\PlayPro\src\concepts\1-records-examples.ts at 
+Object.getFileProtocolModuleFormat [as file:] (node:internal/modules/esm/get_format:218:9) at 
+defaultGetFormat (node:internal/modules/esm/get_format:244:36) at defaultLoad (node:internal/modules/esm/load:122:22) 
+at async ModuleLoader.load (node:internal/modules/esm/loader:570:7) at async ModuleLoader.moduleProvider 
+(node:internal/modules/esm/loader:443:45) at async ModuleJob._link (node:internal/modules/esm/module_job:106:19) 
+{ code: 'ERR_UNKNOWN_FILE_EXTENSION'
+
+This is bcoz - Node.js does not natively understand TypeScript files (.ts) because it only executes 
+JavaScript (.js) files.
+
+So as solution - one way is to install ts-node package which allows you to run TypeScript files directly 
+                 without precompiling them to JavaScript.
+
+
+Steps - 
+
+1. Install ts-node & typescript as dev dependencies - npm install --save-dev typescript ts-node
+
+2. Add a tsconfig.json
+
+Generate one with command : npx tsc --init
+
+Once you run this command, a tsconfig.json file will be created in your current directory.
+Replace its content with below content - 
+
+{
+    "compilerOptions": {
+      "target": "ES2020",
+      "module": "CommonJS",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "strict": true,
+      "skipLibCheck": true
+    }
+  }
+  
+  3. Run your file
+
+  Now you should be able to run:   npx ts-node src/concepts/1-records-examples.ts
+
+  and even if u do right click on ts file and click on run it will work.
+
+
+  4. (Optional) Add npm script
+
+  So you don’t need to type the full command every time, add to your package.json:
+
+  "scripts": {
+  "start": "ts-node src/concepts/1-records-examples.ts"
+}
+
+Now you can just run: npm start
+

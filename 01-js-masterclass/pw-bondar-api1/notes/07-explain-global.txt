@@ -1,0 +1,18 @@
+Explain below code:
+
+declare global {
+    namespace PlaywrightTest {
+        interface Matchers<R> {
+            shouldEqual(expected: any): R;
+        }
+    }
+}
+
+and Y it is needed?
+
+I created custom expect with name shouldEqual but when I use it in tests it was throwing red color error
+i.e.
+
+Property 'shouldEqual' does not exist on type '{ not: MakeMatchers<void, any, {}>; resolves: MakeMatchers<Promise<void>, any, {}>; rejects: MakeMatchers<Promise<void>, any, {}>; } & ... 6 more ... & SnapshotAssertions'.
+
+So to avoid this error and fix it we added above code in custom-expect.ts file

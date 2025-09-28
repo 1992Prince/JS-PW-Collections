@@ -1,0 +1,381 @@
+https://playwright.dev/docs/test-annotations
+
+✅ "Playwright me aap tags aur annotations use kar sakte ho, jo test report me clearly show hote hain."
+
+✅ "Annotations aap ek test pe bhi laga sakte ho, ya pura test group (describe block) pe bhi."
+
+✅ "Kuch built-in annotations condition ke hisaab se apply hote hain — jaise agar koi test sirf Chrome me fail ho raha ho, toh us condition ke base pe skip ya fail mark kar sakte ho."
+
+✅ "Ek test pe aap ek se zyada annotations bhi laga sakte ho — aur har config ke according woh alag behave kar sakte hain."
+
+✅ "Playwright me kuch built-in annotations already diye gaye hain — jaise:"
+
+        - test.skip() – test ko chhod deta hai
+        - test.fail() – test ko intentionally fail expect karta hai
+        - test.fixme() – batata hai ki yeh test abhi theek nahi hai
+        - test.slow() – test ko extra time deta hai
+
+✅ Annotations se hum test execution ko zyada control kar sakte hain, 
+    aur test reports bhi clean aur samajhne layak bante hain.
+
+Ab main tujhe real example ke through 4 tests in one spec file explain karta hoon 
+    using each built-in annotation in Playwright:
+
+
+
+
+🔍 1. test.skip() – Skip test completely
+
+✅ What it does: Ye test chalega hi nahi
+💼 Real use case: Feature not developed, or test is environment-specific
+🧪 Example above: 'Profile test - not ready' is skipped
+📊 Result: Out of 4 tests, only 3 will attempt to run
+This test appears as skipped in report
+
+
+
+
+🔍 2. test.fail() – Expected to fail
+
+✅ What it does: Ye test chalega, lekin fail hona chahiye
+Agar ye pass ho gaya toh Playwright test suite ko fail karega
+
+💼 Real use case: Known bug, you want to track it but not block pipeline
+🧪 Example: 'Cart test - known bug on Safari'
+📊 Result:
+Test will run
+If it fails, it's fine (✅)
+If it passes, suite fails ❌
+
+So for test wch u marked it fail, if that tc is passed then in report this tc will be marked as failed.
+when u open this test in report , u can see that 
+Annotations - fail
+Errors      - Expected to fail, but passed.
+
+
+lekin after execution when that test wch u marked fail is actully failed then in report
+it will come passed with Errors as real console errors etc.
+
+NOTE: all above execution testing I am doing execution in sequence.
+
+
+🔹 test.fail() kya karta hai?
+
+  By default, Playwright expect karta hai ki test pass ho.
+  Agar tum test.fail() use karte ho, to tum Playwright ko bolte ho:
+
+👉 “Is test ka expected outcome = FAIL hai.”
+
+Matlab:
+
+  Agar test fail ho jata hai → Playwright bolega ✅ (Expected Fail)
+
+  Agar test pass ho jata hai → Playwright bolega ❌ (Unexpected Pass)
+
+  
+🔹 Kab use karte hain?
+
+  1. Known Bug / Defect
+  
+    Jab tumhe pata hai ki ye test abhi fail karega kyunki app me bug hai.
+  
+    Tum test.fail() mark kar dete ho, taaki report me fail na dikhe “unexpectedly”, balki expected fail lage.
+  
+  2. Work-in-progress test
+  
+    Jab feature abhi complete nahi hua hai.
+  
+    Tum test likh kar mark kar dete ho fail() → CI pipeline me “expected fail” show karega.
+
+  🔹 Example
+
+  import { test, expect } from '@playwright/test';
+
+  test('login button works', async ({ page }) => {
+      test.fail(); // Marked as expected to fail
+  
+      await page.goto('https://www.saucedemo.com/v1/');
+  
+      // Deliberatily Failed Assertion
+      await expect(page).toHaveURL('/dashboard');
+});
+  
+
+👉 Ab kya hoga?
+
+Agar bug hai aur ye test fail hota hai → Report karega ✅ expected fail
+
+Agar bug fix ho jata hai aur test pass ho jata hai → Report karega ❌ unexpected pass 
+(iska matlab bug fix ho gaya, ab test.fail() hata do).
+
+Matalab test.fail() mark karne se ab for this test yeh expectation hogi ki yeh fail kare and once it is failed
+report me yeh failed nae dikhega, report me it will come like ✅ means this is passed since expected behaviour 
+was fail
+
+Lekin agar test pass ho jata hah in that case , in report test result for this test will come failed
+kyu ki expected fail tha na ki pass and this tells to developer ki bug fix ho gaya hah
+
+Scenario real use case:
+u written one automation script and not it is failing due to some bug:
+Now either u mark it text.fixme so that dobara na run ho ya mark it test.skip()
+lekin agar tumhe run karna hah har baar to check agar bug fix ho jae toh tumhe pata lag jae, alag se Functionality
+check na karni padi ki fix hua ya nae bug then in that case mark this test as test.fail()
+ki expected behaviour of this test if fail
+so agar test fail hoga after execution that means bug abhi fix nae hua hah and report me pass show karega ✅
+lekin agar test pass hogaya , matalab bug fix ho gaya hah and report me fail show karega means ab
+test.fail() remove kar do uss test se
+
+
+🔍 3. test.fixme() – Skip test and mark as "needs fixing"
+
+✅ What it does: Test run hi nahi karta
+💼 Real use case: Test is crashing, flaky, or unstable — log as "to fix later"
+🧪 Example: 'Payment test - unstable after backend change'
+📊 Result:
+This test will be skipped silently
+In report, it appears as ⚠️ fixme
+
+In report, it will come under Skipped section and under Annotations - fixme will appear
+
+
+
+🔍 4. test('Login test', ...) – Normal test
+
+✅ This one will run normally
+
+
+
+
+🔍 5. test.slow() - marks the test as slow and triples the test timeout.
+
+✅ What it does:
+Ye annotation test ko zyada timeout deta hai. By default Playwright ka timeout hota hai 30 seconds, 
+aur test.slow() usko 3× (i.e. 90 seconds) kar deta hai.
+
+⏱️ Default Maximum Time for a Test in Playwright
+    ✅ By default, Playwright gives each test a maximum of 30 seconds (30,000 ms) to complete.
+    If the test takes longer than 30s, it will automatically fail with a timeout error.
+
+🔧 How to Increase It
+You have 3 options:
+
+✅ 1. Use test.slow()
+Multiplies the timeout by 3 — so the test gets 90 seconds.
+
+test.slow('slow test', async ({ page }) => {
+  // test now has 90 seconds
+});
+
+
+✅ 2. Set timeout for one test manually:
+
+test('long test', async ({ page }) => {
+  // test logic
+}).timeout(60000); // 60 seconds
+
+
+✅ 3. Change globally in playwright.config.ts:
+
+use: {
+  timeout: 60000  // applies to each test
+}
+
+By default, each test has 30 seconds timeout. For slow operations like file uploads or complex flows, 
+we either increase the timeout manually or use test.slow() to give the test more breathing room 
+without changing global settings.
+
+
+What error you will get if your script takes longer time than 30 secs and it failed?
+Suppose I haven't increased the tests timing in config file or for test specifically or made it slow.
+Then If I script takes longer than 30 seconds then I will get:
+
+Test timeout of 30000ms exceeded.
+Error: page.waitForTimeout: Test timeout of 30000ms exceeded.
+
+test.only('has title', async ({ page }) => {
+  await page.goto('https://playwright.dev/');
+
+  await page.waitForTimeout(40000); // wait for 40 secs
+  // Expect a title "to contain" a substring.
+  await expect(page).toHaveTitle(/Plapqweywright/);
+
+});
+
+-------------------------------------------------------------------------------------
+
+
+
+🧠 Focus a test
+
+You can focus some tests. When there are focused tests, only these tests run.
+
+test.only('focus this test', async ({ page }) => {
+  // Run only focused tests in the entire project.
+});
+
+🧠  Skip a test - Mark a test as skipped.
+
+🧠  Conditionally skip a test
+
+🔹 Kya hota hai Conditional Skip in Playwright?
+    - ✅ Matlab: Test ko kuch condition ke basis pe skip karna.
+    - Jaise: "Agar browser Firefox hai toh test run mat karo."
+
+💡 Real-World Use Case:
+    
+    "Mera test Chrome me theek chal raha hai, but Firefox me ek bug hai — fix aane tak mujhe us test 
+    ko sirf Firefox ke liye skip karna hai.
+
+   
+example, suppose u want to skip your particular test in firefox then u can do is
+
+test('has title', async ({ page, browserName }) => {
+
+  test.skip(browserName === 'firefox', 'Still working on it'); // skip if browserName is firefox
+
+  await page.goto('https://playwright.dev/');
+
+  await expect(page).toHaveTitle(/Plapqweywright/);
+
+});
+
+If u run your spec in firefox then this test will be skipped and comes under skipped section in report
+and under 
+Annotations: skip: Still working on it. => this will populate
+
+
+
+
+
+
+
+
+
+
+
+🔷 🧠 What is test.describe() in Playwright?
+
+➤ test.describe() ek block hai jisme aap multiple related tests ko group kar sakte ho.
+
+Ye group aapko:
+
+    - Ek logical naam dene me help karta hai (jaise "Login Tests", "Cart Tests", etc.)
+    - Us group ke andar beforeAll, afterAll, beforeEach, afterEach hooks define kar sakte ho
+    - Aur reports me bhi ye group naam dikhta hai
+
+📘 Example:
+
+import { test, expect } from '@playwright/test';
+
+test.describe('Login Functionality', () => {
+
+  test('Valid credentials', async ({ page }) => {
+    await page.goto('https://example.com/login');
+    // login test with valid creds
+  });
+
+  test('Invalid credentials', async ({ page }) => {
+    await page.goto('https://example.com/login');
+    // login test with invalid creds
+  });
+
+});
+
+🧾 Report Output:
+
+Login Functionality
+   ✓ Valid credentials
+   ✓ Invalid credentials
+
+
+
+🔧 Why use test.describe()?
+| Reason                         | Benefit                                                   |
+| ------------------------------ | --------------------------------------------------------- |
+| Grouping tests                 | Logical structure & clear reports                         |
+| Apply setup/teardown per group | Hooks like `beforeEach()` run only inside that group      |
+| Easier debugging               | You can run/skip a whole group with `.only()` / `.skip()` |
+
+
+🛠️ With Hooks Example:
+
+test.describe('Cart Tests', () => {
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('https://example.com');
+    // Login or set up state
+  });
+
+  test('Add to cart', async ({ page }) => {
+    // Test logic
+  });
+
+  test('Remove from cart', async ({ page }) => {
+    // Test logic
+  });
+
+});
+
+➡️ Yahan beforeEach() sirf Cart tests ke liye chalega.
+
+🔥 Bonus:
+    - test.describe.only() → run only that group
+    - test.describe.skip() → skip entire group
+    - You can nest test.describe() blocks too (but avoid deep nesting for readability)
+
+
+🧠 Interview Line:
+"We use test.describe() to group related test cases and apply setup/cleanup only to that group. 
+It also improves readability, maintainability, and makes test reports more meaningful."
+
+
+
+🧪 Scenario:
+Suppose ye code hai:
+
+// 📍 Global hook
+test.beforeEach(async ({ page }) => {
+  console.log('🔁 Global beforeEach: Visit homepage');
+  await page.goto('https://example.com');
+});
+
+// 🧪 Test group
+test.describe('Cart Tests', () => {
+
+  // 📍 Group-level hook
+  test.beforeEach(async ({ page }) => {
+    console.log('🛒 Group beforeEach: Login or setup cart');
+    // maybe login or load cart items
+  });
+
+  test('Add to cart', async ({ page }) => {
+    console.log('✅ Test: Add to cart');
+  });
+
+  test('Remove from cart', async ({ page }) => {
+    console.log('✅ Test: Remove from cart');
+  });
+});
+
+
+✅ Execution Order (for each test inside Cart Tests):
+    🔁 Global beforeEach() runs first
+    🛒 Group-level beforeEach() runs second
+    ✅ Test case runs
+
+🖨️ Output will look like (for each test):
+    🔁 Global beforeEach: Visit homepage
+    🛒 Group beforeEach: Login or setup cart
+    ✅ Test: Add to cart
+
+🧠 Why important?
+    Global hook = shared setup for all tests (like setting baseURL or clearing storage)
+    Group-level hook = specific setup for related tests (like login or adding items)
+
+
+🤔 If there's a test.beforeAll() globally and inside describe()?
+
+Similar rule:
+
+    Global beforeAll() → runs once before all tests start
+    Group beforeAll() → runs once before only that group’s tests

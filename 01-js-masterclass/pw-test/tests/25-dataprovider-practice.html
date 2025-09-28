@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Page</title>
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="loginForm">
+    <label>Username: 
+      <input type="text" id="username" />
+    </label>
+    <br><br>
+    <label>Password: 
+      <input type="password" id="password" />
+    </label>
+    <br><br>
+    <button type="button" onclick="login()">Login</button>
+  </form>
+
+  <p id="message" style="color:red;"></p>
+
+  <script>
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const message = document.getElementById("message");
+
+      if (user === "rahul" && pass === "pass123") {
+        message.style.color = "green";
+        message.textContent = "Login successful!";
+      } else {
+        message.style.color = "red";
+        message.textContent = "Invalid username or password!";
+      }
+    }
+  </script>
+</body>
+</html>

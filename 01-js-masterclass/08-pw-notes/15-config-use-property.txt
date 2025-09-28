@@ -1,0 +1,92 @@
+🏗️ Levels of use in Playwright
+
+1️⃣ Root-level use (config ke top pe)
+
+    - Ye default config hai jo sab tests/specs pe apply hoti hai.
+
+    - Jaise common cheezein: screenshot policy, video, baseURL, timezone, locale, etc.
+
+
+// playwright.config.ts
+export default defineConfig({
+  use: {
+    headless: true,
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+});
+
+
+➡️ Matlab: sab tests headless chalenge, aur sirf fail hone pe screenshot aayega.
+
+
+
+2️⃣ Project-level use
+
+    Ye root use ke upar override hota hai.
+
+    Matlab root me defined cheez rakhega, but agar tum project ke andar usi property ko dobara set karte ho to wo 
+    override ho jaayegi.
+
+
+    projects: [
+    {
+        name: 'chromium headed',
+        use: { ...devices['Desktop Chrome'], headless: false }, // override root headless:true
+    },
+    {
+        name: 'firefox headless',
+        use: { ...devices['Desktop Firefox'], headless: true }, // keep default headless:true
+    },
+    ]
+
+➡️ Matlab:
+
+    Chromium GUI mode me chalega (override).
+
+    Firefox headless (root ka default follow karega).
+
+
+
+
+3️⃣ Spec-level test.use
+
+    Tum spec file ke andar ya individual tests pe test.use() laga sakte ho.
+
+    Ye project + root dono ko override karta hai.
+
+    Sirf usi spec/test par apply hota hai jaha define kiya hai.
+
+
+
+    // tests/login.spec.ts
+    import { test, expect } from '@playwright/test';
+
+    // 👇 Spec-level override: applies to all tests in this file
+    test.use({ headless: false, storageState: 'loggedIn.json' });
+
+    test('should show user profile', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('h1')).toHaveText('Welcome back');
+    });
+
+    // 👇 Even more granular: override per test
+    test('should show guest homepage', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('h1')).toHaveText('Hello Guest');
+    });
+
+
+
+⚖️ Priority Order (Lowest → Highest)
+
+    1. Root-level use (default for all)
+
+    2. Project-level use (override root for that project only)
+
+    3. Spec/Test-level test.use (override everything for that spec/test only)
+
+
+✅ So tu yaad rakh:
+Root → Project → Spec/Test
+Jis level pe define karega, wo neeche wale level ko override karega.

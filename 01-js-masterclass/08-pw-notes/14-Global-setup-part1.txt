@@ -1,0 +1,250 @@
+🌍 Global Setup & Teardown in Playwright
+
+
+Playwright Test me dono tarike hote hain:
+
+1) Project Dependencies (✅ Recommended)
+
+        Ek project banaate ho jo pehle run hota hai aur doosre projects uspe depend karte hain.
+
+        Report me alag se dikhai deta hai.
+
+        Traces/fixtures supported hote hain.
+
+        Teardown bhi define kar sakte ho.
+
+2) globalSetup / globalTeardown (Config option)
+
+        Config me define karte ho.
+
+        Sirf ek file run hoti hai start aur end me.
+
+        Report/traces me nahi dikhte.
+
+        Fixtures ka support nahi hota.
+
+        Browser khud launch karna padta hai agar chahiye.
+
+    
+⚖️ Comparison
+
+| Feature               | **Project Dependencies (Recommended)** | **`globalSetup` in config**           |
+| --------------------- | -------------------------------------- | ------------------------------------- |
+| Runs before all tests | ✅ Yes                                  | ✅ Yes                                 |
+| Shown in HTML report  | ✅ Yes (as project)                     | ❌ No                                  |
+| Trace recording       | ✅ Supported                            | ❌ Not supported                       |
+| Can use fixtures      | ✅ Yes                                  | ❌ No                                  |
+| Browser mgmt          | ✅ With `browser` fixture               | ❌ Manually via `browserType.launch()` |
+| Retries/parallelism   | ✅ Yes                                  | ❌ No                                  |
+
+
+
+🔗 Project Dependencies Flow
+
+1. Har project ek independent "unit" hota hai
+
+    Har project apna browser context, config, env leke run hota hai.
+
+    Tum playwright.config.ts me multiple projects define kar sakte ho.
+
+    Normally ye parallel run hote hain.
+
+
+2. Dependency define karna
+
+Agar Project B ko chalne se pehle Project A run karna zaroori hai, to hum bol dete hain:
+
+{
+  name: 'Project B',
+  dependencies: ['Project A'],
+}
+
+Matlab → "B start tabhi hoga jab A complete ho jaaye".
+
+
+3. Setup project
+
+Tum ek setup project banaate ho, jo sirf setup tests run karega (jaise DB create karna, seed data dalna, etc.).
+
+Example:
+
+{
+  name: 'setup db',
+  testMatch: /global\.setup\.ts/,
+}
+
+
+Yaha global.setup.ts file ek normal test file hi hai, but wo "setup" kaam karti hai.
+
+4. Dependent project
+
+Tumhare actual test projects bolte hain → "hume pehle setup db chahiye".
+
+Example:
+
+{
+  name: 'chromium with db',
+  use: { ...devices['Desktop Chrome'] },
+  dependencies: ['setup db'],
+}
+
+
+Matlab: "Ye tests tab tak start hi nahi honge jab tak setup db complete nahi hota."
+
+5. Teardown project (optional)
+
+Tum cleanup project bana sakte ho jo setup ke baad chalega.
+
+Example:
+
+    {
+    name: 'setup db',
+    testMatch: /global\.setup\.ts/,
+    teardown: 'cleanup db',  // 👈 teardown linked
+    },
+    {
+    name: 'cleanup db',
+    testMatch: /global\.teardown\.ts/,
+    }
+
+
+🔁 Execution Flow Example
+
+Maan lo tumhare paas ye 3 projects hain:
+
+1. setup db
+
+2. chromium with db (depends on setup db)
+
+3. cleanup db (teardown of setup db)
+
+Aur tum run karte ho: npx playwright test
+
+
+
+Execution order:
+
+1. 🛠 Run setup db project
+
+    Runs tests/global.setup.ts
+
+    Example: create DB, seed test data
+
+2. 🧪 Run chromium with db project
+
+    Runs your real tests (e.g. tests/menu.spec.ts)
+
+    Uses the database created above
+
+3. 🧹 Run cleanup db project
+
+    Runs tests/global.teardown.ts
+
+    Example: delete/drop DB
+
+
+
+✅ Benefits of this flow
+
+Tumhare setup aur teardown bhi tests ki tarah behave karte hain (report me dikhte hain, trace record hota hai, 
+fixtures available hote hain).
+
+Agar setup fail hota hai → dependent projects run hi nahi karte.
+
+Agar multiple test projects hain (e.g. Chromium, Firefox, WebKit), sab setup ke baad run karte hain.
+
+
+
+
+🤔 Doubt: "Mere paas bahut saari spec files hain, kaise decide hoga kaun sa spec kis project ke andar aayega?"
+
+Answer:
+👉 Ye config.ts me tumhe decide karna hota hai ki kaun si test files kis project ke under run hongi.
+Ye control hota hai through:
+
+testDir → root folder jaha tests hain.
+
+testMatch → regex ya glob pattern jo batata hai ki kaun si files is project me run hongi.
+
+dependencies → batata hai ki ye project pehle wale project ke complete hone ka wait karega.
+
+Example:
+
+Maan lo tumhare paas ye structure hai:
+
+tests/
+ ├─ global.setup.ts
+ ├─ global.teardown.ts
+ ├─ auth.spec.ts
+ ├─ menu.spec.ts
+ ├─ cart.spec.ts
+ └─ search.spec.ts
+
+
+Aur tum chahte ho:
+
+    1. setup db project → sirf global.setup.ts run kare.
+
+    2. cleanup db project → sirf global.teardown.ts run kare.
+
+    3. chromium tests project → saare functional specs (*.spec.ts) run kare after setup.
+
+
+
+🛠 Example playwright.config.ts
+
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+
+  projects: [
+    // 1) Setup Project
+    {
+      name: 'setup db',
+      testMatch: /global\.setup\.ts/,   // 👈 runs only setup file
+      teardown: 'cleanup db',           // 👈 linked to cleanup project
+    },
+
+    // 2) Cleanup Project
+    {
+      name: 'cleanup db',
+      testMatch: /global\.teardown\.ts/, // 👈 runs only teardown file
+    },
+
+    // 3) Main Chromium Project (depends on setup db)
+    {
+      name: 'chromium tests',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /.*\.spec\.ts/,        // 👈 runs all spec files (except setup/teardown)
+      dependencies: ['setup db'],       // 👈 will wait for setup db
+    },
+
+    // 4) Example: another browser project
+    {
+      name: 'firefox tests',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: /.*\.spec\.ts/,        // 👈 runs all spec files
+      dependencies: ['setup db'],       // 👈 will also wait for setup db
+    },
+  ],
+});
+
+
+
+🔁 Execution Flow (when you run npx playwright test)
+
+    1. 🛠 setup db project runs first (global.setup.ts).
+
+    2. 🧪 Then all dependent projects (chromium tests, firefox tests) run in parallel.
+
+        - Each of them will run all the spec files matched by their testMatch.
+
+        - Example: auth.spec.ts, menu.spec.ts, cart.spec.ts, etc.
+
+    3. 🧹 Finally, cleanup db project runs (global.teardown.ts).
+
+
+✅ So tumhare saare specs (*.spec.ts) automatically chromium tests & firefox tests projects ke andar chale jaayenge 
+    because of testMatch: /.*\.spec\.ts/.
+    Aur setup/teardown wali files unke alag-alag projects me match ho jaayengi.

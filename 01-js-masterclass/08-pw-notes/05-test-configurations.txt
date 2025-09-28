@@ -1,0 +1,386 @@
+/*
+Test configuration
+
+Playwright has many options to configure how your tests are run. 
+You can specify these options in the configuration file. 
+Note that test runner options are top-level, do not put them into the use section.
+
+🧠 What does this mean:
+"Test runner options are top-level, do not put them in the use section."
+
+
+🔑 Explanation in simple words:
+Playwright Config file (usually playwright.config.ts or .js) has two types of options:
+
+1. 🧪 Test Runner Options → Top-level config
+
+These control how the test runs — e.g. test directory, timeout, retries, etc.
+
+✅ Example:
+
+const config = {
+  testDir: './tests',
+  timeout: 30000,
+  retries: 2,
+  reporter: 'html',
+};
+
+⚠️ These must be at the top-level — not inside the use block.
+
+2. 🌐 Browser Context Options → Inside use
+
+These control the browser behavior or context — e.g. headless, viewport, baseURL, etc.
+
+✅ Example:
+
+const config = {
+  use: {
+    headless: false,
+    viewport: { width: 1280, height: 720 },
+    baseURL: 'https://example.com'
+  }
+};
+
+
+NOTE:
+✅ In Playwright, the config file (playwright.config.ts) defines default behavior for all tests via properties 
+like screenshot, video, trace, headless, etc. These are set at the project level, but can be overridden at the test, 
+project, or code level. For example, even if screenshot: "off" is set globally, you can still take a screenshot using 
+page.screenshot() in code. Similar override behavior applies to video, trace, viewport, 
+and other settings — Playwright prioritizes the most specific configuration (code > test > project).
+
+https://playwright.dev/docs/test-configuration
+Basic Configuration for Playwright Tests:
+
+import { defineConfig } from '@playwright/test';   
+        - testDir           -    Where Playwright looks for test files
+        - fullyParallel     -   Run all tests in full parallel
+        - forbidOnly        -   Prevent .only() commits on CI
+        - retries           -   Set test retry attempts
+        - workers           - How many workers to use (parallelism)
+        - reporter          - Output format (e.g., html, list, dot)
+        - use               - Default browser context settings
+                - baseURL
+                - headless
+                - viewport
+                - screenshot
+                - video
+                - trace
+        - projects          - 	Run same test in multiple browsers/devices
+        - webServer         -   Start dev server before running tests
+*/
+
+                    📁 use in playwright.config.js
+
+https://playwright.dev/docs/test-use-options
+
+                    // playwright.config.js
+                    const config = {
+                    use: {
+                        // your options here
+                    }
+                    };
+
+                    export default config;
+
+
+🔹 What is use?
+"use in playwright.config.js is a configuration object that defines context-level settings for all tests. 
+It acts as a default setup for the browser context—things like viewport size, base URL, geolocation, or 
+tracing—so you don’t have to repeat them in every test."
+
+🔹 Why is use Important?
+    - Promotes reusability: Shared config across all tests.
+    - Supports test isolation: Each test runs in a fresh, predictable browser context.
+    - Enables realistic simulation: With device emulation, permissions, geolocation, etc.
+    - Helps in debugging: With built-in support for video, screenshots, and trace capture.
+
+In use object we can keep below options:
+
+| **Category**        | **Option**     | **Used for**                                                                    |
+| ------------------- | -------------- | ------------------------------------------------------------------------------- |
+| ✅ **Basic Options** | `baseURL`      | Define the base path for relative URLs in navigation. Helpful for environments. |
+|                     | `storageState` | Persist login state. Enables authenticated sessions across tests.               |
+
+| **Category**             | **Option**    | **Used for**                                              |
+| ------------------------ | ------------- | --------------------------------------------------------- |
+| 📱 **Emulation Options** | `colorScheme` | Simulate light/dark mode for UI testing.                  |
+|                          | `geolocation` | Mock location—important for location-based features.      |
+|                          | `locale`      | Test internationalization/localization.                   |
+|                          | `permissions` | Grant browser-level permissions (e.g., camera, location). |
+|                          | `viewport`    | Set screen size for responsiveness testing.               |
+
+| **Category**           | **Option**          | **Used for**                                                 |
+| ---------------------- | ------------------- | ------------------------------------------------------------ |
+| 🌐 **Network Options** | `acceptDownloads`   | Allow or block file downloads in tests.                      |
+|                        | `extraHTTPHeaders`  | Add custom headers like auth tokens or localization headers. |
+|                        | `httpCredentials`   | Provide HTTP basic auth credentials.                         |
+|                        | `ignoreHTTPSErrors` | Useful when testing self-signed certificates in dev.         |
+|                        | `proxy`             | Route browser traffic through a proxy.                       |
+
+| **Category**             | **Option**   | **Used for**                                                             |
+| ------------------------ | ------------ | ------------------------------------------------------------------------ |
+| 🎥 **Recording Options** | `screenshot` | Take screenshots—on failure or always—for debugging UI issues.           |
+|                          | `trace`      | Capture Playwright trace viewer (DOM snapshots, actions, console, etc.). |
+|                          | `video`      | Record test sessions for review or debugging.                            |
+
+| **Category**         | **Option**        | **Used for**                                                             |
+| -------------------- | ----------------- | ------------------------------------------------------------------------ |
+| ⚙️ **Other Options** | `browserName`     | Set the target browser: `chromium`, `firefox`, `webkit`.                 |
+|                      | `bypassCSP`       | Ignore Content Security Policies (helpful for testing extensions, etc.). |
+|                      | `channel`         | Use a specific browser build like `chrome`, `msedge`.                    |
+|                      | `headless`        | Run tests without UI—for CI or speed.                                    |
+|                      | `testIdAttribute` | Define custom attribute for locators like `getByTestId()`.               |
+
+
+1)
+-------------------------------------------------------------------------------------------------
+Basic Options: baseURL - 
+
+baseURL is a config property that sets  a default base part of the URL so that you don't have to repeat
+the full domain in every test.
+
+🔹 What is baseURL?
+
+The baseURL is a default root URL used by Playwright to resolve all relative URLs in your tests. 
+You define it once in the config, and then in your test files, instead of writing full URLs again and again, 
+you just use relative paths.
+
+✅ Why it's useful:
+    - Keeps your test code clean and DRY (Don’t Repeat Yourself)
+    - Makes it easier to switch environments (just change baseURL)
+    - Supports seamless page.goto() navigation with short paths
+
+
+🛠️ How to Define baseURL in use
+
+    In your playwright.config.ts:
+
+    use: {
+    baseURL: 'https://playwright.dev',
+    }
+
+    This means that now, in your test code, you can use: await page.goto('/');
+
+    and it will internally resolve to: https://playwright.dev/
+
+
+📌 Why we use a slash ('/') in page.goto() instead of appending it to baseURL
+
+You should not include a trailing slash in baseURL unless it’s part of the domain path.
+
+Instead, always start your test paths with / in page.goto() — this tells Playwright to append the 
+relative path directly after the base domain, not to concatenate it blindly.
+
+🔍 Best Practice:
+
+    // Correct ✅
+    baseURL: 'https://playwright.dev',
+    await page.goto('/dashboard');
+
+    // Avoid ❌
+    baseURL: 'https://playwright.dev/'
+    await page.goto('dashboard') // Could give malformed URL
+
+
+📥 Example: Navigating to a Sub-Page like /community/window
+
+Assuming - baseURL: 'https://playwright.dev',
+
+Then in your test file: await page.goto('/community/window');
+
+This will correctly resolve to: https://playwright.dev/community/window
+
+🧪 Bonus: Dynamically Setting baseURL in Playwright
+
+🎯 Goal:
+We want to override config file values like baseURL dynamically — for example:
+
+we have diff baseurl for each envs like below:
+
+    - Local: http://localhost:3000
+    - Staging: https://staging.myapp.com
+    - Prod: https://myapp.com
+
+✅ 1. 🔧 In playwright.config.ts, use process.env:
+
+use: {
+  baseURL: process.env.BASE_URL || 'http://localhost:3000',
+}
+
+This means:
+
+    - If BASE_URL is provided from outside (like CLI or CI env), it will use that.
+    - Otherwise, it falls back to the default (localhost:3000).
+
+✅ 2. 🚀 CLI Syntax to pass env variable:
+You don’t use --base-url directly in CLI because baseURL is not a CLI flag — it’s a custom config property, 
+so we pass it via environment variable:
+
+BASE_URL=https://staging.myapp.com npx playwright test
+
+In Windows (CMD): set BASE_URL=https://staging.myapp.com && npx playwright test
+
+
+✅ Correct Way — Env Variable Se Override Karo
+Playwright ke config ke andar jo properties hoti hain (like baseURL), wo CLI flags se override nahi hoti directly.
+
+Unko override karne ka only way hai:
+➡️ Environment variable set karo
+➡️ Aur config file me process.env se read karo
+
+So set env variable for BASE_URL for Concourse or Jenkins or Gitlab
+
+**********************************************************************************************************
+
+----------------------------------------------------------------------------------------------------------
+Basic Options: storageState
+
+✅ What is storageState in Playwright?
+storageState is a Playwright context option that allows you to save and reuse authentication state like 
+cookies and local/session storage.
+
+It’s part of the use config or can be used programmatically via browserContext.storageState().
+
+🎯 Why Use storageState?
+To avoid logging in repeatedly in every test.
+
+Instead of doing login steps (e.g., filling login forms) in every test file, you can:
+
+        1) Run the login flow once.
+        2) Save the state to a file.
+        3) Reuse that file in all your tests via use.storageState.
+
+This makes your tests:
+
+        - Faster (no repeated login)
+        - Less brittle (less UI steps)
+        - Easier to maintain (centralized login logic)
+
+🧑‍💻 Real-Time Use Case
+
+    Say you're testing a banking dashboard. Every test needs a logged-in user. 
+    Logging in repeatedly wastes time.
+
+    With storageState, you:
+
+    - Log in once.
+    - Save cookies and localStorage (which includes session/auth tokens).
+    - Load that state before each test — so you start already logged in.
+
+✅ Additional Use Case: UI Login → API Testing with storageState
+
+🧩 Problem Scenario
+"In some real-world projects, the frontend UI is still under development or is flaky — maybe due to 
+unstable CSS selectors or frequent UI changes. 
+But I still need to test authenticated operations — like CRUD on user data, dashboards, orders, etc."
+
+🔒 But here's the catch:
+
+The backend team hasn't exposed an API to get auth tokens directly.
+
+So I can't do headless API testing without logging in through the UI at least once.
+
+🎯 Solution with storageState
+"I log in once via the UI, extract all the session-related storage (cookies, localStorage, sessionStorage), 
+and save it using storageState. Then in all my actual test cases, I don’t touch the UI at all. 
+I reuse the stored session and hit APIs directly."
+
+This gives me:
+
+    ✅ Reliable auth context
+    ⚡ Super fast test execution (since I bypass the UI)
+    💥 Less flakiness (no UI dependencies)
+
+🧪 Flow Diagram:
+
+[Login Test (UI)]
+     |
+     └──→ login → save storageState.json (cookies, localStorage)
+
+[Main Test Suite (API)]
+     |
+     └──→ load storageState → use tokens to make API calls (no UI)
+
+📂 Folder Structure Example
+
+e2e/
+├── auth.setup.js           // logs in and saves storageState
+├── storageState.json       // generated file
+├── playwright.config.js    // uses the file
+├── dashboard.spec.js       // starts already logged in
+
+
+📜 Example – auth.setup.js
+
+import { chromium } from '@playwright/test';
+
+async function globalSetup() {
+  const browser = await chromium.launch();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  // Perform login
+  await page.goto('https://yourapp.com/login');
+  await page.fill('#username', 'testuser');
+  await page.fill('#password', 'password123');
+  await page.click('button[type=submit]');
+
+  // Wait for navigation
+  await page.waitForURL('**/dashboard');
+
+  // Save storage state to file
+  await context.storageState({ path: 'storageState.json' });
+
+  await browser.close();
+}
+
+export default globalSetup;
+
+
+Then update playwright.config.js:
+
+const config = {
+  globalSetup: './auth.setup.js',
+  use: {
+    storageState: 'storageState.json',
+    baseURL: 'https://yourapp.com',
+  },
+};
+
+export default config;
+
+
+🧪 dashboard.spec.js
+
+import { test, expect } from '@playwright/test';
+
+test('should show user dashboard', async ({ page }) => {
+  await page.goto('/dashboard');
+  await expect(page.locator('h1')).toHaveText('Welcome back');
+});
+
+
+✅ No login steps — test starts from logged-in state!
+
+👥 Real-World Benefits to Teams & Users
+| Benefit                 | Impact                                                                 |
+| ----------------------- | ---------------------------------------------------------------------- |
+| 🔁 No Repeated Login    | Speeds up test runs in CI/CD                                           |
+| 💥 Fewer Flaky Tests    | Eliminates failures due to login page issues                           |
+| 🔐 Secure Auth Handling | Keeps auth logic in one place; avoids spreading credentials in code    |
+| 🌍 Multiple Users       | You can generate and test different `storageState` files per user role |
+| 🧪 Cleaner Test Code    | Focuses on business functionality, not login flows                     |
+
+**********************************************************************************************************
+2)
+----------------------------------------------------------------------------------------------------------
+**********************************************************************************************************
+
+----------------------------------------------------------------------------------------------------------
+**********************************************************************************************************
+
+----------------------------------------------------------------------------------------------------------
+**********************************************************************************************************
+
+

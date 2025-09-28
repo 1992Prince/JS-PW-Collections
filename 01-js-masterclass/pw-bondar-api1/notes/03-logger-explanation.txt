@@ -1,0 +1,177 @@
+
+export class APILogger {
+👉 Ek class banayi gayi hai APILogger jo request/response logs ko manage karegi.
+        export use hua hai taaki tum is class ko dusri files me import kar sako.
+
+private recentLogs: any[] = [];
+👉 Class ke andar ek private property banayi gayi hai:
+        - recentLogs ek array hai jisme saare logs store honge.
+        - private ka matlab hai ki class ke bahar se directly recentLogs access nahi kar paoge (encapsulation).
+        - any[] matlab array ke andar koi bhi type ke objects jaa sakte hain.
+
+
+logReqest(method: string, url: string, headers: Record<string, string>, body?: any) {
+👉 Ye ek method hai jo request details ko log karta hai.
+
+        method: string → jaise GET, POST, PUT
+        url: string → API endpoint URL
+        headers: Record<string, string> → headers ek object hoga jisme key-value pairs (string-string) rahenge
+        body?: any → optional hai (kyunki GET me body nahi hoti)
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+Doubt - what is this: const logEntry = { method, url, headers, body }
+
+
+        Normally agar tum ek js object banaoge, toh aise likhna padega:
+
+        const logEntry = { method: method, url: url, headers: headers, body: body };
+
+        Yaha clearly dikh raha hai ki key aur value same naam ke variables hai.
+
+JavaScript/TypeScript shorthand:
+
+javaScript me agar key aur variable ka naam same hai, toh tum shorthand me sirf ek baar likh sakte ho.
+Matlab: { method, url } => ka matlab hota hai:
+
+{ method: method, url: url }
+
+So in const logEntry = { method, url, headers, body }
+
+logEntry is an object like = {method:metod, url:url, headers:headers, body:body}
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+Explain - this.recentLogs.push({ type: 'Request Details', data: logEntry });
+
+    recentLogs ek array hai
+    any[] → array ke andar koi bhi type ka data (object, string, number, etc.) store ho sakta hai
+    Initially khali [] hai
+
+    push() ek JavaScript array method hai jo array ke end me naya element add karta hai.
+
+    { type: 'Request Details', data: logEntry }
+    Ye ek object literal hai jisme do properties hain:
+    type → string "Request Details" (yeh identify karta hai ki log entry kis type ka hai)
+    data → actual log data jo tumne logEntry variable me banaya tha
+
+    Example agar tum logRequest("POST", "/users", { "Content-Type": "application/json" }, { name: "Peter" }) 
+    call karte ho, toh logEntry banega:
+
+    {
+  "method": "POST",
+  "url": "/users",
+  "headers": { "Content-Type": "application/json" },
+  "body": { "name": "Peter" }
+}
+
+Aur push hoga recentLogs me as:
+
+{
+  "type": "Request Details",
+  "data": {
+    "method": "POST",
+    "url": "/users",
+    "headers": { "Content-Type": "application/json" },
+    "body": { "name": "Peter" }
+  }
+}
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+Explain below code:
+
+getRecentLogs() {
+        const logs = this.recentLogs.map(log => {
+            return `====${log.type}===\n${JSON.stringify(log.data, null, 4)}`
+        }).join('\n\n');
+
+        return logs;
+    }
+
+
+recentLogs ek array hai (jo tum push se fill kar rahe ho).
+map() ek array method hai jo har element pe function run karta hai aur ek new array return karta hai.
+
+return `====${log.type}===\n${JSON.stringify(log.data, null, 4)}`
+
+    Backticks (`) ka use hua hai → yeh template literal hai.
+    ${log.type} → request ya response ka type (jo tumne push me diya tha: "Request Details" ya "Response Details")
+    \n → newline character (next line me chale jao)
+    JSON.stringify(log.data, null, 4) →
+        - log.data ek object hai (jaise { method, url, headers, body })
+        - JSON.stringify(obj, null, 4) object ko JSON string banata hai pretty format me with 4 spaces indentation
+
+JSON.stringify() - Ye JavaScript ka built-in function hai jo ek object ya array ko string me convert karta hai.
+Format: JSON.stringify(value, replacer, space)
+    - value → object ya array jise convert karna hai
+    - replacer → optional filter function ya array (usually null dete hain)
+    - space → indentation ke liye number of spaces (ya string)
+
+
+Example without indentation
+
+const obj = { name: "Peter", age: 25 };
+console.log(JSON.stringify(obj));
+
+Output (ek hi line me): {"name":"Peter","age":25}
+
+Example with 4 indentation: console.log(JSON.stringify(obj, null, 4));
+
+Output:
+
+{
+    "name": "Peter",
+    "age": 25
+}
+
+👉 Yaha har nested property 4 spaces se indented hogi, isliye readable lagta hai.
+
+
+join() : join() ek array method hai jo array ke elements ko combine karke ek single string bana deta hai.
+    Format:: array.join(separator)
+    separator → har element ke beech ka text (default: ,)
+    Example:
+        const arr = ["Apple", "Banana", "Mango"];
+        console.log(arr.join(" | "));
+    Output:
+        Apple | Banana | Mango
+
+👉 Tumhare code me separator \n\n hai (2 new lines), matlab har log ke beech ek blank line aa jayegi.
+
+logs return karega ek bada string jo tumhari request/response log ka formatted report hoga
+
+
+
+map() kya karta hai?
+
+Ye ek array method hai.
+Ye original array ke har element pe ek callback function chalata hai.
+Callback jo return karega, us return value se ek new array banata hai.
+Original array ko modify nahi karta.
+
+🔹 Example 1 (Simple Numbers)
+
+const numbers = [1, 2, 3];
+
+const doubled = numbers.map(num => {
+  return num * 2;
+});
+
+console.log(doubled);
+
+👉 Output: [2, 4, 6]
+
+Yaha return num * 2 ki wajah se har element double ho gaya aur new array me aagaya.
+
+matalab is fun me - 
+
+    const logs = this.recentLogs.map(log => { return ====${log.type}===\n${JSON.stringify(log.data, null, 4)} }).join('\n\n');,
+    map return karta hah new array and we are calling join method on that to create one formatted string 
+    and storing it in logs variable [we are not storing new map in new variable but on same we are
+    calling join function]
+
+👉 Ab logs ek formatted string hoga jo tumhare sare request/response logs ko ek report ki tarah represent karega.

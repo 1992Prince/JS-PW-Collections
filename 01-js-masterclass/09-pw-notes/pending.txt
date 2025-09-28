@@ -1,0 +1,53 @@
+Frames - in detail - one practice question is pending , complete Dialogs next and then complete that question
+         of click on button, then entering text in js dialog box
+         find no of iframes present in webpage
+         find how to switch to parenframe to new frame or new framew to another framew or back to parent frame
+
+Dialogs - tomorrow planned 
+          If I need to make any utility for handling dialog or
+          in framework I need to handle or dismiss some or accept some in a flow then
+          in framework how should it will be developed as utility?
+          
+
+Actions
+
+xpath anscestors and siblinlgs all axes and css also - complete it by friday
+
+hard wait page.waitForTimeout(5000)
+
+fixtures vs hooks - vimp and its understanding for framework developement [understand it with live example]
+
+
+
+
+
+https://playwright.dev/docs/locators#filtering-locators - VIMP
+xpath and css in detail
+describe - https://playwright.dev/docs/test-annotations#group-tests
+slomo - [https://playwright.dev/docs/debug#headed-mode]
+timeouts - https://playwright.dev/docs/test-timeouts
+hooks
+fixtures
+create a record of string and number type and print its values and print all keys values using for-in loop
+RCA process of any script which is failing
+How you will make your framework scalable?
+
+What does skip do in below test
+
+    test('has title', async ({ page, browserName }) => {
+
+        test.skip(browserName === 'firefox', 'Still working on it');
+        await page.goto('https://playwright.dev/');
+    
+        //await page.waitForTimeout(40000); // wait for 40 secs
+        // Expect a title "to contain" a substring.
+        await expect(page).toHaveTitle(/Plapqweywright/);
+    
+    
+    
+        // Create timestamp
+        const timestamp = new Date().toISOString().replace(/[:]/g, '-').replace('T', '_').split('.')[0];
+        await page.screenshot({ path: `screenshots/example_${timestamp}.png`, fullPage: true })
+    });
+
+already some value is present on text filed - fetch it

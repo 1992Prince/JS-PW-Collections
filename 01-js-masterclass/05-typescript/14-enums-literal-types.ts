@@ -11,10 +11,10 @@ jaise test statuses, user roles, environments, etc.
 // ✅ Example: enum for Test Status
 
 enum TestStatus {
-    Pass = "PASS",
-    Fail = "FAIL",
-    Skip = "SKIP"
-  }
+  Pass = "PASS",
+  Fail = "FAIL",
+  Skip = "SKIP"
+}
 
 // Yahaan pe:
 // We created a group of string constants.
@@ -23,14 +23,14 @@ enum TestStatus {
 // 🔁 Using the Enum
 
 function logTestStatus(status: TestStatus) {
-    console.log("Test Status:", status);
-  }
-  
-  logTestStatus(TestStatus.Pass); // ✅ Output: Test Status: PASS
+  console.log("Test Status:", status);
+}
+
+logTestStatus(TestStatus.Pass); // ✅ Output: Test Status: PASS
 //logTestStatus("PASS");          // ❌ Error if not using enum value
-  
+
 // ✅ This keeps your code type-safe and prevents spelling mistakes like "pas" or "PaSS"
-  
+
 /**
 💡 Use Cases in Automation
 

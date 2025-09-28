@@ -1,0 +1,116 @@
+👉  Locating child elements
+👉 refer html page - http://127.0.0.1:5500/tests/20-parent-child.html and test - parent-child-tests.spec.ts file
+
+
+
+1. Tumhari Hierarchy
+
+<nb-card>   <!-- parent -->
+  <div>
+    <section>
+      <nb-radio>
+        <button>Dark Mode</button>   <!-- text here -->
+      </nb-radio>
+    </section>
+  </div>
+</nb-card>
+
+Tumne locator likha: 'nb-card nb-radio :text-is("Dark Mode")'
+
+
+
+2. How Playwright Resolves This
+
+- nb-card → Find all <nb-card>
+- nb-radio → Uske andar jitne <nb-radio> hai unhe filter karo
+- :text-is("Dark Mode") → Ab un sab nb-radio ke child tree me dekho jahan koi element 
+  ka text exactly "Dark Mode" hai.
+
+👉 Important: Text "Dark Mode" button ke andar hai, not directly in nb-radio.
+
+But Playwright searches inside children. Matlab jab tum nb-radio :text-is("Dark Mode") likhte ho, 
+toh Playwright check karega ki nb-radio ke andar koi child element hai jiska text "Dark Mode" hai.
+
+Phir wo us element ko click karega → jo button hai ✅ via await page.locator('nb-card nb-radio :text-is("Dark Mode")').click();
+
+
+
+
+3. Do We Need <div> or <section> in Locator?
+
+Nahi 🔴
+
+- CSS selectors by default traverse down.
+- Agar tum parent–child relationship maintain karna chahte ho toh beech ke nodes likhna zaroori nahi.
+- Isliye tumne div aur section skip kar diya aur fir bhi sahi element mil gaya.
+
+
+4. What If Tags Change?
+
+Acha sawal 💯
+
+- Agar nb-card badal ke my-card ho jaye, aur tum fir bhi nb-card likh rahe ho → locator fail karega ❌
+- Lekin agar tum nb-card ki jagah generic parent use karo (jaise [data-testid="preferences-card"]) 
+  toh stable rahega ✅
+
+Example:
+
+await page.locator('[data-testid="preferences-card"] :text-is("Dark Mode")').click();
+
+
+
+5. General Rule
+
+- Locator ka last part (:text-is("Dark Mode")) → jis element ka text hai usko pick karega (yahan button).
+- Parent tags (nb-card, nb-radio) sirf scope narrow karne ke liye use hote hain.
+- Agar parent tag names change hote rehte hain → test id / role / aria-label use karna zyada stable hai.
+
+
+
+👉 Explain - await page.locator('nb-card nb-radio :text-is("Dark Mode")').click();
+
+1. page.locator(...)
+
+    - Ye Playwright ka Locator API ka part hai.
+    - Locator = ek handle/abstraction jo DOM element ko target karta hai.
+    - Benefit: Locator retry karta hai automatically (jab tak element aajaye ya visible ho).
+    - Matlab, ye selector strategy + waiting mechanism ka combo hai.
+
+
+2. 'nb-card nb-radio :text-is("Dark Mode")'
+
+Ye ek CSS + Playwright text engine mix locator hai:
+
+    - nb-card nb-radio → Means:
+
+        - Pehle nb-card element lo (parent)
+        - Uske andar nb-radio element lo (child).
+
+    - :text-is("Dark Mode") → Playwright ka text engine filter hai:
+
+        - Sirf woh element match hoga jiska text exactly "Dark Mode" ho.
+        - Agar tum :has-text("Dark") likhte → partial match hota.
+        - :text-is(...) is for strict equality.
+
+
+⚡ So your pattern is:
+
+Parent → Child → Text filter → Action
+
+Generic form: await page.locator('PARENT CHILD :text-is("Exact Text")').click();
+
+
+✅ Pattern You Can Reuse Anywhere
+
+1. Click button by exact text inside parent:
+
+await page.locator('parentSelector childSelector :text-is("Exact Text")').click();
+
+2. Click by partial text inside parent:
+
+await page.locator('parentSelector childSelector :has-text("Partial")').click();
+
+3. Target nested structure:
+
+await page.locator('nb-card:has-text("Survey Question") label:has-text("Option 2") input').check();
+

@@ -1,0 +1,243 @@
+1) TestInfo kya hai — simple definition
+
+TestInfo ek object hai jo current running test ke baare mein information deta hai 
+(jaise test ka naam, file, project, retry count, output path, etc.) 
+aur kuch utilities bhi provide karta hai — jaise files attach karna (reports ke liye), 
+test timeout change karna, etc. 
+
+TestInfo test functions, hooks (beforeEach, afterEach, beforeAll, afterAll) aur test-scoped fixtures me 
+available hota hai.
+
+TestInfo contains information about currently running test. 
+
+It is available to test functions, test.beforeEach(), test.afterEach(), test.beforeAll() and test.afterAll() hooks, 
+and test-scoped fixtures.
+
+TestInfo provides utilities to control test execution: attach files, update test timeout, 
+determine which test is currently running and whether it was retried, etc.
+
+-------------------------------------------------------------------------------------------
+
+🔍 What testInfo contains
+
+testInfo gives you a lot of useful information about the test:
+
+    - testInfo.title → The name of the test ('homepage visual test' in this case).
+
+
+    - testInfo.outputDir → Path where Playwright stores artifacts like screenshots, traces, videos.
+
+
+    - testInfo.snapshotDir → Path to the baseline snapshot folder.
+
+
+    - testInfo.retry → Retry attempt number (if the test is retried).
+
+
+    - testInfo.workerIndex → Worker process running the test (for parallel execution).
+
+
+    - testInfo.annotations → Custom tags/labels for the test.
+
+-------------------------------------------------------------------------------------------
+
+📑 testInfo Properties & Methods — Quick Reference Table
+
+| **Property / Method**                | **Description (Hinglish)**                               | **Example Usage**                                                                         |
+| ------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **`title`** (property)               | Test ka naam (string).                                   | `console.log(testInfo.title); // "homepage visual test"`                                  |
+| **`file`**                           | Test file ka path.                                       | `console.log(testInfo.file);`                                                             |
+| **`line`**                           | Test define hui line number.                             | `console.log(testInfo.line);`                                                             |
+| **`column`**                         | Column number jahan test likha hai.                      | `console.log(testInfo.column);`                                                           |
+| **`project`**                        | Current Playwright project object (name/config).         | `console.log(testInfo.project.name); // "chromium"`                                       |
+| **`workerIndex`**                    | Konsa worker process run kar raha (parallel me).         | `console.log(testInfo.workerIndex); // e.g. 2`                                            |
+| **`retry`**                          | Retry attempt number (0 = pehli run, 1 = retry1, …).     | `if (testInfo.retry > 0) console.log('Retrying...');`                                     |
+| **`expectedStatus`**                 | Playwright ko kya status chahiye (pass/fail).            | `console.log(testInfo.expectedStatus); // "passed"`                                       |
+| **`status`**                         | Actual result (passed/failed/skipped/timedOut).          | `console.log(testInfo.status);`                                                           |
+| **`error`**                          | Agar test fail hua to Error object.                      | `if (testInfo.error) console.log(testInfo.error.message);`                                |
+| **`annotations`**                    | Custom tags/labels jo test pe lagaye gaye.               | `testInfo.annotations.push({ type: 'owner', description: 'Alice' });`                     |
+| **`outputDir`**                      | Directory jahan test artifacts save hote hain.           | `console.log(testInfo.outputDir);`                                                        |
+| **`snapshotDir`**                    | Baseline snapshots folder path.                          | `console.log(testInfo.snapshotDir);`                                                      |
+| **`stdout`**                         | Test ke dauran collect hua console output.               | `console.log(testInfo.stdout);`                                                           |
+| **`stderr`**                         | Test ke dauran collect hua error output.                 | `console.log(testInfo.stderr);`                                                           |
+| **`outputPath(name)`** (method)      | Safe file path banata hai inside `outputDir`.            | `page.screenshot({ path: testInfo.outputPath('page.png') });`                             |
+| **`attach(name, options)`** (method) | Report me artifact (screenshot, log, json) attach karna. | `await testInfo.attach('log', { body: Buffer.from('text'), contentType: 'text/plain' });` |
+| **`setTimeout(ms)`** (method)        | Test/hook ka timeout runtime pe change karna.            | `testInfo.setTimeout(60000); // 60s`                                                      |
+
+-------------------------------------------------------------------------------------------
+
+
+
+testInfo properties that give info:
+
+
+
+📌 1) testInfo.title
+
+    👉 Test ka naam return karta hai (string).
+    🔹 Useful for: logs, custom messages, dynamic filenames.
+
+    test('homepage visual test', async ({ page }, testInfo) => {
+        console.log('Test name:', testInfo.title);
+        // Output: Test name: homepage visual test
+    });
+
+
+
+📌 2) testInfo.file
+
+    👉 Path of the test file jisme test likha gaya hai from root level.
+    🔹 Useful for: custom reporting, debugging.
+
+    test('my test', async ({}, testInfo) => {
+        console.log('Test file:', testInfo.file);
+        // Output: /tests/login.spec.ts
+    });
+
+
+
+
+📌 3) testInfo.line & testInfo.column
+
+        👉 Line number & column number jahan test defined hai.
+        🔹 Useful for: precise failure reporting.
+
+        test('sample test', async ({}, testInfo) => {
+            console.log('Location:', testInfo.file, testInfo.line, testInfo.column);
+            // Output: /tests/sample.spec.ts 10 5
+        });
+
+
+
+📌 4) testInfo.project
+
+        👉 Current Playwright project ka object deta hai.
+        🔹 project.name zyada use hota hai (e.g. chromium, firefox, webkit).
+        🔹 Useful for: multi-browser/multi-device test cases.
+
+        test('cross-browser test', async ({}, testInfo) => {
+            console.log('Project name:', testInfo.project.name);
+            // Output: chromium / firefox / webkit
+        });
+
+
+
+📌 5) testInfo.workerIndex
+
+        👉 Bataata hai ki konsi worker process test ko run kar rahi hai (parallel execution ke liye).
+        🔹 Useful for: per-worker resource allocation (DB ports, files).
+
+        test('parallel test', async ({}, testInfo) => {
+            console.log('Worker index:', testInfo.workerIndex);
+            // Output: e.g. 0, 1, 2 ...
+        });
+
+
+
+📌 6) testInfo.retry
+
+        👉 Retry attempt number return karta hai.
+
+            0 → first run
+
+            1 → first retry
+
+            2 → second retry
+
+            🔹 Useful for: flaky test handling, skip heavy checks on retries.
+
+        test('flaky test', async ({}, testInfo) => {
+            if (testInfo.retry > 0) {
+            console.log('This is a retry attempt:', testInfo.retry);
+            }
+        });
+        
+
+
+📌 7) testInfo.status
+
+        👉 Actual result of test execution (string):
+
+        "passed", "failed", "skipped", "timedOut".
+
+        🔹 Useful for: afterEach hook me decide karna ki fail hua toh screenshot lo.
+
+
+        test.afterEach(async ({}, testInfo) => {
+            console.log('Status:', testInfo.status);
+        });
+        
+
+
+
+🔹 test.fail() kya karta hai?
+
+        By default, Playwright expect karta hai ki test pass ho.
+        Agar tum test.fail() use karte ho, to tum Playwright ko bolte ho:
+
+        👉 “Is test ka expected outcome = FAIL hai.”
+
+Matlab:
+
+        Agar test fail ho jata hai → Playwright bolega ✅ (Expected Fail)
+
+        Agar test pass ho jata hai → Playwright bolega ❌ (Unexpected Pass)
+
+🔹 Kab use karte hain?
+
+        1. Known Bug / Defect
+
+            Jab tumhe pata hai ki ye test abhi fail karega kyunki app me bug hai.
+
+            Tum test.fail() mark kar dete ho, taaki report me fail na dikhe “unexpectedly”, balki expected fail lage.
+
+        2. Work-in-progress test
+
+            Jab feature abhi complete nahi hua hai.
+
+            Tum test likh kar mark kar dete ho fail() → CI pipeline me “expected fail” show karega.
+
+🔹 Example
+
+import { test, expect } from '@playwright/test';
+
+test('login button works', async ({ page }) => {
+  test.fail(); // Marked as expected to fail
+
+  await page.goto('https://myapp.com');
+  const button = page.locator('#login');
+  await button.click();
+
+  // Assertion
+  await expect(page).toHaveURL('/dashboard');
+});
+
+👉 Ab kya hoga?
+
+    Agar bug hai aur ye test fail hota hai → Report karega ✅ expected fail
+
+    Agar bug fix ho jata hai aur test pass ho jata hai → Report karega ❌ unexpected pass 
+    (iska matlab bug fix ho gaya, ab test.fail() hata do). aur report me erro message dega- Expected to fail, but passed.
+
+
+Agar test se test.fail() hata dia then testInfo.expectedStatus ki value hogi pass
+
+
+📌 8) testInfo.expectedStatus
+
+👉 Playwright ko kya status chahiye (expected outcome).
+
+Agar tum test.fail() lagate ho, toh expectedStatus = "failed" hota hai.
+
+🔹 Useful for: differentiate between intentional fail vs real fail.
+
+test('known bug', async ({}, testInfo) => {
+    test.fail(); // mark as expected to fail
+    console.log('Expected:', testInfo.expectedStatus); // "failed"
+});
+  
+  
+  
+  
+  
+  

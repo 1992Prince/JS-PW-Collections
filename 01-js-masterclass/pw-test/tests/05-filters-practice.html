@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright Filter Practice</title>
+</head>
+<body>
+  <h1>🛒 Product List</h1>
+
+  <ul>
+    <li>
+      <h3>Product 1</h3>
+      <span>Status: In stock</span>
+      <button>Add to cart</button>
+    </li>
+    <li>
+      <h3>Product 2</h3>
+      <span>Status: Out of stock</span>
+      <button>Add to cart</button>
+    </li>
+    <li>
+      <h3>Product 3</h3>
+      <span>Status: In stock</span>
+      <button>Add to cart</button>
+    </li>
+    <li>
+      <h3>Product 4</h3>
+      <span>Status: In stock</span>
+      <button>Add to cart</button>
+    </li>
+  </ul>
+
+  <script>
+    // Just to confirm click works
+    document.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        console.log(btn.previousElementSibling.textContent + " clicked!");
+        alert(btn.previousElementSibling.textContent + " added to cart!");
+      });
+    });
+  </script>
+</body>
+</html>

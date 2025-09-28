@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Complex Locator Practice</title>
+  <style>
+    nb-card {
+      display: block;
+      border: 1px solid gray;
+      padding: 12px;
+      margin: 10px;
+      width: 350px;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .header {
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin: 4px 0;
+    }
+    button {
+      margin: 5px 0;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #eaeaea;
+    }
+  </style>
+</head>
+<body>
+  <!-- First Card -->
+  <nb-card>
+    <div class="header">System Settings</div>
+    <section>
+      <p>Choose a mode:</p>
+      <nb-radio>
+        <button>Dark Mode</button>
+      </nb-radio>
+      <nb-radio>
+        <button>Light Mode</button>
+      </nb-radio>
+    </section>
+  </nb-card>
+
+  <!-- Second Card -->
+  <nb-card>
+    <div class="header">User Information</div>
+    <section>
+      <div class="profile">
+        <span class="label">Name:</span>
+        <span class="value">John Doe</span>
+      </div>
+      <div class="profile">
+        <span class="label">Role:</span>
+        <span class="value">Administrator</span>
+      </div>
+    </section>
+  </nb-card>
+
+  <!-- Third Card -->
+  <nb-card>
+    <div class="header">Feature Toggles</div>
+    <section>
+      <ul>
+        <li><span>Feature A</span> - <em>Enabled</em></li>
+        <li><span>Feature B</span> - <em>Disabled</em></li>
+        <li><span>Feature C</span> - <em>Enabled</em></li>
+      </ul>
+    </section>
+  </nb-card>
+
+  <!-- Fourth Card -->
+  <nb-card>
+    <div class="header">Notifications</div>
+    <section>
+      <div class="message">
+        <p><strong>Info:</strong> Updates available.</p>
+      </div>
+      <div class="message">
+        <p><strong>Warning:</strong> Password expires soon.</p>
+      </div>
+      <div class="message">
+        <p><strong>Error:</strong> Unable to connect to server.</p>
+      </div>
+    </section>
+  </nb-card>
+</body>
+</html>

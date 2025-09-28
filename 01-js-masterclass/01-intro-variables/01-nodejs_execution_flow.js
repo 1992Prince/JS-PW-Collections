@@ -21,7 +21,6 @@
    Server -> Node.js runs JS for backend.
 */
 
-
 /*
 ------------------------------------------------------------
 🔷 2. Why Use Node.js? (Purpose)
@@ -39,7 +38,6 @@
 - Streaming services (like Netflix)
 */
 
-
 /*
 ------------------------------------------------------------
 🔷 3. What is V8 Engine?
@@ -52,7 +50,6 @@
 📌 Browser me bhi V8 hota hai (in Chrome), lekin Node.js me humne usse use kiya browser ke bahar JavaScript run karne ke liye.
 */
 
-
 /*
 ------------------------------------------------------------
 🔷 4. Core Components Involved in Code Execution
@@ -64,6 +61,22 @@
 🧵 4. Thread Pool → Handles heavy tasks in background (fs, crypto)
 🧾 5. Callback Queue → Stores async task callbacks
 📌 6. Microtask Queue → Stores promise & process.nextTick callbacks
+
+🧠 Mnemonic to Remember Core Components of Node.js Execution
+
+V-L-E-T-C-M → "Very Little Effort Takes Coding Mastery"
+
+V8 Engine (Executes sync JavaScript)
+
+Libuv (Handles async operations)
+
+Event Loop (Manages execution order)
+
+Thread Pool (Handles heavy tasks)
+
+Callback Queue (Stores async callbacks)
+
+Microtask Queue (Stores promise callbacks)
 */
 
 /*
@@ -97,7 +110,7 @@
 4️⃣ After 1000ms → Callback is moved to **Callback Queue**
 
 5️⃣ Event Loop checks: "Is main thread free?" → Yes
-    → Picks callback from queue → Sends to V8 → Runs callback
+    → Picks callback from queue → Sends to V8 → Runs callback like here runs setTimeout callback code i.e. console.log("Async Task Done")
     ✅ Step 5: Event Loop Callback uthata hai
     Event Loop check karta hai: "Kya koi callback execute karne ke liye ready hai?"
 
@@ -168,14 +181,12 @@ Agar haan, toh woh callback wapis JavaScript engine ko deta hai, aur fir vo run 
 [ V8 executes callback function ]
 */
 
-
 /*
 ------------------------------------------------------------
 🔷 7. Live Code Example
 ------------------------------------------------------------
 */
 
- 
 /*
 ------------------------------------------------------------
 🔷 5. How JavaScript Executes in Node.js (Step-by-Step)
@@ -189,7 +200,6 @@ Agar haan, toh woh callback wapis JavaScript engine ko deta hai, aur fir vo run 
 
 📝 Microtasks (Promises, nextTick) run *before* timers & I/O
 */
-
 
 /*
 ------------------------------------------------------------

@@ -1,0 +1,595 @@
+ Let's now cover these "Other Options" in playwright.config.ts — one by one — with:
+
+✅ Purpose
+🎯 Real-world use cases
+🧑‍💼 Interview explanation (Hinglish where helpful)
+🛠️ Syntax / Best practices
+
+
+⚙️ browserName option
+
+browserName ek config property hai jo Playwright ko batata hai:
+
+👉 Kaunse browser me test run karna hai?
+
+✅ Isme 3 options hote hain:
+
+| `browserName` | Browser Engine | Used For Testing |
+| ------------- | -------------- | ---------------- |
+| `'chromium'`  | Blink          | Chrome / Edge    |
+| `'firefox'`   | Gecko          | Firefox          |
+| `'webkit'`    | WebKit         | Safari           |
+
+use: {
+  browserName: 'chromium'
+}
+
+
+Agar tu sirf 1 browser me test run karna chahta hai, 
+to use object ke andar browserName likh de — woh sab tests me apply ho jayega.
+
+
+🔸 Phir: projects kya hota hai?
+
+🔁 projects[] ka use hota hai — multiple environments ya browsers me test run karne ke liye.
+Jaise:
+
+1 hi test ko 3 browsers me run karna ho
+
+Ya alag-alag devices, languages, viewport, etc ke hisaab se
+
+🔧 Example:
+
+projects: [
+  {
+    name: 'Chrome',
+    use: {
+      browserName: 'chromium',
+    },
+  },
+  {
+    name: 'Firefox',
+    use: {
+      browserName: 'firefox',
+    },
+  },
+  {
+    name: 'Safari',
+    use: {
+      browserName: 'webkit',
+    },
+  },
+],
+
+Ab jab tu npx playwright test chalaye, toh woh same test cases teeno browsers me chalega ✅
+
+🔀 Dono ke beech farq:
+
+| Concept           | Kya karta hai                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| `use.browserName` | Ek fixed browser set karta hai (agar tu projects use nahi kar raha)                  |
+| `projects[]`      | Alag-alag configs banata hai jisme `browserName`, `viewport`, etc alag ho sakte hain |
+
+
+💡 Best Practice (Interview Tip):
+"Agar mujhe tests sirf ek browser me run karne hain to main use.browserName use karta hoon.
+Lekin agar mujhe cross-browser testing karni ho, to main projects[] ka use karta hoon jisme har 
+project me alag browserName define karta hoon."
+
+🧪 Bonus: CLI me bhi specify kar sakta hai : npx playwright test --project=Chrome
+
+
+✅ Scenario 1: Sirf use.browserName: 'firefox' diya and u have 10 tests in spec file
+
+use: {
+  browserName: 'firefox'
+}
+
+🔸 Output:
+    - Sab 10 tests sirf Firefox me chalenge.
+    - Report me 10 tests dikhenge, browser Firefox hoga.
+    - Total Executions: 10
+
+✅ Scenario 2: Projects me 3 browsers diye
+
+projects: [
+  { name: 'Chrome', use: { browserName: 'chromium' } },
+  { name: 'Firefox', use: { browserName: 'firefox' } },
+  { name: 'Safari', use: { browserName: 'webkit' } },
+]
+
+🔸 Output:
+Har ek test teeno browsers me chalega.
+10 tests × 3 browsers = 30 executions
+Report me 30 rows dikhenge: Chrome, Firefox, Safari ke alag-alag results.
+Total Executions: 30
+
+
+❓ Scenario 3: Dono diya — use.browserName + projects
+
+use: {
+  browserName: 'firefox', // 🔸 Global fallback
+},
+projects: [
+  { name: 'Chrome', use: { browserName: 'chromium' } },
+  { name: 'Firefox', use: { browserName: 'firefox' } },
+]
+
+🔍 Toh kya hoga?
+    - projects[] ka use override karega global use ko.
+    - Projects ke andar jo browserName define hai, wahi use hoga.
+    - use.browserName sirf fallback ke liye hota hai agar project ke andar specify nahi kiya to.
+
+🔸 Output:
+    - 10 tests × 2 browsers = 20 executions
+    - Chrome aur Firefox ke liye alag-alag report lines.
+    - Global use.browserName ignored hoga projects ke case me.
+
+************************************************************************
+
+⚙️ bypassCSP option
+
+✅ Purpose:
+
+Bypasses Content Security Policy (CSP) set by websites.
+
+CSP restricts:
+
+    - Inline scripts
+    - Dynamic styles/scripts injection
+
+Useful in:
+
+    - Testing browser extensions
+    - Testing analytics scripts
+    - Overriding protections during debugging
+
+🧠 Real-world Use Case:
+Suppose you’re testing a browser extension or injecting test helpers/scripts, CSP may block it.
+Set bypassCSP: true to bypass those restrictions in test environment.
+
+🛠️ Syntax:
+
+use: {
+  bypassCSP: true
+}
+
+👨‍💼 Interview Insight:
+"BypassCSP tab use hota hai jab mujhe test ke dauraan page mein kuch inject karna hota hai — 
+jaise custom JS, tracking code, ya debugging helper.
+CSP is security feature — but in automation testing, sometimes you need to override it."
+
+🛡️ CSP kya hota hai? (Content Security Policy)
+CSP ek browser security feature hota hai jo restrict karta hai:
+
+        - Kaunsi scripts run ho sakti hain
+        - Kaunsi styles ya images load ho sakti hain
+        - Inline JavaScript ya 3rd-party scripts ko block karta hai
+
+👉 Ye mainly hota hai security ke liye — jaise ki XSS (cross-site scripting) se bachane ke liye.
+
+
+🧪 Bypass kyu karte hain CSP ko testing me?
+
+Real world me kai baar CSP testing ko block karta hai — jaise:
+
+    - Agar hum test ke time custom script inject karna chahein
+    - Browser extension test karni ho
+    - Code coverage ya DOM tracking karni ho
+    - Koi restricted admin ya banking app test karni ho jahan CSP laga ho
+    - To uss case me hum bypassCSP: true laga ke CSP ko disable kar dete hain.
+
+*********************************************************************************************
+
+
+⚙️ channel option
+
+✅ Purpose:
+
+Use a specific browser channel/build instead of default Playwright bundle.
+
+Examples:
+
+    - 'chrome'
+    - 'msedge'
+
+This ensures you're testing against the exact browser version as used in production.
+
+🧠 Real-world Use Case:
+"Agar client bolta hai 'test should be done in Microsoft Edge stable version', 
+I’ll set channel: 'msedge' to match production behavior."
+
+🛠️ Syntax:
+
+use: {
+  channel: 'chrome',
+}
+
+🔔 Note: You need to have that browser installed on your system.
+
+
+**************************************************************************************
+
+
+⚙️ headless option
+
+✅ Purpose:
+
+Run browser without GUI — useful in CI/CD or when no UI is needed.
+
+use: {
+  headless: true // default in CI
+}
+
+
+🧠 Real-world Use Case:
+
+✅ Run tests faster
+✅ In headless servers (Linux) where GUI is not present
+
+
+🧑‍💼 Interview line:
+
+"Headless mode CI/CD mein use hota hai jahan speed aur resource optimization chahiye.
+Main local dev ke liye headless false rakhta hoon for visual debugging."
+
+
+**************************************************************************************
+
+
+⚙️ testIdAttribute option
+
+✅ Purpose:
+Customizes which attribute is used for getByTestId() or getByRole() locators.
+
+By default: data-testid
+
+use: {
+  testIdAttribute: 'data-test-id'
+}
+
+
+🧠 Real-world Use Case:
+Your app may use data-qa, data-id, or some other custom attribute for test selectors.
+Instead of repeating that in every locator, define it once in config.
+
+🔍 Example usage: await page.getByTestId('submit-btn').click();
+
+"Hum test selectors ko reliable banane ke liye data-testid ya data-qa jaise attributes use karte hain. 
+Config mein testIdAttribute set karne se locators clean aur consistent rehte hain."
+
+
+🔍 Kya hai testIdAttribute in Playwright?
+testIdAttribute ek config property hai jo Playwright ko yeh batata hai:
+
+"Kis HTML attribute ko target kare jab hum getByTestId() method use karein"
+
+
+🧠 Simple Words Me:
+
+💬 "Jaise jab tu page pe kisi button ya div ko identify karna chahta hai automation me, 
+toh tu usko kisi attribute se pakadta hai — Playwright me ek common attribute hota hai data-testid. 
+Agar tu getByTestId('login-btn') likhta hai, toh woh internally data-testid="login-btn" dhundta hai."
+
+✅ Default Behavior:
+By default, Playwright assume karta hai:
+
+testIdAttribute: 'data-testid'
+
+Toh agar HTML aise hai: <button data-testid="login-btn">Login</button>
+
+Toh locator aise likhoge: await page.getByTestId('login-btn').click();
+
+
+🎯 Kab testIdAttribute override karna padta hai?
+
+Real-world apps me har team data-testid nahi use karti.
+Kuch apps me custom attribute hota hai, jaise:
+
+    - data-qa
+    - data-test-id
+    - test-id
+
+Tab tu config me specify karega ki Playwright kis attribute ko "test id" samjhe.
+
+✅ Example config with override:
+
+use: {
+  testIdAttribute: 'data-qa'
+}
+
+Ab yeh code: page.getByTestId('search')
+
+Internally dhundhega: <input data-qa="search">
+
+
+🧑‍💼 Interview Ready One-liner:
+
+"Playwright me testIdAttribute batata hai ki getByTestId() kis attribute ko locate kare. 
+By default data-testid hota hai, but agar app me custom test id attribute use ho raha hai 
+jaise data-qa, toh config me usko override karte hain."
+
+🛠️ Best Practices:
+    - Use getByTestId() only when IDs are stable and not dynamic.
+    - Keep test IDs separate from styling classes or dynamic values.
+    - Developers and QA teams often agree on a common test attribute to avoid flaky tests.
+
+**************************************************************************************
+
+🔚 Summary Table for Quick Interview Recall:
+| Option            | Purpose                                   | Real-World Use Case                                                                 |
+| ----------------- | ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| `browserName`     | Set which browser to run                  | Cross-browser testing or specific browser like Safari, Firefox, etc.                |
+| `bypassCSP`       | Ignore CSP rules like inline-script-block | Injecting test helpers, browser extension testing                                   |
+| `channel`         | Use specific browser build                | Match production (e.g., test in MS Edge or Chrome stable)                           |
+| `headless`        | Run browser in background mode            | CI/CD, fast test runs without UI                                                    |
+| `testIdAttribute` | Customize test selector attribute         | Clean locators using app-specific data attributes (like `data-qa`, `data-id`, etc.) |
+
+**************************************************************************************
+
+
+🔹 Q1: What are channels available in Playwright?
+
+✅ channel allows you to use the official browser builds installed on your machine, 
+instead of the bundled versions Playwright downloads.
+
+Here are the most commonly supported channels (depending on the browser and OS):
+
+| Channel Name      | Description           |
+| ----------------- | --------------------- |
+| `'chrome'`        | Google Chrome Stable  |
+| `'chrome-beta'`   | Google Chrome Beta    |
+| `'chrome-dev'`    | Google Chrome Dev     |
+| `'chrome-canary'` | Google Chrome Canary  |
+| `'msedge'`        | Microsoft Edge Stable |
+| `'msedge-dev'`    | Microsoft Edge Dev    |
+| `'msedge-beta'`   | Microsoft Edge Beta   |
+| `'msedge-canary'` | Microsoft Edge Canary |
+
+🔹 Only Chromium-based browsers support channel option.
+
+🔧 Sample usage:
+
+use: {
+  browserName: 'chromium',
+  channel: 'chrome', // Uses system-installed Chrome
+}
+
+
+
+
+🔹 Q2: Can we specify a browser version using channel?
+
+❌ No, you cannot specify a specific version number directly via the channel option.
+
+💡 The channel uses the version installed on your system — so if you want to control the version, you need to:
+
+Install that specific version manually, OR
+Use a container/docker with the exact version pre-installed
+
+🧠 In interview, say:
+"Playwright doesn’t allow setting browser version through config. 
+Instead, channel picks up whatever version of that browser is installed on the machine. 
+So to test a specific version, I make sure that version is installed manually or via Docker."
+
+
+
+************************************************************************************
+
+
+🔹 Do we use channel for Firefox or Safari?
+
+❌ No, the channel option is not supported for firefox or webkit (Safari engine) in Playwright.
+
+🔍 Why?
+The channel option is designed for Chromium-based browsers only (like Chrome, Edge).
+
+Playwright uses its own built-in versions of Firefox and WebKit, which are custom-built to 
+support automation features consistently across platforms.
+
+🔧 So how do we run tests on Firefox or Safari?
+Use the browserName:
+
+use: {
+  browserName: 'firefox'   // for Firefox
+}
+
+
+use: {
+  browserName: 'webkit'    // for Safari (WebKit engine)
+}
+
+✅ On macOS, WebKit maps to Safari engine
+🚫 No channel: 'safari' or channel: 'firefox' exists.
+
+🧑‍💼 Interview-ready Line:
+"Channel is only available for Chromium-based browsers like Chrome and Edge.
+For Firefox and Safari, Playwright uses its own pre-built versions and we just set browserName 
+to firefox or webkit — channel is not applicable there."
+
+************************************************************************************
+
+
+🔍 What is a Browser Engine?
+
+A browser engine is the core software component of a web browser responsible for:
+
+    - Parsing HTML/CSS
+    - Rendering content on screen (layout, styling)
+    - Running JavaScript (with help from JS engine)
+    - Handling user interactions
+
+Think of it as the brain of the browser that converts raw web code into the visible webpage.
+
+
+⚙️ Popular Browser Engines:
+
+| Browser Engine | Used In                   |
+| -------------- | ------------------------- |
+| **Blink**      | Chrome, Edge, Opera       |
+| **Gecko**      | Firefox                   |
+| **WebKit**     | Safari (and iOS WebViews) |
+
+🔸 Note: Blink is a fork of WebKit created by Google.
+
+🆚 Browser Engine vs Real Browser
+
+🧑‍💼 ✅ Browser Engine vs Real Browser — Interview Answer (Statements)
+
+"A browser engine is the core component of a browser that parses HTML, CSS, and JS to render web pages — it's like the brain of the browser."
+
+"Real browsers like Chrome, Firefox, or Safari are built on top of these engines and include additional UI features like tabs, address bar, dev tools, bookmarks, and extensions."
+
+"Playwright uses browser engines (Blink, Gecko, WebKit) directly to run tests — which makes execution faster and more stable, especially in headless mode."
+
+"Testing on browser engines gives better automation control — like tracing, intercepting network requests, or bypassing security policies — which may not be possible in a full browser."
+
+"If I want to mimic a real-world user experience exactly, I can use the channel option to run on full browsers like Chrome or Edge — but by default, Playwright uses its bundled engines for consistency."
+
+"In short, browser engine = core rendering logic; real browser = engine + user interface."                  |
+
+
+🤖 What Browser Engines does Playwright use?
+Playwright internally supports 3 major engines through their respective browserName:
+
+| `browserName` | Engine Used | Real Browser Equivalent |
+| ------------- | ----------- | ----------------------- |
+| `chromium`    | Blink       | Chrome / Edge           |
+| `firefox`     | Gecko       | Firefox                 |
+| `webkit`      | WebKit      | Safari                  |
+
+
+💡 Why does Playwright run tests on Browser Engines?
+
+✅ Key Benefits:
+Consistency — Engines provided by Playwright are prebuilt and version-locked.
+Speed — Lightweight compared to full browser UI (especially in headless mode).
+Cross-platform Support — WebKit can be tested on Linux/Windows (normally Safari is Mac-only).
+Better Control — Supports automation APIs, CSP bypassing, HAR tracing, etc.
+
+🧑‍💼 How to Explain in Interview:
+"Playwright uses browser engines like Blink (for Chromium), Gecko (for Firefox), and WebKit (for Safari) 
+under the hood.
+These engines are bundled with Playwright and help run tests faster, more reliably, 
+and in a controlled environment — without depending on real user browsers like Chrome or 
+Safari being installed.
+For real-world behavior, you can also run on real browsers using the channel option."
+
+ Chrome and Edge both use the same browser engine — called Blink.
+
+ *********************************************************************************
+
+
+ ✅ 1. How to trigger tests in real browser like Chrome, Edge, Firefox, Safari?
+
+Playwright ke default browserName options: 'chromium', 'firefox', 'webkit' 
+hote hain — ye browser engines hain.
+But agar tu actual real browsers (like Chrome, Edge) me test run karna chahta hai, 
+toh channel use karta hai.
+
+🔧 Example (in config):
+
+use: {
+  browserName: 'chromium',
+  channel: 'chrome',    // for Google Chrome
+}
+
+| Real Browser | browserName  | channel                                |
+| ------------ | ------------ | -------------------------------------- |
+| Chrome       | `'chromium'` | `'chrome'`                             |
+| Edge         | `'chromium'` | `'msedge'`                             |
+| Firefox      | `'firefox'`  | ❌ no channel needed                    |
+| Safari       | `'webkit'`   | ❌ no channel needed (WebKit covers it) |
+
+📌 Note: Safari can't be triggered exactly as “real Safari”, Playwright uses WebKit engine (Safari’s core).
+
+*********************************************************************************
+
+
+✅ 2. What happens when we keep trace property 2 times in use or give invalid value?
+
+📛 Multiple same keys example:
+When we give same key 2 times in same object like use is an object and we keep 
+trace key 2 times like below :
+
+use: {
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    // baseURL: 'http://localhost:3000',
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on',
+    trace: 'on',
+    screenshot: 'on',
+    headless: false,
+    browserName: 'chromium',
+  },
+
+Then in ts you will get compile time error - An object literal cannot have multiple properties with the same name.
+
+📛 Invalid value example:
+And if you try to assign invalid value then again u will get compile time error like - 
+
+se: {
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    // baseURL: 'http://localhost:3000',
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'onp', // invalid value given to trace key
+    screenshot: 'on',
+    headless: false,
+    browserName: 'chromium',
+  },
+
+
+No overload matches this call.
+  The last overload gave the following error.
+    Type '"onp"' is not assignable to type 'TraceMode | "retry-with-trace" | { mode: TraceMode; snapshots?: boolean | undefined; screenshots?: boolean | undefined; sources?: boolean | undefined; attachments?: boolean | undefined; } | undefined'.ts(2769)
+
+
+******************************************************************************************************
+
+
+✅ 3. How do you give name to a screenshot?
+
+Using page.screenshot():
+
+
+await page.screenshot({ path: `screenshots/login-${Date.now()}.png` });
+
+📸 Tips:
+
+    - Use ${Date.now()} or new Date().toISOString() to add timestamps.
+    - Add test name or step info to filename for clarity.
+
+📂 Default path:
+
+If screenshot option is on (in config), screenshots get saved in 
+test-results/ automatically per test & browser.
+
+
+****************************************************************************
+
+✅ 4. With what name is trace recorded and can we change it?
+
+When trace is enabled (trace: 'on', etc.), Playwright saves it as a .zip file like:
+
+📂 Default path & name:
+
+test-results/<test-title-browsername>/trace.zip
+
+🛠️ Can we rename it manually?
+
+Yes, if you record trace programmatically, like this:
+
+await context.tracing.start({ screenshots: true, snapshots: true });
+...
+await context.tracing.stop({ path: 'traces/custom-login-trace.zip' });
+
+⚠️ But if you're relying on Playwright auto-trace (via config), then you cannot rename it 
+directly — it follows its own folder-based naming convention.
+
+****************************************************************************
+Task:
+Write program to show how we can use skip login for multiple tcs using auth via storageState and save state.
+
+

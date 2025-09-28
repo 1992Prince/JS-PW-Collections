@@ -1,0 +1,173 @@
+1️⃣ textContent()
+
+  const text1 = await subParentLoc1.locator('.value').textContent();
+
+  Return type → Promise<string | null>
+
+  Kya return karega? raw DOM text (including hidden text, line breaks, spacing).
+
+  Tumhare example mein → "John Doe" mila.
+
+  ❌ Agar tum multiple elements wale locator pe direct .textContent() lagate ho → error aata hai ("strict mode violation").
+
+  ✅ Fix: .first() / .nth() use karo.
+
+
+2️⃣ innerText()
+
+  const text2 = await subParentLoc1.locator('.value').innerText();
+
+  Return type → Promise<string>
+
+  Kya return karega? visible rendered text (CSS styling ke hisaab se, whitespace collapse ho jaata hai).
+
+  Tumhare example mein → "John Doe".
+
+  ❌ Agar locator multiple elements resolve kare → error (same strict mode rule).
+
+  ✅ Fix: .first() ya .nth() lagao.
+
+
+
+
+3️⃣ allTextContents()
+
+const allCards = page.locator('nb-card');
+const allCardsText = await allCards.allTextContents();
+
+Return type → Promise<string[]>
+
+Kya return karega? saare matched elements ka raw text (hidden + children bhi).
+
+Tumhare example mein → 4 nb-card the, toh 4 raw text strings ek array mein mile.
+
+✅ Ye directly multiple elements handle karta hai, error nahi aata.
+
+Example output (shortened):
+
+[
+  "System Settings ... Dark Mode Light Mode",
+  "User Information ... John Doe",
+  "Feature Toggles ... Feature A - Enabled",
+  "Notifications ... Updates available ..."
+]
+
+
+
+4️⃣ allInnerTexts()
+
+const allInnerTexts = await page.locator('nb-card').allInnerTexts();
+
+Return type → Promise<string[]>
+
+Kya return karega? saare matched elements ka visible rendered text ek array mein.
+
+Tumhare code mein → array of 4 strings, har ek card ka readable text.
+
+⚠️ Tumne await miss kiya tha, isliye [object Promise] print hua.
+✅ Correct code:
+
+const allInnerTexts = await page.locator('nb-card').allInnerTexts();
+console.log("allInnerTexts - ", allInnerTexts);
+
+
+📌 Summary Table
+
+| Method              | Return Type             | Handles Multiple Elements?              | Includes Hidden Text? | Example in your test              |
+| ------------------- | ----------------------- | --------------------------------------- | --------------------- | --------------------------------- |
+| `textContent()`     | `Promise<string\|null>` | ❌ (strict mode error) unless `.first()` | ✅ Yes                 | `"John Doe"`                      |
+| `innerText()`       | `Promise<string>`       | ❌ (strict mode error) unless `.first()` | ❌ No (only visible)   | `"John Doe"`                      |
+| `allTextContents()` | `Promise<string[]>`     | ✅ Yes                                   | ✅ Yes                 | Array of 4 nb-card raw texts      |
+| `allInnerTexts()`   | `Promise<string[]>`     | ✅ Yes                                   | ❌ No (only visible)   | Array of 4 nb-card readable texts |
+
+
+⚡️ Rule of Thumb (Usecases)
+
+  textContent() → ek hi element ka raw text lena hai (hidden bhi).
+
+  innerText() → ek hi element ka visible readable text lena hai.
+
+  allTextContents() → multiple elements ka raw text ek saath lena ho.
+
+  allInnerTexts() → multiple elements ka visible readable text ek saath lena ho.
+
+
+
+
+  🔹 Case: Parent element with child elements
+
+  1) textContent() on parent
+
+Behavior → Parent ke andar jitne bhi child elements ka text hai, sab aa jaayega.
+
+Example:
+
+const parent = page.locator('nb-card').first();
+const txt = await parent.textContent();
+console.log(txt);
+
+👉 Output: parent element + sab child ka text (hidden text bhi).
+
+
+2) innerText() on parent
+
+Behavior → Parent ke saare visible child text ko concatenate karke return karega.
+
+Example:
+
+const parent = page.locator('nb-card').first();
+const txt = await parent.innerText();
+console.log(txt);
+
+👉 Output: parent + child visible text (formatted like browser shows).
+
+
+🔹 Case: Multiple elements locator
+
+3) allTextContents()
+
+Behavior → Matching har element ka textContent ek array of strings mein return hota hai.
+
+Example:
+
+const allCards = page.locator('nb-card'); //here nb-card will resolve to 4 elements
+const texts = await allCards.allTextContents();
+
+for (const t of texts) {
+  console.log("Card text (textContent):", t);
+}
+
+texts.forEach((t, i) => console.log(`Card ${i} text: ${t}`));
+
+👉 Output:
+
+  Array of strings → ["Card1 raw text...", "Card2 raw text..."]
+
+  Iterate karke har ek element ka text alag use kar sakte ho.
+
+
+
+
+4) allInnerTexts()
+
+Behavior → Same jaise upar, bas visible text only aayega.
+
+Example:
+
+const allCards = page.locator('nb-card');
+const texts = await allCards.allInnerTexts();
+
+texts.forEach((t, i) => console.log(`Card ${i} innerText: ${t}`));
+
+
+👉 Output:
+
+Array of strings → ["Card1 visible text...", "Card2 visible text..."].
+
+⚡ Summary
+
+textContent() / innerText() → Single element → include children also.
+
+allTextContents() / allInnerTexts() → Multiple elements → array of strings → iterate with for or forEach.
+                                      where locator will resolve to multiple eleemnts like nb-card
+                                      and on page there will be multiple nb-cards 

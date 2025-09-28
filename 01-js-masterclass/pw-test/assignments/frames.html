@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge 4: Nested Frames & Alerts</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto; background:#0b1220; color:#e5e7eb; margin:0; }
+    header, .container { max-width:900px; margin:0 auto; padding:16px; }
+    iframe { width:100%; height:260px; border:1px solid rgba(255,255,255,0.2); border-radius:12px; }
+    .hint { color:#93c5fd; font-size:13px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Challenge 4: Nested Frames & Alerts</h1>
+  <p class="hint">Switch into frames, click button to trigger alert, then verify nested frame text.</p>
+</header>
+<div class="container">
+  <iframe src="./inner.html" title="Outer frame"></iframe>
+
+  <section>
+    <h2>Automation Tasks</h2>
+    <ol>
+      <li>Switch into the iframe and click the button that shows an alert. Assert alert text equals <code>"Inner button clicked"</code>.</li>
+      <li>Switch into the nested iframe (inside the first iframe) and assert the text equals <strong>"Deep nested content ready"</strong>.</li>
+      <li>Return to the main page and verify that the heading contains <strong>"Nested Frames & Alerts"</strong>.</li>
+    </ol>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+🔹 What type really is
+
+TypeScript mein type ek type alias banata hai — matlab ek nickname deta hai kisi bhi type ko. 
+Aur wo type kuch bhi ho sakta hai:
+
+In TypeScript, the type keyword is just a way to make a type alias.
+That alias can represent any type expression, not just objects.
+
+Think of it like a nickname.
+You can give a nickname to:
+
+    - an object shape
+
+    - a primitive
+
+    - a union
+
+    - even a function signature
+
+    🔹 Example 1: Object shape ka alias
+
+    type User = {
+        name: string;
+        age: number;
+      };
+      
+      const u: User = { name: "Alice", age: 25 }; // ✅
+      Yaha User ek object shape ka alias hai (name aur age hona chahiye).
+      
+      🔹 Example 2: String literal union ka alias
+
+      type User = "alice" | "bob";
+
+let u: User;
+
+u = "alice";   // ✅ allowed
+u = "bob";     // ✅ allowed
+u = "charlie"; // ❌ error
+
+Yaha User ek union type ka alias hai — matlab u sirf "alice" ya "bob" hi ho sakta hai.
+Bas do hi option hai, aur TypeScript compiler force karega ki tu inhi values ka use kare.
+
+🔹 Example 3: Primitive alias
+
+    type Age = number;
+
+    let a: Age = 25;  // ✅ same as number
+
+    Yaha Age bas number ka ek nickname hai.
+
+🔹 Example 4: Function alias
+
+    type Greet = (name: string) => string;
+
+    const greet: Greet = (name) => `Hello, ${name}`;
+
+    Yaha Greet ek function type ka alias hai.
+
+
+🔑 Bottom Line
+
+type ka matlab sirf “object type” nahi hai.
+
+Ye ek nickname hai jo tu kisi bhi type ko de sakta hai: object, union, primitive, function, sab kuch.
+
+Isliye jab hum likhte hain:
+
+type User = "alice" | "bob";
+
+
+to iska matlab hota hai: "User ek aisi type hai jo sirf "alice" ya "bob" ho sakti hai, aur kuch nahi."

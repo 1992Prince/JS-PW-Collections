@@ -1,0 +1,221 @@
+🧠 What is trace in Playwright?
+
+The trace option in Playwright enables detailed tracing of test execution, including:
+
+    - Screenshots
+    - DOM snapshots
+    - Actions timeline
+    - Network requests
+    - Console logs, etc.
+
+You can open a .zip trace file in Playwright’s Trace Viewer to visually debug what happened in the test.
+
+
+📂 Where is Trace Configured?
+
+In playwright.config.ts or per test:
+
+use: {
+  trace: 'on', // or 'retain-on-failure', etc.
+}
+
+
+
+🧪 Trace Output Format
+
+Playwright stores traces inside: test-results/<test-name>-<browser>/trace.zip
+
+
+for below config - 
+use: {
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    // baseURL: 'http://localhost:3000',
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on',
+    screenshot: 'on',
+    headless: false
+  },
+
+  screenshots and trace both will be stored at : test-results/<test-name>-<browser>/trace.zip
+                                                 : test-results/<test-name>-<browser>/screenshot.png
+                                                 
+
+📋 All trace Options — with Explanation and Use Cases
+        - off
+        - on 
+        - on-all-retries
+        - on-first-retry
+        - retain-on-failure
+        - retain-on-first-failure
+        - retry-with-trace
+
+
+1️⃣ 'off'
+🔹 No trace recording at all
+🚫 No performance impact
+✅ Best for clean & fast test runs
+
+
+2️⃣ 'on'
+🔹 Record trace for all test runs, pass or fail
+🗂️ Trace always saved
+📦 Can bloat storage
+
+✅ Use when: You're actively developing/debugging and want visibility into every test run.
+    But mostly avoid it,since it will clutter lots of traces of each test and take lots of space
+
+
+3️⃣ 'retain-on-failure' ✅ (Most used in CI)
+🔹 Trace is recorded for all runs, but it's only saved if the test fails finally
+🏃‍♂️ Saves time and space
+
+trace: 'retain-on-failure'
+
+✅ Use when: You want to debug only failed tests in CI/CD — very practical in real projects.
+
+
+4️⃣ 'on-first-retry'
+🔹 Trace is recorded only on the first retry,
+not on initial run or further retries
+
+trace: 'on-first-retry'
+
+✅ Use when: You're focusing on flaky tests — first retry visibility is enough.
+
+
+5️⃣ 'on-all-retries'
+🔹 Record trace for all retries, but not the first attempt
+🎥 Covers full retry lifecycle
+
+trace: 'on-all-retries'
+
+✅ Use when: You want trace data only for retries — helps investigate flaky tests.
+
+
+6️⃣ 'retain-on-first-failure'
+🔹 Trace is kept only for the first failure,even if the test passes on a retry
+
+trace: 'retain-on-first-failure'
+
+✅ Use when: You're OK with seeing just one failure attempt, not every retry.
+
+
+7️⃣ 'retry-with-trace'
+🔹 Record trace only during retries,
+not on the first run
+🔸 Similar to on-all-retries, but smarter:
+Traces only start when retries start, not before
+
+trace: 'retry-with-trace'
+✅ Use when: You want to reduce overhead and only trace retry paths.
+
+🔥 How to Explain in Interview (Hinglish)
+"Trace feature Playwright mein ek tarike ka visual debugger hai — jisme DOM snapshots, actions, network calls, console logs sab record hota hai.
+Main mostly retain-on-failure use karta hoon CI pipelines mein — jisse sirf failed tests ka trace save hota hai, aur unnecessary storage nahi lagta.
+Agar mujhe flaky tests debug karni ho, toh on-first-retry ya retry-with-trace use karta hoon — jisse mujhe pata chalta hai retry ke time kya hua."
+
+🎯 Bonus: Open Trace Viewer - npx playwright show-trace test-results/login-chromium/trace.zip
+
+Extension for trace file - .zip
+
+--------------------------------------------------------------------------------------------------------
+
+Perfect! Let’s take a realistic scenario — you run a test with:
+
+retries: 2
+
+Which means:
+
+▶️ Initial Run
+🔁 Retry #1 (if failed)
+🔁 Retry #2 (if still failed)
+
+Now I’ll walk you through how each trace option behaves during these 3 runs, what’s recorded, 
+and what is saved — this is the kind of explanation that makes an interviewer think, 
+“This person knows the internal workings.”
+
+🎯 Test Settings:
+
+// playwright.config.ts
+retries: 2,
+use: {
+  trace: 'OPTION_HERE'
+}
+
+
+✅ 1. trace: 'off'
+
+Initial Run: ❌ No trace
+Retry #1: ❌ No trace
+Retry #2: ❌ No trace
+Saved: ❌ Nothing saved
+
+🧠 No trace is recorded at all. You get the fastest test runs, 
+but no trace data for debugging even if the test fails.
+
+
+✅ 2. trace: 'on'
+
+Initial Run: ✅ Trace recorded
+Retry #1: ✅ Trace recorded
+Retry #2: ✅ Trace recorded
+Saved: ✅ All 3 saved (even if test passes)
+
+🧠 Use this during development — full insight into every run. But can consume lots of storage.
+
+
+
+✅ 3. trace: 'retain-on-failure'
+
+Initial Run: ✅ Trace recorded
+Retry #1: ✅ Trace recorded
+Retry #2: ✅ Trace recorded
+Saved: ✅ Only saved if test fails finally (after all retries)
+
+🧠 Great for CI — everything is recorded, but only final failed trace is saved. Saves space.
+
+
+
+
+✅ 4. trace: 'on-first-retry'
+
+Initial Run: ❌ No trace
+Retry #1: ✅ Trace recorded
+Retry #2: ❌ No trace
+Saved: ✅ Only retry #1 trace (if test fails at that point)
+
+🧠 Best when debugging flaky tests — record just one retry to catch the intermittent issue.
+
+
+
+✅ 5. trace: 'on-all-retries'
+
+Initial Run: ❌ No trace
+Retry #1: ✅ Trace recorded
+Retry #2: ✅ Trace recorded
+Saved: ✅ Only saved if the test fails finally
+
+🧠 Saves time by skipping the initial trace, but records all retries. Good balance for flakiness.
+
+
+✅ 6. trace: 'retain-on-first-failure'
+
+Initial Run: ✅ Trace recorded
+Retry #1: ❌ No trace
+Retry #2: ❌ No trace
+Saved: ✅ Only initial run’s trace is saved if it failed there
+
+🧠 Useful when you want just one snapshot of the first failure — even if test passes later.
+
+
+
+✅ 7. trace: 'retry-with-trace'
+
+Initial Run: ❌ No trace
+Retry #1: ✅ Trace recorded
+Retry #2: ✅ Trace recorded
+Saved: ✅ Only if test fails finally (saves last retry trace)
+
+🧠 Smart choice when you're only interested in retry behavior. Saves trace only when retrying fails.
+

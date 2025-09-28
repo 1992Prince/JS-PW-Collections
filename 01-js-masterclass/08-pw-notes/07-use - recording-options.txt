@@ -1,0 +1,376 @@
+| **Category**             | **Option**   | **Used for**                                                             |
+| ------------------------ | ------------ | ------------------------------------------------------------------------ |
+| 🎥 **Recording Options** | `screenshot` | Take screenshots—on failure or always—for debugging UI issues.           |
+|                          | `trace`      | Capture Playwright trace viewer (DOM snapshots, actions, console, etc.). |
+|                          | `video`      | Record test sessions for review or debugging.                            |
+
+Recording Options are helpful for taking screenshots, videos and traces of tests
+
+
+
+🖼️ screenshot Option in Playwright
+
+📌 Purpose:
+Ye option decide karta hai ki Playwright kab screenshot capture kare — especially useful for debugging 
+failed test cases.
+
+🔧 Syntax in playwright.config.js:
+
+use: {
+  screenshot: 'off' // ya 'on', 'only-on-failure'
+}
+
+🔄 Available Values:
+| Value               | Meaning                                                                 |
+| ------------------- | ----------------------------------------------------------------------- |
+| `'off'`             | No screenshots taken (default).                                         |
+| `'on'`              | Screenshot le har test ke baad — chahe pass ho ya fail.                 |
+| `'only-on-failure'` | Sirf tab screenshot le jab test **fail** hota hai (👈 most useful one and preferred). |
+
+
+
+🧠 Real-World Use Cases (Hinglish mein)
+
+
+
+✅ 1. 'only-on-failure' — Most Common
+
+"CI/CD mein jab test fail ho jata hai, toh mujhe samajhna hota hai ki page kis state mein tha.
+Is option se Playwright automatically fail hone wale test ka screenshot capture kar leta hai."
+
+📌 Helps in: Debugging failed UI, broken selectors, missing elements, popups
+
+use: {
+  screenshot: 'only-on-failure'
+}
+
+📷 2. 'on' — Always Capture - Agar mujhe visual documentation chahiye ya visual regression testing karni ho — toh 
+                                main har test ka screenshot le leta hoon."
+
+🚫 3. 'off' — No Screenshots : Agar mujhe sirf speed chahiye ya screenshots ki zarurat nahi hai — tab off rakhte hain.
+
+        Helps in: API-only tests or CLI runs where output se hi kaam chal jaata hai
+
+🆕 4. 'on-first-failure' — Screenshot Option
+        "on-first-failure" means Playwright will take a screenshot only for the first failure in a test 
+         file — not for every failed test.
+
+🤔 Why use 'on-first-failure'?
+"Kabhi-kabhi test file mein multiple tests hote hain. Agar pehla hi test fail ho jata hai, toh baaki tests 
+bhi us failure ki wajah se fail ho sakte hain.
+In that case, mujhe sirf pehle failure ka screenshot chahiye hota hai, 
+jisse root cause pata chal jaye — baaki failures ignore kiye ja sakte hain."
+
+🧠 Real-World Use Case:
+
+Imagine you have 10 tests in a file. First test fails due to navigation error — baaki sab fail ho jaate hain 
+kyunki page load hi nahi hua.
+
+In that case:
+
+'only-on-failure': captures screenshot for all 10 failed tests.
+'on-first-failure': captures screenshot for only the first failed test.
+
+⚡ Faster & storage-efficient debugging.
+
+
+
+
+📂 Default Screenshot Path:
+----------------------------------
+
+After test execution, Playwright automatically creates a test-results/ folder in your 
+root directory to store all artifacts like screenshots, traces, logs, etc.
+
+🖼️ 2. If screenshot is set to 'on' or 'only-on-failure'[Pre-requisite for testing]:
+
+then trigger one test suite with command - npx playwright test tests/example.spec.ts
+
+Screenshots will be saved automatically
+
+The storage path is: test-results/<test-name>-<browser-name>/
+
+
+📦 Suppose u r running your test in all 3 browsers then 
+    Playwright will create 3 separate folders for each browser inside test-results/, like:
+
+Playwright by default saves screenshots inside:
+
+test-results/
+  └── your-test-name-browsername/
+        └── test-failure.png
+
+
+
+🎯 Customize Screenshot Manually
+-------------------------------------
+Aap test ke andar bhi screenshot le sakte ho custom path ke saath:
+
+for this , make screenshot in use : "off" and then add page.screenshot()
+
+mark that test with only so that when u run only that specific test should run and add below code:
+
+await page.screenshot({ path: 'screenshots/imagename1.png', fullPage: true })
+
+Above code will take screenshot of full page and create screenshots folder if it is not there
+and then store image with name imagename1.png 
+
+But when u run same script again, then it will override same image and u will loose your image.
+
+To avoid it lets append it with timestamp:
+
+🕒 Timestamp Format for File Naming : YYYY-MM-DD_HH-mm-ss
+
+// Create timestamp
+  const timestamp = new Date().toISOString().replace(/[:]/g, '-').replace('T', '_').split('.')[0];
+
+  // Save screenshot with timestamp
+  await page.screenshot({ path: `screenshots/example_${timestamp}.png` });
+
+  🔍 Breakdown of Timestamp Logic:
+  new Date().toISOString()                     // 2025-08-02T15:45:10.123Z
+.replace(/[:]/g, '-')                        // 2025-08-02T15-45-10.123Z
+.replace('T', '_')                           // 2025-08-02_15-45-10.123Z
+.split('.')[0]                               // 2025-08-02_15-45-10
+
+✅ Result: Clean filename-safe timestamp like example_2025-08-02_15-45-10.png
+
+when I ran single test with only one project then I got screenshot name- example_2025-08-02_08-37-29.png
+
+So u can see that we have made screeshot property off in use but still we are are override this property
+for speicic test and take screenshot and store it in custom result path.
+
+
+
+
+
+Q - 
+await page.screenshot({ path: 'screenshots/homepage.png' }); 
+
+VS
+
+await page.screenshot({ path: 'screenshots/full.png', fullPage: true });
+
+✅ Comparison: Regular vs Full Page Screenshot
+| Code Line                                                                  | Description                                                                                                                     |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `await page.screenshot({ path: 'screenshots/homepage.png' });`             | 📸 Takes a screenshot of **only the visible viewport** (whatever is currently visible on the screen).                           |
+| `await page.screenshot({ path: 'screenshots/full.png', fullPage: true });` | 📸 Takes a screenshot of the **entire scrollable page**, including content below the fold (even if it's not visible initially). |
+
+
+
+📝 🔔 Important Note: Manual Screenshot Still Works Even if Global screenshot is 'off'
+"Agar aap playwright.config.js mein screenshot: 'off' set karte ho, toh Playwright automatically screenshots 
+capture nahi karega.
+
+Lekin agar aap test ke andar manually page.screenshot() likhte ho, toh wo screenshot fir bhi capture hoga."
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+
+🖼️ video Option in Playwright
+
+video option allow karta hai browser session ka video record karna during test run — super useful 
+for debugging, especially in CI when tests fail.
+
+📍 Where to configure it?
+
+You can set video option in:
+
+use: {
+  video: 'on' // or 'off', 'retain-on-failure', etc.
+}
+
+Or you can use it per-project or per-test using test.use().
+
+📂 Video Save Path
+By default, videos are saved in:
+
+test-results/<test-name>-<browser>/video.webm
+
+like 
+test-results/example-has-title-chromium/video.webm
+
+Here extension of video is webm [super imp]
+
+✅ All video Options — With Use Cases
+
+1️⃣ 'off' (Default)
+📌 No video recording at all.
+
+Useful when you're confident and want faster runs without storage overhead.
+Mostly we prefer this , bcoz storing videos makes storage heavy
+
+2️⃣ 'on'
+    📌 Record video for every test — pass or fail. [not preferred until visual testing is done]
+
+🎯 Use when:
+
+    Doing visual documentation
+    Reviewing all test sessions
+    Performing visual validation
+
+🔻 Downside: All videos get stored, even for passing tests (may consume space).
+
+3️⃣ 'retain-on-failure' ✅ (Most common and preffered)
+
+📌 Record video for all tests, but keep only if the test fails.
+
+🎯 Use when:
+
+    Running tests in CI
+    Want videos only when something breaks
+    Storage-conscious setup
+
+🧠 Highly recommended for CI pipelines — you only keep what matters.
+
+
+4️⃣ 'on-first-retry'
+
+📌 Record video only when a test is retried for the first time.
+
+🎯 Use when:
+
+    You allow retries (retries: 1 or more)
+    You want to investigate flakiness
+    You want to avoid recording on every first attempt
+
+🧪 Example flow:
+
+    First run: no video
+    First retry: video recorded
+    Second retry (if configured): no video
+
+5️⃣ 'retry-with-video'
+
+📌 Don’t record video initially, but record for all retries (if the test fails).
+
+🎯 Use when:
+
+    You want to avoid recording unnecessary video
+    Only want retry attempts tracked
+    Good balance between performance & debug ability
+
+🧪 Example flow:
+
+First run: no video
+Retry 1: video recorded
+Retry 2: video recorded
+
+🎯 Summary Table
+
+| Option                | Records Video?           | Keeps Video?     | Best For                               |
+| --------------------- | ------------------------ | ---------------- | -------------------------------------- |
+| `'off'`               | ❌ No                     | ❌ No             | Speed-focused, no need for visual logs |
+| `'on'`                | ✅ Every run              | ✅ All videos     | Visual audit, training, doc capture    |
+| `'retain-on-failure'` | ✅ Every run              | ❌ Only if failed | CI/CD, debug failed tests only         |
+| `'on-first-retry'`    | ❌ 1st run, ✅ 1st retry   | ✅ Retry only     | Debugging flaky tests                  |
+| `'retry-with-video'`  | ❌ 1st run, ✅ All retries | ✅ Retry only     | Retry-focused debugging                |
+
+
+🎯 Scenario:
+
+
+You have:
+
+retries: 3
+use: { video: <option> }
+
+So the test will run:
+
+    🟢 1 initial attempt
+    🔁 Up to 3 retries (if it fails)
+
+Let’s now see how Playwright behaves with each video option during these attempts.
+
+✅ 1. video: 'retain-on-failure'
+
+Attempt	Video Recorded?	Kept in test-results?
+Run #1	    ✅ Yes	❌ No (test failed)
+Retry #1	✅ Yes	❌ No (test failed)
+Retry #2	✅ Yes	❌ No (test failed)
+Retry #3	✅ Yes	✅ Yes (if still failed)
+
+🎯 Only keeps video of the final failed attempt, if the test fails even after all retries.
+
+💬 Best for: Avoiding video clutter — only keep videos if test ultimately fails.
+
+
+✅ 2. video: 'on-first-retry'
+
+Attempt	Video Recorded?	Kept in test-results?
+Run #1	    ❌ No	❌ No
+Retry #1	✅ Yes	✅ Yes (only if fails here)
+Retry #2	❌ No	❌ No
+Retry #3	❌ No	❌ No
+
+🎯 Only Retry #1 is recorded, no matter how many retries you allow.
+
+💬 Best for: Investigating flaky tests — video only when test retries once.
+
+
+✅ 3. video: 'retry-with-video'
+Attempt	Video Recorded?	Kept in test-results?
+Run #1	    ❌ No	❌ No
+Retry #1	✅ Yes	❌ No (unless final fail)
+Retry #2	✅ Yes	❌ No
+Retry #3	✅ Yes	✅ Yes (if test fails completely)
+
+🎯 Records every retry (Retry #1, #2, #3), but keeps only the last one that fails, if test fails overall.
+
+💬 Best for: Full retry tracking, without recording first attempt.
+
+
+------------------------------------------------------------
+
+Explain to interviewer like below:
+
+🎯 Then, Explain the Differences in Simple Terms
+1️⃣ retain-on-failure
+"This one records video for every test attempt, but it only saves the video if the test fails finally, even after all retries.
+It’s perfect when we want to debug only failed test cases and avoid saving videos for passing tests."
+
+🧪 Example:
+
+Test runs → retry 3 times → still fails
+
+✅ Only the last failed attempt's video is saved
+
+🧠 Ideal for: CI/CD pipelines to keep storage clean, and still debug failures when needed.
+
+2️⃣ on-first-retry
+"Here, Playwright doesn't record video during the first run, but starts recording only on the first retry — and only that one retry is recorded.
+It’s useful when you want to investigate flaky tests — only recording when a test fails and retries once."
+
+🧪 Example:
+
+Test fails on first run
+
+✅ First retry video recorded
+
+❌ No video for further retries
+
+🧠 Ideal for: Teams troubleshooting flakiness, not persistent failures.
+
+3️⃣ retry-with-video
+"In this one, Playwright only starts recording when retries begin, and it records all retries, not just the first.
+But again, like others, it only saves the video if the test fails after all retries."
+
+🧪 Example:
+
+Test retries 3 times
+
+✅ All retries are recorded
+
+✅ Last failed video is saved (if final result is fail)
+
+🧠 Ideal for: Teams that want full visibility of retries, especially for debugging unstable scenarios.
+
+
+| Option              | When It Records     | When It Saves                     |
+| ------------------- | ------------------- | --------------------------------- |
+| `retain-on-failure` | Always              | Only if test fails finally        |
+| `on-first-retry`    | Only on first retry | Only if test fails at first retry |
+| `retry-with-video`  | All retries         | Only if test fails finally        |

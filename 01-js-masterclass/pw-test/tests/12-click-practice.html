@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright Click Practice</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .box {
+      width: 200px; height: 60px;
+      border: 2px solid #333; margin: 10px 0;
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer;
+    }
+    #hoverBox { background: lightblue; }
+    #hoverBox:hover { background: orange; }
+    #rightClickBox { background: lightgreen; }
+    #forceArea { position: relative; }
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 200px; height: 60px;
+      background: rgba(255, 0, 0, 0.6);
+      display: none;
+      justify-content: center; align-items: center;
+      color: white; font-weight: bold;
+    }
+    #forceArea:hover #overlay { display: flex; }
+  </style>
+</head>
+<body>
+  <h1>Playwright Click Practice Page</h1>
+
+  <!-- Generic Click -->
+  <button id="btnClick">Generic Click</button>
+
+  <!-- Double Click -->
+  <div id="dblClickBox" class="box">Double Click Me</div>
+
+  <!-- Right Click -->
+  <div id="rightClickBox" class="box">Right Click Here</div>
+
+  <!-- Shift + Click -->
+  <div id="shiftClickBox" class="box">Shift + Click Here</div>
+
+  <!-- Ctrl/Meta + Click -->
+  <a id="ctrlClickLink" href="https://example.com" target="_blank" class="box">
+    Ctrl/Meta + Click Me (opens new tab)
+  </a>
+
+  <!-- Hover -->
+  <div id="hoverBox" class="box">Hover Over Me</div>
+
+  <!-- Click at position -->
+  <div id="posClickBox" class="box">Click Top-Left Corner</div>
+
+  <!-- Force Click (overlay blocks button) -->
+  <div id="forceArea" class="box">
+    <button id="forceBtn">Force Click Button</button>
+    <div id="overlay">Overlay</div>
+  </div>
+
+  <!-- Programmatic Click -->
+  <button id="progBtn">Programmatic Click</button>
+
+  <script>
+    // Utility log
+    function log(msg) {
+      console.log(msg);
+      const p = document.createElement("p");
+      p.textContent = msg;
+      document.body.appendChild(p);
+    }
+
+    // Generic Click
+    document.getElementById("btnClick").addEventListener("click", () => {
+      log("✅ Generic Click performed on button");
+    });
+
+    // Double Click
+    document.getElementById("dblClickBox").addEventListener("dblclick", () => {
+      log("✅ Double Click detected");
+    });
+
+    // Right Click
+    document.getElementById("rightClickBox").addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      log("✅ Right Click detected");
+    });
+
+    // Shift + Click
+    document.getElementById("shiftClickBox").addEventListener("click", (e) => {
+      if (e.shiftKey) {
+        log("✅ Shift + Click detected");
+      } else {
+        log("⚠️ Normal click instead of Shift + Click");
+      }
+    });
+
+    // Ctrl/Meta + Click
+    document.getElementById("ctrlClickLink").addEventListener("click", (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        log("✅ Ctrl/Meta + Click detected (would open in new tab)");
+      } else {
+        log("⚠️ Normal link click (same tab)");
+      }
+    });
+
+    // Hover
+    document.getElementById("hoverBox").addEventListener("mouseenter", () => {
+      log("✅ Hover detected");
+    });
+
+    // Position Click
+    document.getElementById("posClickBox").addEventListener("click", (e) => {
+      log(`✅ Click at position (x:${e.offsetX}, y:${e.offsetY})`);
+    });
+
+    // Force Click
+    document.getElementById("forceBtn").addEventListener("click", () => {
+      log("✅ Force Click button clicked (even if overlay visible)");
+    });
+
+    // Programmatic Click
+    document.getElementById("progBtn").addEventListener("click", () => {
+      log("✅ Programmatic Click triggered");
+    });
+  </script>
+</body>
+</html>

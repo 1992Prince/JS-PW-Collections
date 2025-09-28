@@ -1,0 +1,102 @@
+https://playwright.dev/docs/frames
+
+1. iframe / frame kya hota hai?
+
+    - Ek webpage ke andar doosra webpage embed karne ka tarika hai.
+    - Matlab, tumhaare main page ke andar ek chhota window hota hai jo alag HTML page load karta hai.
+    - Ye HTML page alag document hota hai, iske andar apna khud ka DOM hota hai.
+
+✅ Interview Answer
+
+Q: What is a frame or iframe in HTML?
+
+👉 A frame/iframe is used to embed one HTML document inside another.
+    - Frame (old, <frameset> tag) was used earlier to split a webpage into sections, but it is obsolete now.
+    I- frame (inline frame, <iframe>) is still used today. It allows you to load another web page inside the 
+       current one.
+
+For example: YouTube videos, ads, and chat widgets on websites usually come inside an iframe.
+
+
+
+
+A page can have additional frames attached with the iframe HTML tag. 
+These frames can be accessed for interactions inside the frame.
+
+
+
+🔹 Frame Objects in Playwright
+
+Jaise maine bola tha → iframe ek page ke andar ek chhota page hota hai, aur uska apna DOM hota hai.
+
+👉 Isliye Playwright me, agar iframe ke andar interact karna hai, toh pehle uska frame object lena padta hai.
+
+1. Frame ka object kaise milta hai?
+
+a) By name attribute
+
+<iframe name="frame-login" src="https://example.com/login"></iframe>
+
+const frame = page.frame('frame-login');   // frame name se access
+await frame.fill('#username-input', 'John');
+
+
+b) By URL
+
+<iframe src="https://myapp.com/login"></iframe>
+
+const frame = page.frame({ url: /.*myapp\.com\/login.*/ }); #const frame = page.frame({ url: /.*domain.*/ });
+await frame.fill('#username-input', 'John');
+
+👉 Yahaan regex (/.*myapp\.com.*/) use karke URL match kar raha hai.
+
+
+
+
+
+👉 "Agar page.frame() se frame access ho hi raha hai, toh frameLocator kyon aaya Playwright me?"
+
+🔹 1. page.frame() kya karta hai?
+
+    - Ye ek frame object return karta hai (iframe ke andar ka pura page).
+    - Uske baad tumko manually us frame me jaake locator likhna padta hai.
+
+    const loginFrame = page.frame('frame-login');  // frame object lo
+    await loginFrame.fill('#username', 'john');    // uske andar ka element fill
+
+    ⚠️ Problem → Ye frame ko static reference se pakadta hai. Agar page reload ho gaya, iframe reloaded hua, 
+    ya dynamic iframe load hua — toh tumhara frame object invalid ho sakta hai.
+
+
+
+🔹 2. frameLocator kya karta hai?
+
+- Ye auto-waiting + auto-resolution deta hai.
+- Tum directly iframe ke andar ke elements target kar sakte ho bina frame object manually handle kiye.
+- Matlab → tum locator ko chain kar sakte ho, aur Playwright khud dekh lega ki iframe kab load hota hai.
+
+    // directly iframe ke andar locate
+    await page.frameLocator('#login-frame')
+        .getByRole('textbox', { name: 'Username' })
+        .fill('john');
+
+
+
+3. Difference in Short
+
+| **Feature**             | **page.frame()**             | **frameLocator()**                               |
+| ----------------------- | ---------------------------- | ------------------------------------------------ |
+| How it works            | Gets frame object manually   | Auto-locates elements inside iframe              |
+| Reload / dynamic frames | Can break (old ref)          | Always works (auto-resolves)                     |
+| Waiting                 | You handle it                | Built-in auto-wait                               |
+| Locator chaining        | Not possible                 | Possible (frameLocator → getByRole → click etc.) |
+| Recommended?            | ✅ Sometimes (advanced cases) | ⭐ Preferred for normal element actions           |
+
+
+🎯 Interview Style Answer
+
+"Playwright provides two ways to interact with iframes. With page.frame(), 
+you explicitly get the frame object and then work inside it, but this can break if the iframe reloads or 
+changes dynamically. frameLocator is the recommended modern approach because it supports 
+locator chaining, auto-waiting, and automatically resolves elements inside the iframe. So, in most cases, 
+frameLocator is more reliable than page.frame()."

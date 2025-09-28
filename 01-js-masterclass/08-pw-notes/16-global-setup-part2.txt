@@ -1,0 +1,128 @@
+🌍 globalSetup / globalTeardown (Config option)
+
+Abhi tak humne Project Dependencies aur use levels samjhe.
+Ab chal dusra option samajhte hain —
+
+🔎 Introduction
+
+    - Ye ek simple way hai Playwright Test ke liye ek baar ka setup/teardown code run karne ka.
+
+    - globalSetup → ek file/function jo pure test suite start hone se pehle run hota hai.
+
+    - globalTeardown → ek file/function jo saare tests complete hone ke baad run hota hai.
+
+
+⚠️ Difference from Project Dependencies:
+
+    - Ye test runner ke eco-system ke bahar run hote hain.
+
+    - Report me nahi dikhte.
+
+    - Fixtures/traces ka support nahi hota.
+
+    - Browser manually launch karna padta hai agar chahiye.
+
+
+
+✅ How to Configure
+
+playwright.config.ts
+
+
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  globalSetup: './global-setup.ts',
+  globalTeardown: './global-teardown.ts',
+  use: {
+    baseURL: 'https://example.com',
+    headless: true,
+  },
+});
+
+
+
+✅ global-setup.ts
+
+// global-setup.ts
+import { FullConfig } from '@playwright/test';
+
+async function globalSetup(config: FullConfig) {
+  console.log('🌍 Global setup: runs before all tests');
+
+  // Example: launch browser & store login state
+  const { chromium } = require('@playwright/test');
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  await page.goto(config.projects[0].use.baseURL + '/login');
+  await page.fill('#username', 'testuser');
+  await page.fill('#password', 'secret');
+  await page.click('button[type=submit]');
+
+  // Save logged-in state
+  await page.context().storageState({ path: 'storageState.json' });
+
+  await browser.close();
+}
+
+export default globalSetup;
+
+
+✅ global-teardown.ts
+
+// global-teardown.ts
+async function globalTeardown() {
+  console.log('🧹 Global teardown: runs after all tests');
+  // Example: disconnect DB, stop server, delete temp files
+}
+
+export default globalTeardown;
+
+
+✅ Usage in Specs
+
+// example.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.use({ storageState: 'storageState.json' });
+
+test('profile page', async ({ page }) => {
+  await page.goto('/profile');
+  await expect(page.locator('h1')).toHaveText('Welcome testuser');
+});
+
+
+
+
+🔁 Execution Flow
+
+When you run: npx playwright test
+
+Order will be:
+
+1. global-setup.ts runs (once for entire suite)
+2. All test projects run (e.g. chromium, firefox, etc.)
+3. global-teardown.ts runs (once after entire suite)
+
+
+
+
+✅ When to Use globalSetup/globalTeardown
+
+    - Jab tumhe sirf ek simple init/cleanup step chahiye (e.g. DB migrate, login state save).
+
+    - Jab tumhe report/fixtures/traces ki zaroorat nahi hai.
+
+    - Chhoti ya legacy setup scripts ke liye sahi hai.
+
+
+⚠️ Limitations
+
+    - Report me dikhai nahi dega.
+
+    - Traces record nahi hote.
+
+    - Fixtures ka use possible nahi hai (browser ko khud launch karna padta hai).
+
+    - Retry/parallelism ke saath integrate nahi hota.

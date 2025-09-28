@@ -1,0 +1,24 @@
+Timeouts in Playwright
+
+Timeouts in PW have 3 layer design and dependency
+
+outer layer - Global timeout
+Time limit for whole test run
+default : no timeout
+
+    - Global timeout is the time limit of the whole test run.
+
+    - It means that if you have multiple tests, let's say ten tests in your test suite, global timeout is
+      the total duration of the time for the entire test run execution.
+
+    - If the global timeout, for example, set for two minutes and if your entire test suite runs longer
+      than two minutes, then the test will be terminated based on the timeout by default.
+
+    - Global timeout is not configured and if you want to configure it, you absolutely can do this.
+
+
+
+Test Timeout
+default: 30 secs or 30000 ms
+    The next layer of the timeout is a test timeout, which is under a global timeout test.
+    This is Time limit for the single test

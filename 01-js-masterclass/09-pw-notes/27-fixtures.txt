@@ -1,0 +1,238 @@
+🔹 Steps to Create a Fixture
+
+Step 1: Import base test
+
+Sabse pehle tumhe Playwright ka test import karke ek base test object banana hota hai.
+
+import { test as base } from '@playwright/test';
+
+
+Step 2: Decide what your fixture should provide
+
+Fixture resource (e.g., page, db connection) ya data (e.g., token, baseURL, config) de sakta hai.
+👉 Example: maan lo tumhe authToken fixture banana hai.
+
+
+Step 3: Extend the base test
+
+Fixture banane ke liye base.extend<Fixtures>() use karte ho.
+
+    Yahan generic <Fixtures> type define karta hai ki fixture test ko kya provide karega.
+
+    Fixture ek async function hota hai jisme tumhe use() ko call karke value deni padti hai.
+
+type MyFixtures = {
+    authToken: string;
+  };
+  
+  const test = base.extend<MyFixtures>({
+    authToken: async ({}, use) => {
+      const token = 'token-' + Date.now();  // setup
+      await use(token);                     // test ko value di
+      // cleanup (agar required ho)
+    },
+  });
+  
+  
+Step 4: Use fixture in test
+
+  Ab tum apne test me fixture ko as argument destructure karke use kar sakte ho.
+
+  test('use authToken fixture', async ({ authToken }) => {
+    console.log('My token is:', authToken);
+  });
+
+  
+✅ Summary: Steps
+
+1. Import test as base.
+2. Decide what resource/data fixture should give.
+3. Extend base test with base.extend<Fixtures>().
+4. Provide the value via await use(value) inside fixture.
+5. Use fixture in tests by destructuring { myFixture }.
+
+
+---------------------------------------------------------------
+
+
+🔹 1. Overriding Fixtures
+
+Matlab ek fixture ka default behavior change karna for some tests.
+
+👉 Example:
+
+// base fixture
+const test = base.extend<{ baseURL: string }>({
+  baseURL: async ({}, use) => {
+    await use('https://staging.example.com');
+  },
+});
+
+// override in test file
+const prodTest = test.extend({
+  baseURL: async ({}, use) => {
+    await use('https://prod.example.com');
+  },
+});
+
+prodTest('production test', async ({ baseURL, page }) => {
+  await page.goto(baseURL); // ab prod open hoga
+});
+
+💡 Usecase → staging vs production vs dev environment tests.
+
+-----------------------------------------------------------------------------
+
+🔹 2. Worker-scoped Fixtures
+
+By default fixture har test ke liye naya banta hai.
+Par agar koi resource heavy hai (jaise DB connection, server start karna), toh tum usko worker scope de sakte ho.
+Matlab ek hi baar banega, aur us worker ke saare tests use karenge.
+
+
+👉 Example:
+
+const test = base.extend<{
+    db: { query: (sql: string) => string }
+  }>({
+    db: [async ({}, use) => {
+      console.log('DB connect (once per worker)');
+      const db = { query: (sql: string) => `Result: ${sql}` };
+      await use(db);
+      console.log('DB disconnect');
+    }, { scope: 'worker' }],
+  });
+
+💡 Usecase → database, API server, test data setup jo har test ke liye dobara create karna costly hai.
+
+
+------------------------------------------------------------------------------
+
+
+🔹 3. Automatic Fixtures
+
+Ye fixtures har test me automatically available hote hain, tumhe manually use karne ki zarurat nahi.
+
+👉 Example: built-in page, browser, context, request → ye sab automatic fixtures hain.
+
+Tum custom fixture ko bhi automatic bana sakte ho, agar usko koi dusra fixture consume karta hai
+
+
+
+-----------------------------------------------------------------------------
+
+
+🔹 4. Fixtures & Timeouts
+
+Har fixture ke liye tum timeout set kar sakte ho.
+Default me fixture test ke timeout me hi count hota hai.
+But agar koi setup zyada time leta hai (jaise DB seed), toh tum alag timeout de sakte ho.
+
+👉 Example:
+
+const test = base.extend<{ slowFixture: string }>({
+  slowFixture: async ({}, use) => {
+    await new Promise(res => setTimeout(res, 5000)); // slow setup
+    await use('done');
+  },
+});
+
+test('with timeout', async ({ slowFixture }) => {
+  console.log(slowFixture);
+});
+
+💡 Agar setup heavy hai toh config me timeout badha sakte ho.
+
+
+------------------------------------------------------------------
+
+
+🔹 5. Fixture Options
+
+Tum fixture ke through options (config values) bhi inject kar sakte ho.
+
+👉 Example:
+
+type Options = { apiUrl: string };
+
+const test = base.extend<Options>({
+  apiUrl: async ({}, use) => {
+    await use(process.env.API_URL || 'https://default-api.com');
+  },
+});
+
+test('api test', async ({ apiUrl }) => {
+  console.log('Using API:', apiUrl);
+});
+
+
+💡 Usecase → environments (dev/staging/prod), credentials, test data configs.
+
+
+-----------------------------------------------------------------------
+
+🔹 6. Execution Order
+
+Fixtures ke execution ka ek order hota hai:
+
+    1. Pehle worker-scoped fixtures bante hain.
+
+    2. Fir har test ke liye per-test fixtures bante hain.
+
+    3. Jo fixture dusre pe depend karta hai → wo uske baad execute hota hai.
+
+    4. Cleanup hamesha reverse order me hota hai.
+
+👉 Example:
+
+const test = base.extend<{
+  a: string; b: string; c: string;
+}>({
+  a: async ({}, use) => {
+    console.log('setup A');
+    await use('A');
+    console.log('teardown A');
+  },
+  b: async ({ a }, use) => {
+    console.log('setup B (depends on A)');
+    await use('B');
+    console.log('teardown B');
+  },
+  c: async ({ b }, use) => {
+    console.log('setup C (depends on B)');
+    await use('C');
+    console.log('teardown C');
+  },
+});
+
+test('order test', async ({ a, b, c }) => {
+  console.log('using:', a, b, c);
+});
+
+
+Output:
+
+setup A
+setup B
+setup C
+using: A B C
+teardown C
+teardown B
+teardown A
+
+💡 Ye clear dikhata hai ki setup dependency order me hota hai, aur cleanup ulta.
+
+
+✅ Recap
+
+    Overriding fixtures → same fixture ko alag behavior dena.
+
+    Worker-scoped fixtures → ek hi baar banega per worker, saare tests share karenge.
+
+    Automatic fixtures → bina test me likhe bhi inject hote hain (like page).
+
+    Fixtures & timeouts → heavy setup ke liye timeout handle kar sakte ho.
+
+    Fixture options → config/data pass karne ka tarika.
+
+    Execution order → setup dependency order me, teardown reverse me.

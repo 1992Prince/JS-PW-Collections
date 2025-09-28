@@ -1,0 +1,183 @@
+🔹 What are Dialogs?
+
+Dialogs are browser pop-ups created by JavaScript. 
+Ye modal hote hain (block kar dete hain page ko jab tak handle na karo).
+
+Playwright me agar tu explicitly handle nahi karega, toh dialogs auto-dismiss ho jaate hain.
+
+NOTE:
+If there is no listener for page.on('dialog'), all dialogs are automatically dismissed.
+
+
+🔹 Types of Dialogs
+
+1. alert()
+
+        Sirf ek message dikhata hai aur "OK" button deta hai.
+
+        User bas accept kar sakta hai.
+
+        Example in JS: alert("This is an alert!");
+
+        Playwright Handling:
+
+            page.on('dialog', async dialog => {
+            console.log(dialog.message());   // "This is an alert!"
+            await dialog.accept();
+            });
+            await page.getByRole('button').click();
+
+
+2. confirm()
+
+    Message dikhata hai with OK and Cancel.
+
+    User accept ya dismiss kar sakta hai.
+
+    Example in JS: confirm("Are you sure?");
+
+    Playwright Handling:
+
+        page.on('dialog', async dialog => {
+        console.log(dialog.message());   // "Are you sure?"
+        await dialog.dismiss();          // same as clicking "Cancel"
+        });
+        await page.getByRole('button').click();
+
+
+3. prompt()
+
+    Message + Input box dikhata hai.
+
+    User text enter kar sakta hai ya Cancel.
+
+    Example in JS: prompt("Enter your name:");
+
+    Playwright Handling:
+
+        page.on('dialog', async dialog => {
+        console.log(dialog.message());     // "Enter your name:"
+        await dialog.accept("John Doe");   // fills "John Doe" into prompt
+        });
+        await page.getByRole('button').click();
+
+
+4. beforeunload
+
+    Jab user page close/refresh karta hai, toh confirmation dialog aata hai (Are you sure you want to leave?).
+
+    Example:
+
+        window.addEventListener("beforeunload", event => {
+        event.preventDefault();
+        event.returnValue = ''; // triggers confirmation
+        });
+
+
+    Playwright Handling:
+
+        page.on('dialog', async dialog => {
+        console.log(dialog.type());   // "beforeunload"
+        await dialog.dismiss();       // same as "Stay on Page"
+        });
+        await page.close({ runBeforeUnload: true });
+
+
+5. Print Dialog (window.print)
+
+    Jab koi app "Print Page" option trigger karti hai.
+
+    Playwright direct system print dialog handle nahi kar sakta, but detect kar sakta hai ki trigger hua.
+
+    Example Handling:
+
+    await page.evaluate('(() => { window.waitForPrintDialog = new Promise(f => window.print = f); })()');
+    await page.getByText('Print it!').click();
+    await page.waitForFunction('window.waitForPrintDialog');
+
+
+🔹 IMPORTANT Points for Interview
+
+1) Dialogs are blocking → agar handle nahi karoge, toh test hang ho jaayega.
+2) Agar no listener diya, Playwright auto-dismiss kar dega dialogs.
+3) Difference between types:
+
+    - alert → just info, accept only.
+    - confirm → accept/dismiss.
+    - prompt → accept with value/dismiss.
+    - beforeunload → special case, triggered on navigation/close.
+    - print → detect karna possible, handle karna nahi.
+
+
+🚀🚀🚀 [IMP-INTERVIEW-POINT-START] 🚀🚀🚀
+
+🔹 What are Dialogs in Playwright?
+
+    Dialogs are JavaScript pop-ups (modal windows) like alert, confirm, prompt, or beforeunload.
+    They block the page execution until the user handles them.
+
+    👉 In Playwright, by default, all dialogs are auto-dismissed.
+    If you want to handle them, you must use:
+
+    page.on('dialog', async dialog => {
+    console.log(dialog.message());
+    await dialog.accept(); // or dialog.dismiss()
+    });
+
+
+🔹 Types of Dialogs
+
+1. Alert (alert())
+
+    Shows a simple message with an OK button.
+    The only possible action is "accept".
+    Example: alert("This is an alert!");
+
+2. Confirm (confirm())
+
+    Shows a message with OK and Cancel.
+    The user can either accept or dismiss.
+    Example: confirm("Are you sure?");
+
+3. Prompt (prompt())
+
+Shows a message with an input box and OK/Cancel buttons.
+The user can enter text.
+Example: prompt("Enter your name:");
+
+4. Beforeunload Dialog
+
+    Triggered when the user tries to close or refresh the page.
+    Asks confirmation: “Do you really want to leave this page?”
+    Example:
+
+    window.addEventListener("beforeunload", event => {
+    event.preventDefault();
+    event.returnValue = '';
+    });
+
+
+5. Print Dialog
+
+Triggered when window.print() is called.
+This is a system-level dialog (belongs to OS, not the web page).
+Playwright cannot interact with it but can detect that it was triggered.
+
+
+🔹 Key Difference: Beforeunload vs Print
+
+    Beforeunload → browser’s confirmation box when closing/refreshing a page. 
+                    Playwright can handle it (accept or dismiss).
+
+    Print → OS-level print dialog. Playwright can only detect, not interact.
+
+
+✅ Interview Answer (short form):
+
+"Dialogs in Playwright are modal JavaScript popups such as alert, confirm, prompt, beforeunload, and 
+print. 
+By default, Playwright dismisses them automatically, but we can register page.on('dialog') to handle them. 
+Alert only has OK, confirm has OK/Cancel, prompt allows text input, beforeunload appears on page 
+close/refresh, and print is OS-level — Playwright can detect but not control it.
+
+✅✅✅ [IMP-INTERVIEW-POINT-END] ✅✅✅

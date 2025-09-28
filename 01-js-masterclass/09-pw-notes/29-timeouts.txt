@@ -1,0 +1,171 @@
+Timeouts in PW have 3 layers design and dependency.
+
+Outer Layer is Global Timeouts:
+-------------------------------------------------------
+
+Global timeout is the time limit of the whole test run.
+
+It means that if you have multiple tests, let's say ten tests in your test suite, global timeout is
+the total duration of the time for the entire test run execution.
+
+If the global timeout, for example, set for two minutes and if your entire test suite runs longer
+than two minutes, then the test will be terminated based on the timeout by default.
+
+By default Global timeout is not configured and if you want to configure it, you absolutely can do this.
+
+We can specify global timeout in pw.config.ts file i.e.
+
+export default defineConfig({
+
+    timeout: 20000,
+  
+    globalTimeout: 90000,
+
+
+The next layer of the timeout is a - test timeout, which is under a global timeout test.
+--------------------------------------------------------------------------------------
+
+Timeout is the time limit for a single test execution.
+
+The default value for the timeout is 30s or 30,000 milliseconds and you can configure this value accordingly.
+
+U can configure it in config.ts file also for all tests in framework
+U can configure at test level also [Prince find multiple ways to set it up]
+
+And inside of the test timeout there is a nested three other timeouts[Action timeout, Navigation timeout and Expect timeout] 
+which is action timeout navigation
+
+In playwright.config.ts file we specified test timeout 10000 ms and now if inside any test if any click is taking
+more that 10000 ms then after 10000 ms script will failed with error - target is closed
+bcoz here test timeout specified is 10000 ms and test execution can't go beyond this time
+
+export default defineConfig({
+
+    timeout: 10000,
+-------------------------------------------------------------------------------------------------------------------------------
+
+Action and Navigation Timouts we can specify below in use section of config.ts file
+
+use: {
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    // baseURL: 'http://localhost:3000',
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+    actionTimeout: 5000,
+    navigationTimeout: 5000
+  },
+
+
+- Action Timeout
+
+Action Timeout is the time limit for the action command to be executed.
+For example, if we take the click command, the click command will wait for element to be available,
+visible, clickable and so on up to the time of the test timeout because action timeout by default is
+not configured.
+
+If you will configure the action timeout, click for example, will wait up to the configuration timeout
+of the action.
+
+Timeout action timeout cannot be longer than the test timeout and test timeout cannot be longer than
+a global timeout.
+
+If you put for example action timeout of 40s but test timeout is configured as 30s, the actual action
+timeout will be 30s because it will be limited by the layer of the test timeout and by default action
+timeout is also not configured.
+
+1 case: by default test timeout is 30 secs and we haven't specified action timeout in config file
+        then action timeout will wait for test timeout for performing action like click
+
+2 case: by default test timeout is 30 secs and we specified action timeout of 5 secs in config file
+        then all actions methods in framework like click etc will wait for max 5 secs for elements to visible, clickable etc 
+        and then perform click and if element is not visible/clickable etc in 5 secs then it will throw the error.
+
+        Note: In framework this action timeout will be common for all action mehtods for all tests and for all spec file
+
+3 case: by default test timeout is 30 secs and we specified action timeout of 5 secs in config file 
+        and but still for some specific step action like click() element is taking longer time to load and for this specific case
+        u can just increase action timeout by: await successButton.click({timeout: 16000})
+        So only for this action click action time is overriden from 5 secs to 16 secs.
+
+        but this step should be completed within test timeout bcoz it will not override test timeout and action timeout
+        is subset of test timeout
+
+4 case: by default test timeout is 30 secs but u given test timeout in cofig as 60 secs i.e. 60000 ms
+        Now in some specific test we have one element that loading takes more than 20 secs and so test execution time gets icreased
+        so u want to just increase timeout for specific test and not all tests in framework,
+        This can be done by:
+        test("test name", async ({page})={
+            test.setTimeout(120000);
+        })
+        and now this test got 2 mins to complete its execution and all action methods like click will take this test timeout
+        and we don't need to give action timeout, until u just want to test to complete click in 5 secs and hten u need to add 
+        successButton.click({timeout: 5000}) and now this click should only be completed withing 5 secs and not n 2 mins
+    
+5 case: Suppose u know u have one slow test and it is flaky and u want to increase timeout for just particular this test
+        then in pw u have one option test.slow()
+
+        If u mark your test with this command slow() will incrase the default timeout to 3 times
+        so if in config.ts file timeout: 30000 ms 
+
+        then for below test, execution time will be 30000 * 3 = 90000 ms
+        test("test name", async ({page})={
+            test.slow()
+        })
+
+
+6 case: Suppose u want to modify test timeout for particular test suite, and u can do it in beforeEach hook
+
+test.beforeEach(aync ({page}, testInfo) => {
+   await page.goTo();
+   testInfo.setTimeout(testInfo.timeout +  30000 )
+})
+
+and this will modify default timeout for complete one suite i.e. spec file
+
+
+- Navigation Timeout
+
+Navigation timeout the same thing.
+Navigation timeout is how long playwright will navigate to the certain page and load this page.
+
+This timeout is also not configured by default and limited by the test timeout.
+
+- Expect Timeout
+
+Expect timeout is the time limit for expect locator assertions.
+
+The default value is five seconds and I remind you that only locator assertions has a timeout because
+the generic assertion or general assertion they don't have timeout and they don't wait for anything.
+
+So again expect timeout cannot be configured longer than a test timeout because the higher level timeout
+has higher priority.
+
+By default expect timeout is 5 secs for locators
+But if u want to increase it , then in config file u can do like below, but that will be applied to all expects in all tests
+in all specs in framework
+
+export default defineConfig({
+
+    // timeout: 20000,
+  
+    // globalTimeout: 90000,
+  
+    expect: {
+      timeout: 10000,
+    },
+     
+And if u wnat to just increase expect for particlar step in particular test then  u can override the default timeout
+
+await expect ().toHaveText("text", {timeout: 40000});
+
+but this expect timeout should be completed within test timeout else it will throw error.
+
+Note: action, navgation and expect timeout are subset of test timeout and they can't override test timeout and must be completed within
+      test timeout.
+
+
+---------------------------------------------------------------------------------------------------------
+
+
+

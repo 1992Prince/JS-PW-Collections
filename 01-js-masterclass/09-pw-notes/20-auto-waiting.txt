@@ -1,0 +1,350 @@
+
+It is very imp to understand Auto-waiting concepts to make sure we write reliable and resilitent tests and
+reduce flakiness in tests.
+
+
+allTextContent() - this method don't wait for any condition, it just returns the text content of the element.
+                   If some locator or element is not available when this method is executed
+                   It will throw an error wch will create a flaky and unstable tests.
+                   It returns promise
+
+
+How playwright avoid flakiness in tests by auto-waiting for element to be visible and 
+enabled before performing click action?
+
+Playwright most of methods like click(), fill(), type(), textContent() etc are auto-waiting methods. Menaing...
+But some methods like allTextContent() are not auto-waiting methods. and don't wait for any condition.
+
+click waits for element to be visible and enabled before performing the click action.
+If element is not visible or enabled within 30 secs then it will throw error.
+So we will take one example where button is available after 20 secs and then click() method is executed.
+This is how click method avoid flakiness by waiting for element to be visible and enabled before performing click action.
+
+
+For methods like allTextContent() wch don't ahve any auto-waiting capability, we can use - 
+ - wait for element - await page.waitForSelector('.big-success');
+ - wait for particular response - await page.waitForResponse('https://example.com/api/success');
+ - wait for network calls to be completed - await page.waitForLoadState('networkidle');
+ - we can wait for particular event to be triggered - await page.waitForEvent('popup');
+ - waitForFunction()
+ - we can wait for api request
+ - also we can just wait for hardcore time using page.waitForTimeout(5000); - not recommended
+
+
+
+ 🎯 Auto-Waiting in Playwright
+
+🔹 Introduction
+
+One of Playwright’s biggest strengths is its auto-waiting mechanism.
+Unlike Selenium (where you often need to add manual waits), Playwright waits automatically for 
+elements to be in a ready state before performing any action.
+
+👉 Definition:
+
+Playwright performs actionability checks on elements. 
+It waits for all these checks to pass before executing the action. 
+If checks don’t pass within the timeout (default 30s), Playwright throws a TimeoutError.
+
+
+This ensures reliable tests without adding arbitrary wait() or sleep() calls.
+
+🔹 Example of Auto-Waiting - await page.locator('#submit').click();
+
+Before clicking, Playwright ensures:
+
+    - The locator resolves to exactly one element.
+
+    - Element is visible on the page.
+
+    - Element is stable (not animating).
+
+    - Element is receiving events (not covered by another element).
+
+    - Element is enabled (not disabled).
+
+    Only if all conditions are met → click happens.
+    If not → TimeoutError.
+
+
+    🔹 Actionability Checks (What Playwright Waits For)
+
+    | **Action**                         | Visible | Stable | Receives Events | Enabled | Editable |
+    | ---------------------------------- | ------- | ------ | --------------- | ------- | -------- |
+    | `locator.check()`                  | ✅       | ✅      | ✅               | ✅       | -        |
+    | `locator.click()`                  | ✅       | ✅      | ✅               | ✅       | -        |
+    | `locator.dblclick()`               | ✅       | ✅      | ✅               | ✅       | -        |
+    | `locator.setChecked()`             | ✅       | ✅      | ✅               | ✅       | -        |
+    | `locator.tap()`                    | ✅       | ✅      | ✅               | ✅       | -        |
+    | `locator.uncheck()`                | ✅       | ✅      | ✅               | ✅       | -        |
+    | `locator.hover()`                  | ✅       | ✅      | ✅               | -       | -        |
+    | `locator.dragTo()`                 | ✅       | ✅      | ✅               | -       | -        |
+    | `locator.screenshot()`             | ✅       | ✅      | -               | -       | -        |
+    | `locator.fill()`                   | ✅       | -      | -               | ✅       | ✅        |
+    | `locator.clear()`                  | ✅       | -      | -               | ✅       | ✅        |
+    | `locator.selectOption()`           | ✅       | -      | -               | ✅       | -        |
+    | `locator.selectText()`             | ✅       | -      | -               | -       | -        |
+    | `locator.scrollIntoViewIfNeeded()` | -       | ✅      | -               | -       | -        |
+    | `locator.blur()`                   | -       | -      | -               | -       | -        |
+    | `locator.dispatchEvent()`          | -       | -      | -               | -       | -        |
+    | `locator.focus()`                  | -       | -      | -               | -       | -        |
+    | `locator.press()`                  | -       | -      | -               | -       | -        |
+    | `locator.pressSequentially()`      | -       | -      | -               | -       | -        |
+    | `locator.setInputFiles()`          | -       | -      | -               | -       | -        |
+
+    
+    🔹 Why Is This Important?
+
+        - No flaky tests: Prevents clicks on invisible or disabled elements.
+        
+        - Less boilerplate: No need for explicit waits like waitForSelector().
+        
+        - Smarter testing: Ensures actions happen only when meaningful.
+
+
+        🔹 Quick Mnemonic for Remembering Checks
+
+        👉 For click actions:
+                - V-S-R-E → Visible, Stable, Receives events, Enabled
+
+
+
+
+                1️⃣ Default Timeout (Clarification)
+
+✅ You’re right — default timeout is 30 seconds (not 5 seconds).
+
+This applies to actions like click(), fill(), check() and to expect() assertions.
+
+Can be overridden using:
+
+🔹 Ways to Override Timeout
+
+        1️⃣ At Test Level
+
+            test.setTimeout(60000); // 60s for this test
+
+
+        2️⃣ At Page Level
+
+            page.setDefaultTimeout(10000); // 10s for all page actions in this test
+
+
+        3️⃣ In Config File
+
+            // playwright.config.ts
+            const config = {
+            timeout: 60000,   // global test timeout
+            expect: { timeout: 10000 } // default for assertions
+            };
+
+
+        4️⃣ At Locator/Action Level
+
+            await page.locator('button').click({ timeout: 10000 });
+
+
+
+2️⃣ Methods with Auto-Waiting vs Without
+
+✅ Methods with Auto-Wait (have actionability checks built in):
+
+        locator.click()
+
+        locator.fill()
+
+        locator.check() / locator.uncheck()
+
+        locator.dblclick()
+
+        locator.hover()
+
+        locator.tap()
+
+        locator.selectOption()
+
+        locator.dragTo()
+
+        locator.screenshot()
+
+        👉 Basically user-like actions (interactions with the DOM).
+
+❌ Methods without Auto-Wait (no actionability checks):
+
+        locator.focus()
+
+        locator.blur()
+
+        locator.dispatchEvent()
+
+        locator.press() / locator.pressSequentially()
+
+        locator.setInputFiles()
+
+        👉 These don’t wait for visibility, stability, etc. → If element is not ready, your test may become flaky.
+
+
+
+        3️⃣ How to Avoid Flakiness When Using Non-Auto-Wait Methods
+
+        When using methods without auto-waiting, you need to explicitly synchronize your test.
+        Here are strategies 👇
+
+        🔹 Wait for Element
+                await page.waitForSelector('.big-success');
+        
+        🔹 Wait for Response (API to return success)
+                await page.waitForResponse('https://example.com/api/success');
+        
+        🔹 Wait for Network Idle (all requests complete)
+                await page.waitForLoadState('networkidle'); // what are other options after networkidle?
+        
+        🔹 Wait for Event (e.g., popup, download, navigation)
+                await page.waitForEvent('popup');
+        
+        🔹 Wait for Custom Condition
+                await page.waitForFunction(() => window.appReady === true);
+        
+        🔹 Wait for API Request (explicit)
+                const [response] = await Promise.all([
+                page.waitForResponse('**/login-success'),
+                page.click('#login-btn')
+                ]);
+        
+        🔹 Hard Wait (⚠️ not recommended, last resort)
+                await page.waitForTimeout(5000);
+
+        🔹 page.locator('#delayedText').waitFor();
+
+
+
+                4️⃣ Interview-Ready Answer
+
+                💡 Q: What is auto-waiting in Playwright?
+                
+                Auto-waiting means Playwright automatically waits for elements to be actionable before performing actions. For example, before a click(), it waits for the element to be visible, stable, enabled, and receiving events. The default timeout is 30 seconds, after which it throws a TimeoutError.
+                
+                💡 Q: Give examples of methods that auto-wait and some that don’t.
+                
+                Auto-wait: click(), fill(), check(), hover(), selectOption()
+                Non auto-wait: focus(), blur(), dispatchEvent(), press(), setInputFiles()
+                
+                💡 Q: How do you avoid flaky tests with non-auto-wait methods?
+                
+                By explicitly synchronizing the test using waits:
+                
+                waitForSelector() for element presence
+                
+                waitForResponse() for API
+                
+                waitForLoadState('networkidle') for network stability
+                
+                waitForEvent() for specific events
+                
+                waitForFunction() for custom conditions
+                
+                As a last resort, waitForTimeout(), though it’s not recommended.
+
+
+
+Defenitions of each conditions
+
+🔹 Visible
+
+👉 “Element tab visible maana jata hai jab uska bounding box empty na ho aur visibility:hidden na ho. 
+Agar display:none hai to visible nahi, lekin agar opacity:0 hai to Playwright usse visible hi maanta hai.”
+
+Element is considered visible when it has non-empty bounding box and does not have visibility:hidden computed style.
+
+Note that according to this definition:
+
+Elements of zero size are not considered visible.
+Elements with display:none are not considered visible.
+Elements with opacity:0 are considered visible.
+
+🔹 Stable
+
+👉 “Stable ka matlab hai element animation ya transition mein na ho. Playwright do consecutive animation frames 
+    check karta hai, agar bounding box change nahi hota to element stable maana jata hai.”
+
+    Element is considered stable when it has maintained the same bounding box for at least two consecutive 
+    animation frames.
+
+🔹 Enabled
+
+👉 “Enabled ka matlab hai element disabled state mein na ho. Agar button, input ya textarea pe disabled attribute 
+     laga ho ya wo kisi disabled fieldset ke andar ho to element enabled nahi hota.”
+
+     Element is considered enabled when it is not disabled.
+
+     Element is disabled when:
+     
+     it is a <button>, <select>, <input>, <textarea>, <option> or <optgroup> with a [disabled] attribute;
+     it is a <button>, <select>, <input>, <textarea>, <option> or <optgroup> that is a part of a <fieldset> with a [disabled] attribute;
+     it is a descendant of an element with [aria-disabled=true] attribute
+
+🔹 Editable
+
+👉 “Editable ka matlab hai element enabled bhi ho aur readonly bhi na ho. Jaise ek input field jo readonly 
+     attribute ke saath diya ho wo editable nahi hai.”
+
+     Element is considered editable when it is enabled and is not readonly.
+
+Element is readonly when:
+
+it is a <select>, <input> or <textarea> with a [readonly] attribute;
+it has an [aria-readonly=true] attribute and an aria role that supports it.
+
+🔹 Receives Events
+
+👉 “Receives Events ka matlab hai element ke upar koi aur overlay ya blocker na ho. Jo bhi click ya tap main kar 
+    raha ho, wo actual element tak pohonchna chahiye. Agar koi spinner ya modal upar hai to element events receive 
+    nahi karega.”
+
+    Element is considered receiving pointer events when it is the hit target of the pointer event at the action point. For example, when clicking at the point (10;10), Playwright checks whether some other element (usually an overlay) will instead capture the click at (10;10).
+
+    For example, consider a scenario where Playwright will click Sign Up button regardless of when the locator.click() call was made:
+    
+    page is checking that user name is unique and Sign Up button is disabled;
+    after checking with the server, the disabled Sign Up button is replaced with another one that is now enabled.
+
+
+
+    👉 Forcing actions
+    
+Some actions like locator.click() support force option that disables non-essential actionability checks, 
+    
+for example passing truthy force to locator.click() method will not check that the target element 
+actually receives click events.
+
+
+   👉  Assertions
+
+Playwright includes auto-retrying assertions that remove flakiness by waiting until the condition is met, 
+similarly to auto-waiting before actions.
+
+Assertion	                    Description
+expect(locator).toBeAttached()	Element is attached
+expect(locator).toBeChecked()	Checkbox is checked
+expect(locator).toBeDisabled()	Element is disabled
+expect(locator).toBeEditable()	Element is editable
+expect(locator).toBeEmpty()	Container is empty
+expect(locator).toBeEnabled()	Element is enabled
+expect(locator).toBeFocused()	Element is focused
+expect(locator).toBeHidden()	Element is not visible
+expect(locator).toBeInViewport()	Element intersects viewport
+expect(locator).toBeVisible()	Element is visible
+expect(locator).toContainText()	Element contains text
+expect(locator).toHaveAttribute()	Element has a DOM attribute
+expect(locator).toHaveClass()	Element has a class property
+expect(locator).toHaveCount()	List has exact number of children
+expect(locator).toHaveCSS()	Element has CSS property
+expect(locator).toHaveId()	Element has an ID
+expect(locator).toHaveJSProperty()	Element has a JavaScript property
+expect(locator).toHaveText()	Element matches text
+expect(locator).toHaveValue()	Input has a value
+expect(locator).toHaveValues()	Select has options selected
+expect(page).toHaveTitle()	Page has a title
+expect(page).toHaveURL()	Page has a URL
+expect(response).toBeOK()	Response has an OK status
+Learn more in the assertions guide.

@@ -1,0 +1,129 @@
+-------------------------------------------------------------------------
+🔹 Named Export
+-------------------------------------------------------------------------
+
+👉 Curly braces mandatory hote hain import ke time.
+👉 Hamesha same naam se import karna hota hai (except jab alias dete ho).
+👉 Multiple functions/classes ko export kar sakte ho.
+
+
+
+Example (functions + aliasing)
+
+📁 mathUtils.ts
+
+// Named exports
+export function add(a: number, b: number) {
+  return a + b;
+}
+
+export function subtract(a: number, b: number) {
+  return a - b;
+}
+
+
+📁 app.ts
+
+
+// Curly braces mandatory ❌ without them won't work
+// below we are importing add fun with same name but subtract fun with alias 'minus'
+import { add, subtract as minus } from './mathUtils';
+
+console.log(add(10, 5));   // 15
+console.log(minus(10, 5)); // 5  (alias used)
+
+
+
+
+Example (multiple classes)
+
+📁 shapes.ts
+
+// Multiple named class exports
+export class Circle {
+  radius: number;
+  constructor(r: number) { this.radius = r; }
+}
+
+export class Square {
+  side: number;
+  constructor(s: number) { this.side = s; }
+}
+
+
+📁 app.ts
+
+import { Circle, Square } from './shapes';
+
+const c = new Circle(10);
+const s = new Square(5);
+
+
+===============================================================
+
+
+
+-------------------------------------------------------------------------
+🔹 Default Export
+-------------------------------------------------------------------------
+
+👉 Ek hi default export hota hai per file.
+👉 Import karte waqt {} use nahi hote ❌.
+👉 Naam apne hisaab se kuch bhi rakh sakte ho.
+
+Example (default export function)
+
+📁 logger.ts
+
+// Default export function
+export default function log(message: string) {
+  console.log("LOG:", message);
+}
+
+📁 app.ts
+
+// {} nahi lagte default export ke liye
+import myLogger from './logger';
+
+myLogger("Hello World"); // LOG: Hello World
+
+
+
+Example (default export class)
+
+📁 User.ts
+
+// Default export class
+export default class User {
+  name: string;
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+
+📁 app.ts
+
+import Person from './User';
+
+const u = new Person("Rahul");
+console.log(u.name); // Rahul
+
+
+
+🔹 Named Export vs Default Export (Tabular Comparison)
+
+| Feature             | Named Export ✅                    | Default Export ✅                                         |
+| ------------------- | --------------------------------- | -------------------------------------------------------- |
+| **Curly braces**    | Required (`import { add }`)       | ❌ Not used (`import log`)                                |
+| **Number per file** | Multiple allowed                  | Only one default per file                                |
+| **Import Name**     | Must match export name            | Can be renamed freely                                    |
+| **Alias**           | Supported via `as` keyword        | Direct rename during import                              |
+| **Use Case**        | When file exports many utilities  | When file has one main entity                            |
+| **Examples**        | `export function...` / `class...` | `export default function...` / `export default class...` |
+
+
+🔥 One-liner for Interview
+
+"Named exports require curly braces, allow multiple exports per file, and names must match (or use alias), 
+while default export has only one export per file, doesn’t use curly braces, and can be imported with any name."

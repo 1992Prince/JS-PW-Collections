@@ -1,0 +1,200 @@
+✅ What are Negating Matchers?
+
+A matcher is what you use in a test to check a condition. Normally, you expect something to be true.
+
+But sometimes, you want to check that something is NOT true — that’s where .not comes in.
+
+You simply insert .not before the matcher.
+
+1. Basic Value Check
+
+    expect(value).not.toEqual(0);
+
+    means: “I expect value is anything except 0.”
+
+    If value was 0, the test would fail.
+
+2. String/Text Check
+
+    const sentence = "This is a clean text";
+    expect(sentence).not.toContain("error");  // ✅ passes
+
+3. Playwright / Locator Example
+
+    const button = page.locator('button#submit');
+    await expect(button).not.toBeDisabled();   // ✅ passes if button is enabled
+
+
+🔹 Why Useful?
+
+- Ensures certain bad values/states do NOT appear.
+
+- Negative testing → making sure app doesn’t do something wrong.
+
+- Good for validations like:
+
+    - User should not see an error.
+
+    - Button should not be disabled.
+
+    - List should not contain duplicates.
+
+
+
+
+
+-----------------------------------------------------------------------
+
+
+🔹 What are Soft Assertions?
+
+Normal (Hard) Assertion → If an assertion fails, the test execution stops immediately.
+
+Soft Assertion → If an assertion fails, the test keeps running, but the failure is recorded. At the end, 
+                 the test will still be marked as failed.
+
+👉 Useful when you want to check multiple conditions in one test without stopping at the first failure.
+
+
+🔹 Example 1: Hard vs Soft Assertion
+
+Hard Assertion
+----------------------
+
+test('hard assertion stops execution', async ({ page }) => {
+  await expect(page.locator('#status')).toHaveText('Success'); // ❌ fails, test stops here
+  await expect(page.locator('#eta')).toHaveText('1 day');       // ❌ never runs
+});
+
+If #status is not "Success", the test exits immediately → you don’t know if #eta was wrong too.
+
+
+Soft Assertion
+--------------------
+
+test('soft assertions continue execution', async ({ page }) => {
+  await expect.soft(page.locator('#status')).toHaveText('Success'); // ❌ fails but continues
+  await expect.soft(page.locator('#eta')).toHaveText('1 day');      // ✅/❌ runs regardless
+
+  // Continue with more steps
+  await page.getByRole('link', { name: 'next page' }).click();
+  await expect.soft(page.getByRole('heading', { name: 'Make another order' })).toBeVisible();
+});
+
+👉 Even if the first check fails, the test continues — but at the end, Playwright marks the test as failed.
+
+
+
+🔹 Example 2: Soft Assertions with Conditional Stop
+
+Sometimes you want to run multiple checks, but stop if too many fail.
+
+
+test('stop only if soft assertions failed', async ({ page }) => {
+  await expect.soft(page.getByTestId('status')).toHaveText('Success');
+  await expect.soft(page.getByTestId('eta')).toHaveText('1 day');
+
+  // Check if any soft assertion failed before continuing
+  expect(test.info().errors).toHaveLength(0);
+
+  // This only runs if no errors so far
+  await page.getByRole('link', { name: 'next page' }).click();
+  await expect.soft(page.getByRole('heading', { name: 'Make another order' })).toBeVisible();
+});
+
+
+Here:
+
+If either status or eta check fails → test.info().errors contains errors, and the test stops early.
+
+If both pass → execution continues.
+
+
+🔹 Example 3: Real-World Case (Login Page)
+
+test('login page validations with soft assertions', async ({ page }) => {
+  await page.goto('/login');
+
+  // Multiple field checks
+  await expect.soft(page.locator('#username-label')).toHaveText('Username');
+  await expect.soft(page.locator('#password-label')).toHaveText('Password');
+  await expect.soft(page.locator('#submit-btn')).toBeEnabled();
+
+  // Proceed with login anyway
+  await page.fill('#username', 'testUser');
+  await page.fill('#password', 'wrongPass');
+  await page.click('#submit-btn');
+
+  // Verify error message
+  await expect.soft(page.locator('#error-msg')).toContainText('Invalid');
+});
+
+
+👉 Even if the labels are wrong, the login flow is still tested.
+
+
+🔑 Key Takeaways
+
+    - Use expect.soft(...) to not block test execution.
+
+    - At the end, you can check test.info().errors to decide if the test should continue.
+
+    - Works only in Playwright test runner (not in raw Jest/Mocha).
+
+    - Best used when verifying UI elements, multiple fields, or page content at once.
+
+
+
+
+🔹 Do we need to explicitly fail the test at the end when using expect.soft()?
+
+👉 No, you don’t need to.
+
+
+Playwright’s test runner automatically collects all failed soft assertions and marks the test as failed in the 
+report at the end of execution.
+
+So this works fine without extra code:
+
+test('soft assertions demo', async ({ page }) => {
+  await expect.soft(page.locator('#status')).toHaveText('Success');
+  await expect.soft(page.locator('#eta')).toHaveText('1 day');
+
+  // Even if both fail, test continues.
+  // ✅ At the end, Playwright marks the test as failed automatically.
+});
+
+
+
+
+--------------------------------------------------------
+
+
+🔹 What is a Custom Expect Message?
+
+Normally, when an assertion fails, you only see the matcher and the actual/expected values in the test report.
+But sometimes it’s hard to immediately understand what business rule you were testing.
+
+That’s where a custom message helps.
+
+You pass a string message as the second argument to expect(...).
+
+🔹 Example
+
+await expect(page.getByText('Name'), 'should be logged in').toBeVisible();
+
+Here:
+
+    page.getByText('Name') → Locator
+
+    'should be logged in' → Custom message
+
+
+
+🔹 Why is this Useful?
+
+    - Better test reports → Especially in CI/CD pipelines where you might see dozens of failures.
+
+    - Debugging is easier → Instead of guessing which element failed, you see a human-readable reason.
+
+    - Readable by non-developers → QA/business analysts can understand test reports better.

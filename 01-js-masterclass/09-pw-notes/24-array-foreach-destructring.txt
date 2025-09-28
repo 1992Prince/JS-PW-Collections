@@ -1,0 +1,122 @@
+🔹 Example: Array of Objects
+// Simple array of objects
+const users = [
+  { name: "Rahul", age: 25 },
+  { name: "Sid", age: 30 },
+  { name: "Aman", age: 28 }
+];
+
+
+
+🔹 1. Normal Way (without destructuring)
+users.forEach((user) => {
+  console.log("Name:", user.name, "Age:", user.age);
+});
+
+
+Output:
+
+Name: Rahul Age: 25
+Name: Sid Age: 30
+Name: Aman Age: 28
+
+
+
+🔹 2. Destructuring Way
+users.forEach(({ name, age }) => {
+  console.log("Name:", name, "Age:", age);
+});
+
+
+Output (same hoga):
+
+Name: Rahul Age: 25
+Name: Sid Age: 30
+Name: Aman Age: 28
+
+
+
+🔹 Difference
+
+Normal way → user.name likhna padta hai.
+
+Destructuring way → seedha { name, age } likh ke direct variables mil jaate hain.
+
+
+
+Bhai mast 😎 chal ek thoda complex example banate hain jisme array of objects me multiple fields hain (username, age, city, country, isActive etc.).
+
+🔹 Example: Array of Objects
+const users = [
+  { username: "rahul", age: 25, city: "Delhi", country: "India", isActive: true },
+  { username: "sid", age: 30, city: "Mumbai", country: "India", isActive: false },
+  { username: "aman", age: 28, city: "Pune", country: "India", isActive: true }
+];
+
+
+
+🔹 1. Normal Way (without destructuring)
+users.forEach((user) => {
+  console.log(
+    "User:", user.username,
+    "| Age:", user.age,
+    "| City:", user.city,
+    "| Active:", user.isActive
+  );
+});
+
+
+✅ Output:
+
+User: rahul | Age: 25 | City: Delhi | Active: true
+User: sid | Age: 30 | City: Mumbai | Active: false
+User: aman | Age: 28 | City: Pune | Active: true
+
+
+
+🔹 2. Destructuring Way (all fields)
+users.forEach(({ username, age, city, country, isActive }) => {
+  console.log(
+    "User:", username,
+    "| Age:", age,
+    "| City:", city,
+    "| Country:", country,
+    "| Active:", isActive
+  );
+});
+
+
+✅ Output (same data, bas destructured variables):
+
+User: rahul | Age: 25 | City: Delhi | Country: India | Active: true
+User: sid | Age: 30 | City: Mumbai | Country: India | Active: false
+User: aman | Age: 28 | City: Pune | Country: India | Active: true
+
+
+
+
+🔹 3. Destructuring Way (only selected fields)
+users.forEach(({ username, city, isActive }) => {
+  console.log(
+    "User:", username,
+    "| City:", city,
+    "| Active:", isActive
+  );
+});
+
+
+✅ Output (sirf teen fields):
+
+User: rahul | City: Delhi | Active: true
+User: sid | City: Mumbai | Active: false
+User: aman | City: Pune | Active: true
+
+
+
+📝 Key Takeaways
+
+Without destructuring → full object lete ho aur .field access karte ho.
+
+With destructuring → jo fields chahiye unko direct variables bana lo.
+
+Flexibility → extra fields ignore karna easy ho jaata hai destructuring me.

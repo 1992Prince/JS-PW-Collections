@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Drag and Drop Practice</title>
+  <style>
+    #dragMe {
+      width: 100px;
+      height: 100px;
+      background-color: lightblue;
+      border: 2px solid blue;
+      cursor: grab;
+      margin: 20px;
+    }
+    #dropHere {
+      width: 200px;
+      height: 200px;
+      border: 3px dashed green;
+      margin: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Drag & Drop Example</h2>
+  <div id="dragMe" draggable="true">Drag Me</div>
+  <div id="dropHere">Drop Here</div>
+
+  <script>
+    const dragItem = document.getElementById('dragMe');
+    const dropZone = document.getElementById('dropHere');
+
+    // Allow drop
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = '#e0ffe0';
+    });
+
+    // Handle drop
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      console.log("Item dropped!");
+      dropZone.style.backgroundColor = 'lightgreen';
+      dropZone.innerText = "Dropped!";
+    });
+  </script>
+</body>
+</html>

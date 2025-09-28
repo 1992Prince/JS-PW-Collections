@@ -1,0 +1,40 @@
+what is this in custom-expect.ts file?
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+    apiLogger = logger;
+};
+
+Bhai yeh simple dependency injection + shared reference setup ho raha hai 👇
+
+let apiLogger: APILogger;   // Step 1: declare a variable at module level (but not initialized yet)
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+    apiLogger = logger;     // Step 2: assign the passed logger instance to our module-level variable
+};
+
+
+⚡ What it does
+
+1) let apiLogger: APILogger;
+
+    - Yeh ek module-level variable hai jo APILogger ka reference rakhega.
+    - Initially undefined hai.
+
+2) setCustomExpectLogger(logger)
+
+    Is function ke through hum external se ek logger instance inject kar rahe hain.
+    Jo bhi APILogger ka instance test setup me bana hoga, woh assign ho jaata hai is global apiLogger me.
+
+3) Baad me, koi bhi helper/method iss apiLogger ko use karke logging kar sakta hai, bina har 
+   jagah explicitly pass kiye.
+
+
+We are calling this setCustomExpectLogger() method in fixtures.ts file and passing APILogger instance 
+to this fun.
+
+const logger = new APILogger();
+setCustomExpectLogger(logger);
+
+so now custom-expect.ts file logger variable will also get instance of APILogger;

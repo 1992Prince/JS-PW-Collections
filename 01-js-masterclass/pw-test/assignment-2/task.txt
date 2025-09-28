@@ -1,0 +1,39 @@
+🎯 Automation Challenges from this Page
+
+🎯 Automation Challenges from this Page
+
+    NoSuchElement Simulation
+
+    Click “Show Element after 3s”
+
+    Verify #delayed appears → use await expect(locator).toBeVisible()
+
+Stale Element Simulation
+
+    Grab text of #staleText, then reload DOM
+
+    Try reusing the old locator (fails) → correct strategy: re-locate after DOM change.
+
+Hidden Element
+
+    Try typing into #hiddenInput before it is visible → fails.
+
+    Correct: await page.locator('#hiddenInput').waitFor({ state: 'visible' }).
+
+Overlay Blocking
+
+    Try clicking #blockedBtn while overlay is present → Playwright waits.
+
+    Correct: First remove overlay → then click.
+
+AJAX Updating
+
+    Click “Load Users” → wait for async list update.
+
+    Strategy: wait for text User A instead of relying on immediate DOM.
+
+Moving Element
+
+    Try clicking #movingBtn while it changes position → flaky.
+
+    Strategy: Use locator.click({ trial: true }) or force: true.

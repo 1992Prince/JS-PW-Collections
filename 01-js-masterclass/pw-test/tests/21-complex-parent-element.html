@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NB Card Example</title>
+  <style>
+    nb-card {
+      display: block;
+      border: 1px solid gray;
+      padding: 12px;
+      margin: 10px;
+      width: 300px;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .header {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    button {
+      margin: 5px 0;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .active {
+      background-color: lightgreen !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- First Card -->
+  <nb-card>
+    <div class="header">General Settings</div>
+    <section>
+      <nb-radio>
+        <button onclick="highlight(this)">Option 1</button>
+      </nb-radio>
+      <nb-radio>
+        <button onclick="highlight(this)">Option 2</button>
+      </nb-radio>
+    </section>
+  </nb-card>
+
+  <!-- Second Card -->
+  <nb-card>
+    <div class="header">User Preferences</div>
+    <section>
+      <nb-radio>
+        <button onclick="highlight(this)">Option 1</button>
+      </nb-radio>
+      <nb-radio>
+        <button onclick="highlight(this)">Option 2</button>
+      </nb-radio>
+    </section>
+  </nb-card>
+
+  <!-- Third Card (no unique properties, only child unique) -->
+  <nb-card>
+    <div class="header">Misc Settings</div>
+    <section>
+      <nb-radio>
+        <button onclick="highlight(this)">Special Option</button>
+      </nb-radio>
+      <nb-radio>
+        <button onclick="highlight(this)">Option 2</button>
+      </nb-radio>
+    </section>
+  </nb-card>
+
+  <script>
+    function highlight(el) {
+      // Reset all buttons in this card
+      const parentCard = el.closest("nb-card");
+      parentCard.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
+      // Add highlight to clicked one
+      el.classList.add("active");
+      console.log("You clicked:", el.innerText, "in", parentCard.querySelector(".header").innerText);
+    }
+  </script>
+</body>
+</html>

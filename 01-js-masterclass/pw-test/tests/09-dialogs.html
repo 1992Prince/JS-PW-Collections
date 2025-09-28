@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dialogs Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    button { display: block; margin: 15px 0; padding: 10px 20px; font-size: 16px; }
+  </style>
+  <script>
+    // Alert Dialog
+    function showAlert() {
+      alert("This is an Alert dialog!");
+    }
+
+    // Confirm Dialog
+    function showConfirm() {
+      const result = confirm("Do you want to continue?");
+      console.log("Confirm result:", result);
+    }
+
+    // Prompt Dialog
+    function showPrompt() {
+      const name = prompt("Enter your name:", "John Doe");
+      console.log("Prompt result:", name);
+    }
+
+    // Beforeunload Dialog
+    window.addEventListener("beforeunload", function (event) {
+      event.preventDefault();
+      event.returnValue = ""; // Needed for Chrome to show the dialog
+    });
+
+    function triggerBeforeUnload() {
+      alert("Now try closing or refreshing the page. A beforeunload dialog will appear.");
+    }
+
+    // Print Dialog
+    function showPrint() {
+      window.print();
+    }
+  </script>
+</head>
+<body>
+  <h1>Dialogs Demo Page</h1>
+
+  <button onclick="showAlert()">Show Alert</button>
+  <button onclick="showConfirm()">Show Confirm</button>
+  <button onclick="showPrompt()">Show Prompt</button>
+  <button onclick="triggerBeforeUnload()">Enable BeforeUnload Dialog</button>
+  <button onclick="showPrint()">Show Print Dialog</button>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright Auto-wait Demo</title>
+  <script>
+    function showTextAfterDelay() {
+      setTimeout(() => {
+        const div = document.createElement('div');
+        div.id = 'delayedText';
+        div.innerText = 'Hello, I appeared after 10 seconds!';
+        document.body.appendChild(div);
+      }, 10000); // 10s delay
+    }
+
+    function showButtonAfterDelay() {
+      setTimeout(() => {
+        const btn = document.createElement('button');
+        btn.id = 'newButton';
+        btn.innerText = 'I am new button!';
+        btn.onclick = () => {
+          const msg = document.createElement('p');
+          msg.innerText = 'You clicked the new button!';
+          document.body.appendChild(msg);
+        };
+        document.body.appendChild(btn);
+      }, 10000); // 10s delay
+    }
+  </script>
+</head>
+<body>
+  <h1>Playwright Auto-waiting Demo</h1>
+
+  <button onclick="showTextAfterDelay()">Show Text after 10s</button>
+  <button onclick="showButtonAfterDelay()">Show Button after 10s</button>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playwright Exceptions Practice</title>
+  <style>
+    .hidden { display: none; }
+    .overlay { 
+      position: absolute; 
+      top: 0; left: 0; 
+      width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.7); 
+      color: white; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 10;
+    }
+    #movingBtn { position: relative; }
+  </style>
+</head>
+<body>
+  <h2>Playwright Exception Simulation</h2>
+  <p>
+    Is page pe alag alag scenarios simulate kiye gaye hai jo Selenium wale errors ke jaise behave karenge.  
+  </p>
+
+  <h3>1. NoSuchElement Simulation (delayed element)</h3>
+  <button id="showDelayed">Show Element after 3s</button>
+  <div id="delayed" class="hidden">I appeared late!</div>
+
+  <h3>2. Stale Element Simulation (DOM reload)</h3>
+  <button id="reloadDom">Reload Content</button>
+  <div id="staleContainer">
+    <p id="staleText">This will be replaced</p>
+  </div>
+
+  <h3>3. Hidden Element (visible later)</h3>
+  <button id="showHidden">Show Hidden Input</button>
+  <input type="text" id="hiddenInput" class="hidden" placeholder="I was hidden">
+
+  <h3>4. Overlay Blocking Element</h3>
+  <div style="position:relative;">
+    <button id="blockedBtn">Click Me (Blocked)</button>
+    <div class="overlay hidden" id="overlay">Overlay blocking the button</div>
+  </div>
+  <button id="removeOverlay">Remove Overlay</button>
+
+  <h3>5. AJAX-like DOM Updating</h3>
+  <button id="loadUsers">Load Users</button>
+  <ul id="userList"></ul>
+
+  <h3>6. Moving Element (position changes)</h3>
+  <button id="movingBtn">Catch Me!</button>
+
+  <script>
+    // 1. Delayed element
+    document.getElementById("showDelayed").addEventListener("click", () => {
+      setTimeout(() => {
+        document.getElementById("delayed").classList.remove("hidden");
+      }, 3000);
+    });
+
+    // 2. Stale element (reload container)
+    document.getElementById("reloadDom").addEventListener("click", () => {
+      document.getElementById("staleContainer").innerHTML = 
+        `<p id="staleText">I am a fresh new element at ${new Date().toLocaleTimeString()}</p>`;
+    });
+
+    // 3. Hidden element
+    document.getElementById("showHidden").addEventListener("click", () => {
+      document.getElementById("hiddenInput").classList.remove("hidden");
+    });
+
+    // 4. Overlay
+    document.getElementById("blockedBtn").addEventListener("click", () => {
+      alert("Button clicked!");
+    });
+    document.getElementById("removeOverlay").addEventListener("click", () => {
+      document.getElementById("overlay").classList.add("hidden");
+    });
+    // overlay visible initially
+    setTimeout(() => {
+      document.getElementById("overlay").classList.remove("hidden");
+    }, 2000);
+
+    // 5. AJAX DOM update
+    document.getElementById("loadUsers").addEventListener("click", () => {
+      const list = document.getElementById("userList");
+      list.innerHTML = "<li>Loading...</li>";
+      setTimeout(() => {
+        list.innerHTML = `
+          <li>User A</li>
+          <li>User B</li>
+          <li>User C</li>`;
+      }, 3000);
+    });
+
+    // 6. Moving element
+    const movingBtn = document.getElementById("movingBtn");
+    let pos = 0;
+    setInterval(() => {
+      pos = (pos + 20) % 200;
+      movingBtn.style.left = pos + "px";
+    }, 1000);
+  </script>
+</body>
+</html>

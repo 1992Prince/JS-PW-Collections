@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto; background:#111827; color:#e5e7eb; }
+    .wrap { padding:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    button { background:#22d3ee; border:0; color:#0b1220; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    iframe { width:100%; height:140px; border:1px solid rgba(255,255,255,0.2); border-radius:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <h3>Inner Frame</h3>
+      <button id="alertBtn">Show Alert</button>
+    </div>
+    <div>
+      <h3>Nested Frame</h3>
+      <iframe src="./nested.html" title="Nested frame"></iframe>
+    </div>
+  </div>
+  <script>
+    document.getElementById('alertBtn').addEventListener('click', () => {
+      alert('Inner button clicked');
+    });
+  </script>
+</body>
+</html>

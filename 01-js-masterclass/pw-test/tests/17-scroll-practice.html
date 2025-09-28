@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scroll Practice</title>
+  <style>
+    #scrolling-container {
+      width: 400px;
+      height: 200px;
+      border: 2px solid black;
+      overflow-y: scroll;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    .item {
+      height: 50px;
+      border-bottom: 1px solid #ddd;
+    }
+    #footer-text {
+      margin-top: 1000px; /* push it far below */
+      font-weight: bold;
+      color: darkred;
+    }
+  </style>
+</head>
+<body>
+  <h2>Scrolling Practice Page</h2>
+
+  <div id="scrolling-container" data-testid="scrolling-container">
+    <div class="item">Item 1</div>
+    <div class="item">Item 2</div>
+    <div class="item">Item 3</div>
+    <div class="item">Item 4</div>
+    <div class="item">Item 5</div>
+    <div class="item">Item 6</div>
+    <div class="item">Item 7</div>
+    <div class="item">Item 8</div>
+    <div class="item">Item 9</div>
+    <div class="item">Item 10</div>
+    <div id="footer-text">Footer text (Target)</div>
+  </div>
+
+  <script>
+    const container = document.getElementById('scrolling-container');
+    container.addEventListener('scroll', () => {
+      console.log("Scrolled! Current scrollTop =", container.scrollTop);
+    });
+
+    const footer = document.getElementById('footer-text');
+    footer.addEventListener('mouseenter', () => {
+      console.log("Footer reached and hovered!");
+    });
+  </script>
+</body>
+</html>

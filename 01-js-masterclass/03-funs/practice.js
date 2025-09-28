@@ -1,31 +1,15 @@
-function fetchDataFromServer(){
+function fetchData(callback) {
+  console.log('Fetching data from server');
 
- return new Promise((resolve,reject) => {
- 
-  setTimeout(() => {
-   
-   let bool = false;
-   
-   if(bool){
-    resolve("async tasks completed");
-   }else{
-    reject("async tasks cancelled");
-   }
-  },2000);
- 
- });
-
+  setTimeout(function () {
+    const data = { name: 'Aman', age: 25 };
+    callback(data);
+  }, 2000);
 }
 
-async function fetchData(){
-
-    try {
- const result = await fetchDataFromServer();
- console.log(result);
-    } catch (error) {
-    console.error("Error:", error);
-    }
-
+// this is callback function
+function displayData(data) {
+  console.log('Data received:', data);
 }
 
-fetchData();
+fetchData(displayData);

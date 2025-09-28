@@ -1,0 +1,362 @@
+🔥 Playwright File Upload
+
+1️⃣ locator.setInputFiles() (Standard way)
+
+👉 Works only if there’s an <input type="file">.
+    It sets files into that input element (like a user choosing files).
+
+
+👉 Single file: 
+
+    await page.getByLabel('Upload file').setInputFiles('tests/resources/myfile.pdf');
+
+👉 Multiple files: 
+
+    await page.getByLabel('Upload files').setInputFiles([
+    'tests/resources/file1.txt',
+    'tests/resources/file2.txt'
+    ]);
+
+
+
+👉 Directory (uploads folder contents):
+
+    element tag - <input type="file" id="dirFile" webkitdirectory="">
+    await page.locator('#dirFile').setInputFiles('tests/resources');
+
+    Here it will upload all files present in resources dir
+    Kyunki input pe webkitdirectory attribute hai → yeh folder picker hai, normal single-file input nahi.
+   
+
+✅ Isme ho kya raha hai?
+
+    - Yaha tu ek <input type="file" webkitdirectory> element use kar raha hai (yaani directory chooser).
+    - Normal file input ek ya multiple files leta hai.
+    - Lekin agar input pe webkitdirectory attribute laga hai → toh wo pure folder select karne deta hai 
+      (aur andar ke sab files ko input ke files[] list me daal deta hai).
+
+
+
+📂 Path resolution in setInputFiles() 
+
+await page.locator('#dirFile').setInputFiles('tests/resources');
+⚡ Playwright relative paths ko resolve karta hai from the current working directory (CWD).
+Aur CWD usually hota hai root of your project (jahaan se tu test run karta hai, mostly repo ka roo
+
+await page.locator('#dirFile').setInputFiles('tests/resources');
+👉 Ye path project-root/tests/resources/ ko target karega.
+
+
+
+👉 Clear all selected files:
+
+    await page.getByLabel('Upload file').setInputFiles([]);
+
+
+
+
+2️⃣ Upload from Memory (Buffer)
+
+👉 Sometimes file isn’t on disk (API-generated, DB content, etc).
+You can directly upload a buffer with name + mime type.
+
+Ab maan le ki tere paas file disk pe nahi hai (ya dynamically ban rahi hai test ke andar).
+Example: tu ek API response se data le raha hai aur use ek file ki tarah upload karna hai, 
+bina actual .txt file banaye.
+
+👉 Us case me tu in-memory buffer bana sakta hai aur Playwright ke setInputFiles() ko de sakta hai.
+
+await page.getByLabel('Upload file').setInputFiles({
+  name: 'test.txt',
+  mimeType: 'text/plain',
+  buffer: Buffer.from('this is test content')
+});
+
+⚡ Iska matlab
+
+Playwright ek virtual file object banata hai memory ke andar.
+Browser ko aisa lagta hai ki user ne ek file upload ki hai (testfile.txt).
+Lekin asal me koi file disk pe exist hi nahi karti — sab memory buffer se aata hai.
+
+🛠 Real life use cases
+
+API/DB se file content lana aur bina save kiye upload kar dena.
+Test isolation → koi external file dependency na ho, sab test ke andar se hi generate ho jaye.
+Large random files generate karna performance testing ke liye.
+
+Interview me bolne layak answer
+
+"Normally setInputFiles picks files from disk. But Playwright also allows uploading from an in-memory buffer. 
+In that case, we pass an object with name, mimeType, and buffer. 
+This is useful when we want to simulate file upload without having a physical file present on disk, 
+for example when file content comes from API or is generated dynamically."
+
+
+
+
+
+3️⃣ Dynamic File Chooser (when input is hidden or created on click)
+
+real-world webapps me file inputs mostly hidden hote hain (CSS display:none) aur ek 
+"Upload" button click karne pe file chooser dialog open hota hai.
+
+
+🔹 Problem Statement
+
+    Aksar UI me tumhe aisa dikhega:
+
+    <button id="uploadBtn">Upload File</button>
+    <!-- hidden input -->
+    <input type="file" id="fileInput" style="display:none">
+
+👉 Jab user Upload button click karta hai → JavaScript ek hidden <input type="file"> ko trigger karta hai aur 
+    file chooser dialog khul jaata hai.
+👉 Lekin Playwright directly file chooser dialog control nahi kar sakta (wo OS ka native dialog hai).
+
+
+🔹 Solution: Dynamic File Chooser handling
+
+    Playwright is case ko handle karta hai page.waitForEvent('filechooser') ke saath.
+
+Step-by-Step Flow:
+
+1) Event listener lagao (pehle se wait karna hoga, warna miss ho jaayega)
+
+const fileChooserPromise = page.waitForEvent('filechooser');
+👉 Ye promise tab resolve hoga jab file chooser khulega.
+
+2) Trigger action jo file chooser kholta hai (e.g. "Upload" button click).
+
+await page.getByText('Upload File').click();
+
+3) Get fileChooser object
+
+const fileChooser = await fileChooserPromise;
+
+4) Set files on it 
+
+await fileChooser.setFiles('tests/resources/file1.txt');
+
+
+
+
+    👉 If the input is dynamically created by JS on click, setInputFiles() alone won’t work.
+    You must wait for the filechooser event.
+
+    // Start waiting for file chooser
+    const [fileChooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByLabel('Upload file').click(), // action that triggers file input
+    ]);
+
+    await fileChooser.setFiles('tests/resources/myfile.pdf');
+
+
+
+
+
+4️⃣ Key Interview Points
+
+    setInputFiles() works only on <input type="file">.
+
+    For hidden/dynamic inputs, use page.waitForEvent('filechooser').
+
+    Supports single, multiple, directory, and buffer uploads.
+
+    setInputFiles([]) clears the input.
+
+    Unlike Selenium, Playwright does not need sendKeys for file paths.
+
+    buffer option is handy when you don’t want physical files.
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+📌 Focus element
+
+For the dynamic pages that handle focus events, you can focus the given element with locator.focus().
+
+await page.getByLabel('Password').focus();
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+📌  Drag and Drop
+
+You can perform drag&drop operation with locator.dragTo(). This method will:
+
+Hover the element that will be dragged.
+Press left mouse button.
+Move mouse to the element that will receive the drop.
+Release left mouse button.
+await page.locator('#item-to-be-dragged').dragTo(page.locator('#item-to-drop-at'));
+
+
+1️⃣ Simple Drag & Drop with dragTo()
+
+Ye Playwright ka high-level shortcut hai. 
+Isme tu bas source locator aur target locator deta hai, aur baaki sab steps (hover, press, move, release) 
+Playwright khud karta hai.
+
+// Simple drag & drop
+await page.locator('#item-to-be-dragged').dragTo(
+  page.locator('#item-to-drop-at')
+);
+
+
+👉 Iske andar internally yeh steps hote hain:
+
+    Hover on #item-to-be-dragged
+    Mouse down (press left button)
+    Move mouse to #item-to-drop-at
+    Mouse up (release button)
+
+
+2️⃣ Manual Dragging (Low-level control)
+
+Agar tu chahta hai zyaada precise control (e.g. mid-path stops, custom offset, or intermediate hovers), 
+tab tu mouse API use karega.
+
+// Step by step manual drag
+await page.locator('#item-to-be-dragged').hover(); // move mouse on source
+await page.mouse.down();                           // press mouse
+await page.mouse.move(400, 300);                   // move somewhere specific
+await page.locator('#item-to-drop-at').hover();    // move on target
+await page.mouse.up();                             // release mouse
+
+👉 Yaha tu mouse.move(x, y) me coordinates bhi de sakta hai agar tu pixel-perfect control chahta hai.
+
+or
+
+If you want precise control over the drag operation, use lower-level methods like locator.hover(), mouse.down(), mouse.move() and mouse.up().
+
+await page.locator('#item-to-be-dragged').hover();
+await page.mouse.down();
+await page.locator('#item-to-drop-at').hover();
+await page.mouse.up();
+
+🔑 Note (Interview bolne layak)
+
+dragTo() → high-level, easy, handles all checks (element visible, actionable, etc.). 
+Recommended for most cases.
+
+Manual drag (mouse.down()/mouse.up()) → low-level, useful when app has custom drag logic 
+(e.g. snapping, dragging over canvas, intermediate positions).
+
+Playwright ke saare pointer methods (dragTo, hover, click) pehle actionability checks karte hain: 
+element DOM me ho, visible ho, enabled ho, etc.
+
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+📌 Scrolling
+
+Most of the time, Playwright will automatically scroll for you before doing any actions. 
+Therefore, you do not need to scroll explicitly.
+
+// Scrolls automatically so that button is visible
+await page.getByRole('button').click();
+
+However, in rare cases you might need to manually scroll. For example, you might want to force an 
+"infinite list" to load more elements, or position the page for a specific screenshot. 
+In such a case, the most reliable way is to find an element that you want to make visible at the bottom, 
+and scroll it into view.
+
+// Scroll the footer into view, forcing an "infinite list" to load more content
+await page.getByText('Footer text').scrollIntoViewIfNeeded();
+
+
+
+If you would like to control the scrolling more precisely, use mouse.wheel() or locator.evaluate():
+
+// Position the mouse and scroll with the mouse wheel
+await page.getByTestId('scrolling-container').hover();
+await page.mouse.wheel(0, 10);
+
+// Alternatively, programmatically scroll a specific element
+await page.getByTestId('scrolling-container').evaluate(e => e.scrollTop += 100);
+
+    -> getByTestId('scrolling-container') → finds the element on the page that 
+      has data-testid="scrolling-container".
+
+    -> .evaluate(e => e.scrollTop += 100) → runs JavaScript inside the browser, where e is that element.
+
+    -> scrollTop is the current vertical scroll position of the element.
+
+    -> += 100 means “move it down 100 pixels more from where it is now.”
+
+👉 So we are not scrolling till an element.
+👉 Instead, we are scrolling the element itself (the one with data-testid="scrolling-container") 
+    downward by 100px.
+
+
+
+👉 agar aapko element ko scroll up karna hai (upar le jaana), to aap scrollTop ki value kam kar doge:
+
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop -= 100);
+
+scrollTop += 100 → neeche scroll karega (down).
+
+scrollTop -= 100 → upar scroll karega (up).
+
+
+👉 ⚡ Aur agar element ko seedha bilkul top par le jaana ho to:
+
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop = 0);
+
+👉 ⚡ Agar element ko seedha bilkul bottom par le jaana ho to:
+
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop = e.scrollHeight);
+
+
+
+📌 Interview Note:
+
+    - scrollIntoViewIfNeeded() → element ko viewport me laata hai agar wo already visible nahi hai.
+
+    - mouse.wheel(x, y) → real user mouse wheel simulation.
+
+    - evaluate(scrollTop) → direct DOM manipulation (fast but not real user simulation).
+
+
+
+// Scroll DOWN 100px
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop += 100);
+
+// Scroll UP 100px
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop -= 100);
+
+// Reset to TOP instantly
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop = 0);
+
+// Jump to very BOTTOM instantly
+await page.getByTestId('scrolling-container')
+          .evaluate(e => e.scrollTop = e.scrollHeight);
+
+📌 Interview Point:
+
+    - scrollTop sirf vertical scroll offset ko control karta hai.
+
+    - Agar horizontal scroll karna ho to scrollLeft use karte hain.
+
+    - scrollHeight total scrollable content ka height hota hai.
+
+
+ 👉 // matalab, in scrolling window , scrolling will happen until element with test id child-element is visible
+    await page.getByTestId('child-element')
+        .evaluate(e => e.scrollIntoView({ behavior: "smooth", block: "center" }));
+
+        check example with test name- Scroll example2 and http://127.0.0.1:5500/tests/18-scrolling-example.html
+
+
+📌 also added example when page have multiple scrolling and we are scrolling in both scroll containers 
+   check example - Scroll example3

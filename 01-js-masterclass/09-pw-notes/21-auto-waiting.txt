@@ -1,0 +1,66 @@
+🔹 What is AJAX?
+
+👉 “AJAX ka matlab hai Asynchronous JavaScript And XML. Ye technique hoti hai jisme browser bina page 
+     reload kiye server se data fetch karta hai aur DOM update karta hai.”
+
+For example:
+
+    - Jab tu form fill karta hai aur server se username already taken check hota hai without reloading → wo AJAX hai.
+
+    - Jab tu “Load more” button click karta hai aur naya content page reload kiye bina aa jata hai → wo AJAX hai.
+
+
+🔹 Auto-waiting with AJAX in Playwright
+
+    Playwright kaafi smart hai. Agar tumhara action (jaise click) ke baad AJAX request hota hai, toh tum:
+    
+    Auto-wait via expect() (element aane ka wait karega)
+    
+    Ya phir explicitly wait for network response kar sakte ho.
+
+
+Q- page.locator('#delayedText').textContent(); locators is waiting for 30 secs or 
+   textContent() method is waiting for 30 secs
+    const text = await page.locator('#delayedText').textContent();
+
+    page.locator('#delayedText') khud wait nahi karta. Locator hamesha “lazy” hota hai, matlab wo sirf element 
+    ko describe karta hai, us samay DOM mein element exist kare ya na kare usse farq nahi padta.
+
+    textContent() method hi wait karta hai.
+    Ye method locator ko resolve karta ha
+    Playwright internally actionability checks lagata hai (yahan specifically element ka exist karna + visible hona).
+    Agar element 30s (default timeout) tak appear nahi hota, to ye TimeoutError throw karega.
+
+
+----------------------------------------------------------------
+
+Below we hve 2 examples
+first one is where element loads after 10 secs but auto-checks methods waits for it and avoid flakiness
+
+second one is where element loads after 10 secs but no auto-checks method is used so it fails after 30 secs
+to handle it we used waiting strategies to avoid flakiness
+
+test('auto-wait examples for methods wch do aut-wait', async ({ page }) => {
+
+    await page.goto('http://127.0.0.1:5500/tests/23-auto-waiting.html');
+
+    await page.getByText('Show Button after 10s').click();
+    await page.locator('#newButton').click();
+
+    await page.getByText('Show Text after 10s').click();
+    const text = await page.locator('#delayedText').textContent();
+    expect(text).toBe('Hello, I appeared after 10 seconds!');
+});
+
+
+test('auto-wait examples2 for method wch dont do autowait', async ({ page }) => {
+
+    await page.goto('http://127.0.0.1:5500/tests/23-auto-waiting.html');
+
+
+    await page.getByText('Show Text after 10s').click();
+    const loc = page.locator('#delayedText')
+    await loc.waitFor(); // if we dont do this, the next line will fail bcoz allTextContents does not auto-wait
+    const text = await loc.allTextContents();
+    expect(text).toContain('Hello, I appeared after 10 seconds!');
+});

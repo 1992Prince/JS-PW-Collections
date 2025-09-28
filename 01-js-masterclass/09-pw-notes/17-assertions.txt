@@ -1,0 +1,262 @@
+🎯 Playwright Assertions – Quick Notes
+
+
+✅ Introduction
+
+
+🔹 What are Matchers?
+
+    In testing, an assertion has two parts:
+
+        The actual value (what your code/app produced).
+
+        The matcher (what you want to check about that value).
+
+    👉 A matcher is a function that tells the test framework how to compare the actual value with the 
+        expected condition.
+
+    🔹 Example - expect(5).toBe(5);
+
+        expect(5) → actual value.
+
+        .toBe(5) → matcher that checks strict equality.
+
+
+🔹 Common Matchers in Playwright (and Jest-style)
+
+✅ Equality
+    expect(10).toBe(10);            // strict equality
+    expect({ a: 1 }).toEqual({ a: 1 }); // deep equality
+
+✅ Truthiness
+    expect(true).toBeTruthy();
+    expect(null).toBeFalsy();
+
+✅ Numbers
+    expect(4).toBeGreaterThan(3);
+    expect(5).toBeLessThanOrEqual(5);
+
+✅ Strings / Arrays
+    expect("Playwright").toContain("wright");
+    expect([1, 2, 3]).toContain(2);
+
+✅ Locators (retryable in Playwright)
+    await expect(page.locator('#submit')).toBeVisible();
+    await expect(page.locator('#username')).toHaveValue('testUser');
+
+✅ Negated Matchers
+    expect(5).not.toBe(0);
+    await expect(page.locator('#error')).not.toBeVisible();
+
+
+✅ Summary:
+
+    Matchers = comparison methods (toBe, toEqual, toContain, toBeVisible, etc.).
+
+    They define what condition you’re checking in an assertion.
+
+    Can be combined with .not, expect.soft, and custom messages.
+
+    Some are non-retry matchers (values) and some are retry matchers (locators in Playwright).
+
+
+
+Assertion = verify actual result vs expected result.
+
+In Playwright → use expect() function.
+
+Syntax: expect(value).matcher();
+
+Example: expect(success).toBeTruthy();   // checks if success is true
+
+
+🔹 Generic Matchers (for any values)
+
+    - toEqual(value) → exact match.
+
+    - toContain(value) → substring / element inside array.
+
+    - toBeTruthy() → checks truthy value.
+
+
+
+🔹 Web-specific Matchers (auto-retry until condition met)
+
+    Async matchers wait until expected condition is true.
+
+    Example: await expect(page.getByTestId('status')).toHaveText('Submitted');
+
+    → Playwright will re-fetch the element repeatedly until:
+
+    Text = Submitted, OR
+
+    Timeout is reached.
+
+
+
+⏳ Timeout Behavior
+
+Default assertion timeout = 5s.
+
+    Can customize:
+
+        - Per assertion → pass timeout option.
+
+        - Globally → via testConfig.expect.
+
+    
+⚡ Tip:
+
+    - Use generic matchers for values.
+
+    - Use web-specific matchers for DOM elements → they handle waiting automatically.
+
+
+So PW have 2 type of Assertions:
+
+1) General/Generic Assertions [it is not dealing with dom elements and only validating text, 
+   value etc so we don't need await here]
+2) Locator Assertions [auto-retry and we must use await here]
+
+
+---------------------------------------------
+
+
+🎯 Playwright Non-Retrying Assertions – Quick Notes
+
+1️⃣ What are Non-Retrying Assertions?
+
+These assertions do not auto-retry.
+
+Useful for static values (not changing dynamically on page).
+
+Example: simple function output, numbers, objects.
+
+⚠️ Flaky tests occur if page updates asynchronously (e.g., API call result) 
+    because the assertion runs once only.
+
+
+
+2️⃣ await Usage
+
+General rule: Non-retrying assertions don’t need await if you are testing plain JS values (synchronous).
+              bcoz they don't return any promise wch we need to wait for resolved
+
+When to use await:
+
+Only when the value itself is a Promise (e.g., page.textContent() or async function).
+
+Why? expect(value) alone can’t resolve Promises.
+
+If you don’t use await on a Promise → test may fail because Playwright compares a Promise object 
+                                       instead of the resolved value.
+
+
+3️⃣ What can be validated?
+
+    ✅ JS values: number, string, boolean, array, object.
+
+    ✅ Function outputs (including exceptions with .toThrow()).
+
+    ❌ Dynamic DOM elements reliably (use auto-retrying assertions instead).
+
+
+
+4️⃣ Examples of Non-Retrying Assertions
+
+| Assertion          | Description                                         | Use Case                   |
+| ------------------ | --------------------------------------------------- | -------------------------- |
+| `toBe()`           | Value is exactly the same                           | Compare numbers, strings   |
+| `toBeTruthy()`     | Value is truthy                                     | Boolean check              |
+| `toBeFalsy()`      | Value is falsy                                      | Boolean check              |
+| `toEqual()`        | Deep equality                                       | Objects, arrays            |
+| `toContain()`      | String contains substring OR array contains element | Search or array membership |
+| `toThrow()`        | Function throws error                               | Error handling             |
+| `toHaveLength()`   | Array or string length                              | Length validation          |
+| `toBeInstanceOf()` | Object is instance of class                         | Class instance check       |
+| `toMatch()`        | String matches regex                                | Regex validation           |
+
+5️⃣ When Non-Retrying Assertions Fail
+
+If the value comes from the page asynchronously (AJAX, animation, API call).
+
+Example:
+
+const status = page.getByTestId('status'); // async update
+expect(status.textContent()).toBe('Submitted'); // may fail without retry
+
+✅ Fix: use auto-retrying assertions (await expect(status).toHaveText('Submitted'))
+
+6️⃣ Key Points for Interview
+
+    Non-retrying = plain values, static checks
+
+    await = only for Promises
+
+    Dynamic web content = use retrying assertions
+
+    Can validate: numbers, strings, booleans, objects, arrays, functions
+
+    Cannot reliably validate: DOM updates / async UI changes
+
+
+
+| Assertion                  | Description                             | Example                                                                  |
+| -------------------------- | --------------------------------------- | ------------------------------------------------------------------------ |
+| `toBe()`                   | Value is exactly equal                  | `expect(5).toBe(5);`                                                     |
+| `toEqual()`                | Deep equality for objects/arrays        | `expect({a:1}).toEqual({a:1});`                                          |
+| `toBeTruthy()`             | Value is truthy                         | `expect(true).toBeTruthy();`                                             |
+| `toBeFalsy()`              | Value is falsy                          | `expect(0).toBeFalsy();`                                                 |
+| `toBeDefined()`            | Value is not undefined                  | `let x = 1; expect(x).toBeDefined();`                                    |
+| `toBeUndefined()`          | Value is undefined                      | `let y; expect(y).toBeUndefined();`                                      |
+| `toBeNull()`               | Value is null                           | `let z = null; expect(z).toBeNull();`                                    |
+| `toBeNaN()`                | Value is NaN                            | `expect(Number('abc')).toBeNaN();`                                       |
+| `toBeGreaterThan()`        | Number is greater than value            | `expect(10).toBeGreaterThan(5);`                                         |
+| `toBeGreaterThanOrEqual()` | Number >= value                         | `expect(10).toBeGreaterThanOrEqual(10);`                                 |
+| `toBeLessThan()`           | Number < value                          | `expect(5).toBeLessThan(10);`                                            |
+| `toBeLessThanOrEqual()`    | Number <= value                         | `expect(5).toBeLessThanOrEqual(5);`                                      |
+| `toBeCloseTo()`            | Number approximately equal              | `expect(3.14).toBeCloseTo(3.141, 2);`                                    |
+| `toContain()`              | String/Array contains value             | `expect('hello').toContain('ell');` <br> `expect([1,2,3]).toContain(2);` |
+| `toContainEqual()`         | Array contains similar object           | `expect([{a:1}]).toContainEqual({a:1});`                                 |
+| `toHaveLength()`           | Array/String length                     | `expect([1,2,3]).toHaveLength(3);`                                       |
+| `toHaveProperty()`         | Object has property                     | `expect({a:1}).toHaveProperty('a');`                                     |
+| `toMatch()`                | String matches regex                    | `expect('hello').toMatch(/ell/);`                                        |
+| `toMatchObject()`          | Object contains properties              | `expect({a:1,b:2}).toMatchObject({a:1});`                                |
+| `toStrictEqual()`          | Deep equality including types           | `expect({a:1}).toStrictEqual({a:1});`                                    |
+| `toThrow()`                | Function throws error                   | `expect(() => {throw new Error('err')}).toThrow('err');`                 |
+| `any()`                    | Matches any instance of class/primitive | `expect(5).any(Number);`                                                 |
+| `anything()`               | Matches anything                        | `expect('abc').anything();`                                              |
+| `arrayContaining()`        | Array contains specific elements        | `expect([1,2,3]).arrayContaining([2,3]);`                                |
+| `objectContaining()`       | Object contains specified properties    | `expect({a:1,b:2}).objectContaining({a:1});`                             |
+| `stringContaining()`       | String contains substring               | `expect('hello').stringContaining('ell');`                               |
+| `stringMatching()`         | String matches regex                    | `expect('hello').stringMatching(/ell/);`                                 |
+
+
+expect(1).toBeTruthy();       // ✅ passes
+expect("hello").toBeTruthy(); // ✅ passes
+expect([]).toBeTruthy();      // ✅ passes
+expect(0).toBeTruthy();       // ❌ fails
+So yes, 1 is truthy → this assertion will pass.
+
+expect(false).toBeFalsy();      // ✅ passes
+expect(0).toBeFalsy();          // ✅ passes
+expect("").toBeFalsy();         // ✅ passes
+expect(null).toBeFalsy();       // ✅ passes
+expect(undefined).toBeFalsy();  // ✅ passes
+expect(NaN).toBeFalsy();        // ✅ passes
+
+expect(1).toBeFalsy();          // ❌ fails (1 is truthy)
+expect("hello").toBeFalsy();    // ❌ fails (non-empty string is truthy)
+
+💡 Interview tip:
+
+toBeTruthy() = value is truthy
+
+toBeFalsy() = value is falsy
+
+Use for boolean-like checks or validating values that could be empty/zero/null.
+
+
+-----------------------------------------------------------------------------
+
+

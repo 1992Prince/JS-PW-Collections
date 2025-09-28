@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Table Challenge</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+    th { background: #f2f2f2; cursor: pointer; }
+    .pagination { margin-top: 10px; }
+    .pagination button { margin: 2px; }
+  </style>
+</head>
+<body>
+  <h2>Dynamic Web Table Challenge</h2>
+  <p>
+    Tasks:<br>
+    1. Find salary of employee with name = <b>John Doe</b>.<br>
+    2. Tick checkbox where department = <b>Finance</b> and role = <b>Analyst</b>.<br>
+    3. Sort by Salary (desc) and click "View" for 2nd highest salary.<br>
+    4. Use "Select all" and verify it only selects visible page.<br>
+    5. Navigate pages to find <b>Priya Kapoor</b> and click her "View".<br>
+  </p>
+
+  <table id="employeeTable">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll"></th>
+        <th onclick="sortTable(1)">Name</th>
+        <th>Department</th>
+        <th>Role</th>
+        <th onclick="sortTable(4)">Salary</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <div class="pagination" id="pagination"></div>
+
+  <script>
+    const employees = [
+      { name: "John Doe", dept: "HR", role: "Manager", salary: 70000 },
+      { name: "Alice Smith", dept: "Finance", role: "Analyst", salary: 65000 },
+      { name: "Raj Patel", dept: "Engineering", role: "Developer", salary: 80000 },
+      { name: "Priya Kapoor", dept: "Finance", role: "Manager", salary: 72000 },
+      { name: "Tom Lee", dept: "Engineering", role: "QA", salary: 60000 },
+      { name: "Maria Garcia", dept: "Marketing", role: "Executive", salary: 55000 },
+      { name: "David Chen", dept: "Engineering", role: "Architect", salary: 90000 },
+      { name: "Sara Ali", dept: "HR", role: "Recruiter", salary: 50000 },
+      { name: "Chris Evans", dept: "Finance", role: "CFO", salary: 120000 },
+      { name: "Emma Watson", dept: "Engineering", role: "Lead", salary: 95000 },
+    ];
+
+    let currentPage = 1;
+    const rowsPerPage = 4;
+
+    function renderTable() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+      const start = (currentPage - 1) * rowsPerPage;
+      const pageData = employees.slice(start, start + rowsPerPage);
+
+      pageData.forEach(emp => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input type="checkbox" class="rowCheckbox"></td>
+          <td>${emp.name}</td>
+          <td>${emp.dept}</td>
+          <td>${emp.role}</td>
+          <td>${emp.salary}</td>
+          <td><button onclick="alert('Viewing ${emp.name}')">View</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderPagination() {
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+      const totalPages = Math.ceil(employees.length / rowsPerPage);
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.onclick = () => {
+          currentPage = i;
+          renderTable();
+        };
+        pagination.appendChild(btn);
+      }
+    }
+
+    function sortTable(colIndex) {
+      const key = colIndex === 1 ? "name" : "salary";
+      employees.sort((a, b) => {
+        if (key === "name") return a.name.localeCompare(b.name);
+        return b.salary - a.salary; // Desc sort
+      });
+      renderTable();
+    }
+
+    document.getElementById("selectAll").addEventListener("change", (e) => {
+      document.querySelectorAll(".rowCheckbox").forEach(cb => cb.checked = e.target.checked);
+    });
+
+    renderTable();
+    renderPagination();
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <body style="background:#f9f9f9; height:200px; padding:20px;">
+    <h3>Dialog Frame</h3>
+    <button id="open-dialog">Open JS Dialog</button>
+
+    <script>
+      document.getElementById('open-dialog').addEventListener('click', () => {
+        const value = prompt('Enter your email:');
+        if (value) {
+          console.log('Iframe 1 - Email entered:', value);
+        } else {
+          console.log('Iframe 1 - No input given');
+        }
+      });
+    </script>
+  </body>
+</html>

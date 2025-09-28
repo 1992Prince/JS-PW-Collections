@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File Upload Playground</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #log { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h2>File Upload Practice</h2>
+
+  <!-- 1. Single File -->
+  <label for="singleFile">Upload file</label>
+  <input type="file" id="singleFile"><br><br>
+
+  <!-- 2. Multiple Files -->
+  <label for="multiFile">Upload files</label>
+  <input type="file" id="multiFile" multiple><br><br>
+
+  <!-- 3. Directory -->
+  <label for="dirFile">Upload directory</label>
+  <input type="file" id="dirFile" webkitdirectory><br><br>
+
+  <!-- 4. Dynamic file chooser -->
+  <button id="dynamicBtn">Upload (Dynamic File Input)</button>
+  
+  <div id="log">Logs will appear here</div>
+
+  <script>
+    const log = document.getElementById('log');
+
+    // log selected files
+    function logFiles(input) {
+      if (!input.files.length) {
+        log.innerHTML += `<p>Cleared files for ${input.id}</p>`;
+      } else {
+        [...input.files].forEach(f => {
+          log.innerHTML += `<p>${input.id}: Selected ${f.name}</p>`;
+        });
+      }
+    }
+
+    document.getElementById('singleFile').addEventListener('change', e => logFiles(e.target));
+    document.getElementById('multiFile').addEventListener('change', e => logFiles(e.target));
+    document.getElementById('dirFile').addEventListener('change', e => logFiles(e.target));
+
+    // Dynamic input
+    document.getElementById('dynamicBtn').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.onchange = e => logFiles(e.target);
+      input.click(); // simulate hidden input
+    });
+  </script>
+</body>
+</html>

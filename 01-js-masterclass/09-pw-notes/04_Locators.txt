@@ -1,0 +1,163 @@
+
+🔵 Locate by alt text
+
+    All images should have an alt attribute that describes the image. 
+    You can locate an image based on the text alternative using page.getByAltText().
+
+    <img alt="playwright logo" src="/img/playwright-logo.svg" width="100" />
+
+    You can click on the image after locating it by the text alternative:
+
+    await page.getByAltText('playwright logo').click();
+
+
+
+
+🔵 Locate by title
+
+    Locate an element with a matching title attribute using page.getByTitle().
+
+    <span title='Issues count'>25 issues</span>
+
+    await expect(page.getByTitle('Issues count')).toHaveText('25 issues');
+
+    When to use title locators - Use this locator when your element has the title attribute.
+
+
+
+🔵 Locate by test id
+
+    Testing by test ids is the most resilient way of testing as even if your text or role of the attribute changes, 
+    the test will still pass. 
+
+    QA's and developers should define explicit test ids and query them with page.getByTestId(). 
+
+    However testing by test ids is not user facing. 
+
+    If the role or text value is important to you then consider using user facing locators such as role and text locators.
+
+    <button data-testid="directions">Itinéraire</button>
+
+    You can locate the element by its test id: await page.getByTestId('directions').click();
+
+    🖥️  Set a custom test id attribute
+
+    By default, page.getByTestId() will locate elements based on the data-testid attribute, but you can configure 
+    it in your test config or by calling selectors.setTestIdAttribute().
+
+    Set the test id to use a custom data attribute for your tests.
+
+    playwright.config.ts
+
+    import { defineConfig } from '@playwright/test';
+
+    export default defineConfig({
+      use: {
+        testIdAttribute: 'data-pw'
+      }
+    });
+
+    In your html you can now use data-pw as your test id instead of the default data-testid.
+
+    <button data-pw="directions">Itinéraire</button>
+
+    And then locate the element as you would normally do: await page.getByTestId('directions').click();
+
+
+
+🔵 Locate by CSS or XPath
+
+    If you absolutely must use CSS or XPath locators, you can use page.locator() to create a locator that 
+    takes a selector describing how to find an element in the page. 
+
+    Playwright supports CSS and XPath selectors, and auto-detects them if you omit css= or xpath= prefix.
+
+    await page.locator('css=button').click();
+    await page.locator('xpath=//button').click();
+
+    await page.locator('button').click();
+    await page.locator('//button').click();
+
+
+NOTE - 
+
+CSS and XPath are not recommended as the DOM can often change leading to non resilient tests. 
+Instead, try to come up with a locator that is close to how the user perceives the page such as role locators 
+or define 
+an explicit testing contract using test ids.
+
+
+
+
+🔵  Locate in Shadow DOM
+
+All locators in Playwright by default work with elements in Shadow DOM. 
+
+The exceptions are:
+
+- Locating by XPath does not pierce shadow roots.
+- Closed-mode shadow roots are not supported.
+
+🌑 What is a Shadow Root DOM element?
+
+In modern web development, some components use Shadow DOM (part of Web Components).
+Shadow DOM is part of Web Components that allows encapsulation of DOM and styles.
+It’s like a separate DOM tree inside an element, isolated from the main DOM.
+It creates a separate, hidden DOM tree inside an element.
+Useful for building reusable widgets (e.g., date pickers, dropdowns, custom components).
+
+This makes the DOM look like:
+
+<my-component>
+  #shadow-root (open)
+    <div class="inner">Hello</div>
+</my-component>
+
+
+So, the shadow root is the entry point into that encapsulated subtree.
+
+⚡ Types of Shadow Roots
+
+There are two types:
+
+1. Open Shadow DOM
+
+    - Created with attachShadow({ mode: 'open' }).
+    - Accessible via JavaScript (element.shadowRoot).
+    - Tools like Playwright, Cypress, etc., can pierce into it and interact
+
+2. Closed Shadow Root
+
+    - Created with attachShadow({ mode: 'closed' }).
+    - Not accessible via JS (element.shadowRoot returns null).
+    - Even Playwright cannot directly access it.
+    - You need to rely on visible UI interactions only (clicks, keyboard, etc.), not selectors inside.
+
+
+3. What can be interacted with using Playwright & JavaScript
+
+✅ Possible
+
+    - Elements inside Open Shadow DOM
+    - Playwright: locator('my-element >>> button')
+    - JavaScript: element.shadowRoot.querySelector('button')
+    - Any element in the regular DOM
+
+
+4. What cannot be interacted with
+
+❌ Not possible directly
+
+Elements inside Closed Shadow DOM
+    - PW cannot pierce → element.shadowRoot is null
+    - Only surface-level actions possible (e.g., clicking the host).
+
+5. How to phrase in interview
+
+Shadow DOM is an encapsulated DOM inside a web component. 
+It can be of two types: open, where we can access elements using JavaScript (shadowRoot) or Playwright selectors, 
+and closed, where direct access is blocked. 
+In Playwright, we can interact with open shadow DOM elements using >>> selectors. 
+However, we cannot interact with closed shadow DOM elements or browser-native UI parts like select 
+dropdowns, video controls, or date pickers — for those, we rely on user-like interactions such as clicks or 
+keyboard inputs

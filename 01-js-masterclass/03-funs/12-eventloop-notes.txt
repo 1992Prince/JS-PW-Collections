@@ -1,0 +1,324 @@
+🧠 What does “JavaScript is single-threaded” mean?
+--------------------------------------------------
+
+Javascript is a single-threaded language, meaning it can only execute one task at a time
+
+➤ Single-threaded = One thing at a time
+
+JavaScript runs code in one main thread, meaning:
+
+    - It can only do one task at a time.
+    - There’s one call stack and no parallel execution of code in the traditional sense.
+    - If something takes a long time (like a loop or network request), it can block other code — unless handled asynchronously.
+
+🧠 Think of it like a cashier who serves one customer at a time — others must wait their turn.
+
+
+🔁 What is Synchronous code?
+--------------------------------------------------
+
+➤ Runs step by step, in order
+Each line of code waits for the previous one to finish.
+
+
+console.log("One");
+console.log("Two");
+console.log("Three");
+
+Output:
+
+One
+Two
+Three
+
+🧠 Like standing in a queue — next person moves only when the one in front finishes.
+
+
+
+🔄 What is Asynchronous (non-synchronous) code?
+--------------------------------------------------
+
+➤ Code that doesn’t block — it starts a task, then moves on
+
+JavaScript lets you run code asynchronously using:
+
+- callbacks/setTimeout
+- Promises
+- async/await
+
+🧠 JavaScript schedules the delayed task, moves on, and comes back later when the time is right.
+
+
+
+🔄 How does JavaScript manage asynchronous code if it's single-threaded?
+-----------------------------------------------------------
+
+JavaScript uses:
+
+   - A call stack (for sync tasks),
+   - A task queue (for async callbacks),
+   - And a web API environment (provided by the browser or Node.js) for things like timers and HTTP requests.
+
+This whole system is called the Event Loop — it manages what runs now and what waits.
+
+
+
+✅ Pehle: setTimeout() kya hai?
+-----------------------------------------------------------
+
+➤ setTimeout() is an asynchronous function.
+
+Matlab:
+
+    Tum usse bolte ho: "Yeh kaam X seconds baad karna."
+    JavaScript usse turant run nahi karta.
+    Wo kaam background me daal deta hai, aur baad me callback function ko wapas chalata hai.
+
+    setTimeout(() => {
+        console.log("Kaam baad me chala");
+                    }, 1000);
+
+➡️ () => { console.log(...) } is the callback
+➡️ It's asynchronous because wo baaki code ke saath saath nahi chalta — later chalta hai
+
+
+
+✅ callback kya hota hai?
+-----------------------------------------------------------
+
+➤ Callback = ek function jo baad me chalta hai
+
+Jaise:
+
+
+    function sayHi() {
+    console.log("Hi");
+    }
+
+    setTimeout(sayHi, 1000);
+
+Yahan sayHi is a callback — because JavaScript usse abhi nahi, baad me 1 second baad chalata hai.
+
+
+✅ JavaScript async code kaise manage karta hai?
+-----------------------------------------------------------
+
+Or Question can be 
+If JS is a single threaded lang then how it handles the asynchronous code?
+
+Yahi samajhne ke liye Event Loop ko samajhna padta hai.
+
+
+🔧 Samjho: Call Stack, Task Queue, Web API kya hota hai
+
+1. 📞 Call Stack – Jahaan sync code chalta hai
+    
+    Ek stack (pile) jisme functions jaate hain
+    Jo sabse upar hai wo pehle run hota hai
+    Jab function complete hota hai, stack se nikal jaata hai
+
+
+    function a() {
+    b();
+    }
+    function b() {
+    console.log("Hello");
+    }
+    a();
+
+
+
+    a() stack me gaya
+    b() gaya
+    console.log chala
+    Phir sab nikal gaya
+
+🧠 Only synchronous code stack me chalta hai
+
+
+2. 🌐 Web API environment – Browser ka background kaam
+
+        Jab tum setTimeout, fetch, DOM events, etc. use karte ho
+
+        JavaScript engine browser ko bolta hai:
+        “Yeh kaam tu kar le, mujhe batana jab ready ho.”
+
+        Toh setTimeout() background me chala jata hai browser ke paas
+        → Browser wait karta hai
+        → Jab time pura ho jata hai, wo callback ko queue me daal deta hai
+
+
+3. 📥 Task Queue / Callback Queue
+
+        Jab async kaam complete ho jata hai (jaise timer, API response)
+
+        Uska callback is queue me chala jata hai
+
+        Ye ek simple list hai of “ready-to-run” callbacks
+
+
+
+4. 🔁 Event Loop
+
+        Yeh sabse important:
+
+        Event loop check karta hai:
+        👉 “Call Stack empty hai?”
+        👉 Agar haan, toh queue me se ek callback uthao aur chalao
+
+        Isiliye, async code baad me chalta hai — tab jab stack empty ho jaata hai
+
+
+
+✅ Ek full example + flow:
+
+
+    console.log("Start");
+
+    setTimeout(() => {
+    console.log("Inside timeout");
+    }, 0);
+
+    console.log("End");
+
+
+💡 Output:
+
+    Start
+    End
+    Inside timeout
+
+
+🧠 Breakdown:
+
+    - console.log("Start") → Call Stack → chala → nikla
+
+    - setTimeout(...) → Web API → 0 sec wait → callback goes to Queue
+
+    - console.log("End") → Call Stack → chala → nikla
+
+    - Stack is now empty → Event Loop moves callback from queue → executes console.log("Inside timeout")
+
+
+Conclusion:
+
+✅ Teri baat repeat karun to:
+    setTimeout() ek Web API function hai jo browser handle karta hai.
+    Jab timer complete ho jaata hai, tab browser callback function ko Task Queue me daal deta hai.
+    Phir Event Loop usse Call Stack me bhejta hai.
+
+✅ Aur haan, ye baat sirf setTimeout tak limited nahi hai.
+    Saare asynchronous Web API functions (like setTimeout, fetch, setInterval, event listeners, etc.) 
+    yehi pattern follow karte hain.
+
+
+🔁 Examples of Web API based async functions:
+| Function Type            | Who handles it?        | What happens after completion?                                                 |
+| ------------------------ | ---------------------- | ------------------------------------------------------------------------------ |
+| `setTimeout()`           | Browser (timer)        | Callback goes to **Task Queue**                                                |
+| `fetch()`                | Browser (XHR or fetch) | Response handler (then/catch) goes to **Microtask Queue** (more on that below) |
+| DOM Events (e.g., click) | Browser                | Event handler goes to **Task Queue**                                           |
+| `setInterval()`          | Browser (timer)        | Repeated callback to **Task Queue**                                            |
+| `addEventListener()`     | Browser                | Callback added to Task Queue on trigger                                        |
+
+
+🎯 Process in Simple Steps:
+        Tum JavaScript code me async function call karte ho (e.g., setTimeout, fetch)
+
+        JavaScript engine bolta:
+        👉 “Mujhe nahi pata iske response ya timing ka. Browser tu handle kar.”
+
+        Browser background me kaam karta hai (timer wait karta hai ya API call karta hai)
+
+        Jab kaam complete ho gaya, toh callback function Task Queue me chala jaata hai
+
+        Event Loop dekhta hai:
+
+        "Call Stack empty hai?"
+
+        Agar haan → Queue se callback uthata hai → Call Stack me daalta hai → Execute hota hai
+
+
+
+
+
+
+🔁 Event Loop in JavaScript – Kya hota hai?
+
+        🧠 JavaScript is single-threaded, but it still feels fast and responsive.
+        Yeh magic kaise hota hai?
+
+        Event Loop hi woh mechanism hai jo JavaScript ko:
+
+        Multiple tasks handle karne deta hai
+
+        Without blocking the main thread
+
+
+🔧 Event Loop ka kaam kya hai?
+        - Event Loop is like a manager jo dekhta hai:
+
+        - Kya immediate code execute karna hai (synchronous)
+
+        - Kya background task complete ho gaya hai (asynchronous)
+
+        - Aur kis async task ko ab call stack pe bhejna hai
+
+
+🔄 Main Parts of the Event Loop System:
+
+1. 🧱 Call Stack
+
+    Jahaan JavaScript synchronous code execute karta hai.
+    Ek-ek function stack me jaata hai, execute hota hai, fir nikal jaata hai.
+
+2. 🌐 Web APIs (Browser APIs)
+
+    setTimeout, fetch, DOM events — ye JavaScript khud nahi karta, browser ya Node.js karta hai.
+    JavaScript unhe delegate karta hai.
+
+3. 📥 Callback Queue / Task Queue
+
+        Jab koi async kaam (jaise setTimeout) complete hota hai, uska callback is queue me chala jaata hai.
+
+4. 🔁 Event Loop
+
+        Ye baar-baar check karta hai:
+        "Call Stack empty hai?"
+        Agar haan, to "Callback Queue se ek task uthao aur Call Stack me daal do"
+
+
+
+--------------------------------------------------------------------------------------
+
+🔹 Callback function kya hai?
+
+        A function jo kisi doosre function ko diya jaata hai:
+        "Jab tera kaam ho jaaye, tab ye chala dena."
+
+        🔹 Event Loop kya karta hai?
+        Ye system hai jo:
+
+        Dekhta hai ki koi callback ready hai
+
+        Aur agar Call Stack khaali hai, to us callback ko execute karne bhejta hai
+
+✅ Toh answer in one line:
+
+        🔁 Event Loop is the manager,
+        💡 Callback is the actual worker function
+        📦 Browser/Web APIs prepare the callbacks
+
+
+✅ Final Answer:
+        JavaScript asynchronous code ko technically handle karta hai using:
+
+        Callback functions (jo batate hain kya kaam karna hai)
+
+        Event loop (jo batata hai kab karna hai)
+
+        Web APIs (jo wait ya async operation handle karte hain)
+
+        Callback is the code
+        Event loop is the timing controller
+        Together, they make JavaScript "asynchronous-capable" despite being single-threaded.

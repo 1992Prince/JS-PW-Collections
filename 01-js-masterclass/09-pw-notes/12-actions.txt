@@ -1,0 +1,379 @@
+📌 Mouse click
+
+📌 Explanation of Click Types in Playwright
+
+🟢 1. Simple Click [Generic Click]
+
+        await page.getByRole('button').click();
+
+        ➡ Simulates a normal left mouse click on a button
+
+🟢 2. Double Click
+
+        await page.getByText('Item').dblclick();
+
+        ➡ Fires two clicks quickly (useful for opening files, renaming, etc.).
+
+
+🟢 3. Right Click
+
+        await page.getByText('Item').click({ button: 'right' });
+
+        ➡ Opens context menu like when you right-click with a mouse.
+
+🟢 4. Shift + Click
+
+        await page.getByText('Item').click({ modifiers: ['Shift'] });
+
+        ➡ Used for multi-selection (e.g., selecting files in a file explorer).
+
+🟢 5. Ctrl + Click (Windows/Linux) or Meta + Click (MacOS)
+
+        await page.getByText('Item').click({ modifiers: ['ControlOrMeta'] });
+
+        ➡ Opens links in a new tab or allows multi-selection.
+
+🟢 6. Hover
+
+        await page.getByText('Item').hover();
+
+        ➡ Moves mouse over element without clicking (useful for tooltips, dropdowns).
+
+🟢 7. Click at Position
+
+        await page.getByText('Item').click({ position: { x: 0, y: 0 } });
+
+        ➡ Clicks at a specific point inside the element (top-left here).
+
+🟢 8. Force Click
+
+        await page.getByRole('button').click({ force: true });
+
+        ➡ Ignores Playwright’s safety checks (e.g., if element is hidden or covered).
+
+🟢 9. Programmatic Click
+
+        await page.getByRole('button').dispatchEvent('click');
+
+        ➡ Directly triggers the JavaScript click event on the element (skips user-like checks).
+
+
+
+
+
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+🔎 Under the Hood (what happens before a click)
+
+When you run await locator.click(), Playwright does all this automatically:
+
+1. Wait for element to be in DOM
+
+    Playwright waits until the element actually exists in the HTML.
+
+    Example: if you have a button that appears after AJAX call, Playwright won’t throw immediately, it waits.
+
+    ✅ Playwright waits for the button to exist & be visible before clicking.
+
+
+2. Wait for it to be displayed (visible)
+
+    It ensures the element is not hidden, i.e.:
+
+        display: none;
+        visibility: hidden;
+        opacity: 0;
+
+    Playwright only clicks when the element is actually visible to a user.
+
+
+3. Wait for it to stop moving
+
+    If the element is animating or transitioning or moving (e.g., sliding into position), 
+    Playwright waits until it’s stable.
+    example:
+
+    #slideBtn {
+        transition: left 1s;
+        position: relative;
+        left: -200px;
+    }
+    #slideBtn.show { left: 0; }
+
+    ✅ Playwright waits until the button finishes sliding before clicking.
+
+
+4. Scroll into view
+    If the element is off-screen, Playwright scrolls it into the viewport automatically.
+
+5. Wait for it to receive pointer events
+   Playwright ensures the element is not covered by another element (like a modal, overlay, or tooltip).
+   Otherwise, the click would go to the overlay instead.
+
+6. Retry if detached
+   If the element disappears and reappears during checks, Playwright retries until stable.
+
+
+🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁🔁
+
+
+
+🔥 Special Cases
+
+💡 Force Click
+
+    await page.getByRole('button').click({ force: true });
+
+        Skips all actionability checks (visibility, covered, animation, etc.).
+        Clicks the element regardless of whether it’s blocked or hidden.
+        Use when:
+
+            - An overlay covers the button, but you know it’s intentional (like menus).
+            - Non-trivial UI logic makes normal click impossible.
+
+        ⚠️ Downside: Not a real user scenario. You may miss bugs where users can’t actually click.
+
+
+
+
+💡 Programmatic Click
+
+    await page.getByRole('button').dispatchEvent('click');
+
+        Triggers JavaScript’s built-in .click() function on the element.
+
+            - Does not simulate a user click:
+            - Does not move the mouse.
+            - Does not check visibility.
+            - Does not ensure scroll, pointer events, etc.
+
+        It’s like doing: document.querySelector("button").click();
+        ⚠️ This skips reality — you’re just firing the event handler.
+
+
+💡 Generic Click
+
+    await page.getByRole('button').click();
+
+        - Default & recommended.
+        - Goes through all actionability checks.
+        - Best simulates real user interaction.
+
+📊 Quick Comparison
+
+| Type              | Simulates Real User? | Runs Actionability Checks | Use Case                                                 |
+| ----------------- | -------------------- | ------------------------- | -------------------------------------------------------- |
+| **Generic Click** | ✅ Yes                | ✅ Yes                     | Default, reliable tests                                  |
+| **Force Click**   | ❌ Not really         | ❌ Skips all               | When element is covered but you still want to click      |
+| **Programmatic**  | ❌ No (JS only)       | ❌ Skips all               | When you just need to trigger handler, not simulate user |
+
+
+
+
+🚀🚀🚀 [IMP-INTERVIEW-POINT-START] 🚀🚀🚀
+
+
+1️⃣ When we perform a click, what checks happen behind the scenes?
+
+    Playwright runs a series of actionability checks before clicking:
+    Wait for element with given selector to be in the DOM.
+    Wait for it to be displayed/visible (not display:none, visibility:hidden, or opacity:0).
+    Wait for it to stop moving (CSS transitions/animations must finish).
+    Scroll element into view if it’s off-screen.
+    Wait for it to be able to receive pointer events (not covered by overlay/another element).
+    Retry if element is detached during the checks.
+
+
+2️⃣ Difference: Wait for element in DOM vs Wait for it to be displayed
+
+    Wait for element in DOM → The element exists in the HTML tree (document.querySelector() finds it).
+    Example: <button style="display:none;">Click</button> is in the DOM.
+
+    Wait for it to be displayed → The element is visible to the user 
+    (not hidden, not zero size, not behind display:none).
+    Example: The same <button style="display:none;"> is in DOM but not displayed.
+
+    👉 So, being in DOM ≠ being visible.
+
+👉 An element can exist in the DOM (HTML tree) but still be not actionable / invisible to the user.
+
+<!-- In DOM but hidden -->
+<button id="btn1" style="display: none;">Click Me</button>
+
+<!-- In DOM but invisible -->
+<button id="btn2" style="visibility: hidden;">Click Me</button>
+
+<!-- In DOM but transparent -->
+<button id="btn3" style="opacity: 0;">Click Me</button>
+
+<!-- In DOM but zero size -->
+<button id="btn4" style="width:0; height:0;">Click Me</button>
+
+
+    - All these buttons exist in the DOM (a querySelector('#btnX') will find them).
+
+    - But none of them are displayed to the user → so Playwright will keep waiting until they become visible 
+      before clicking.
+
+
+⚡ Interview wording you can use:
+    "Yes, an element can be present in the DOM but still not visible or actionable. For example, 
+    it may have display:none, visibility:hidden, opacity:0, or zero size. 
+    Playwright distinguishes between being in the DOM vs being displayed before performing actions."
+
+
+
+3️⃣ Are these checks validated before all Playwright actions?
+
+    Yes ✅ — for all pointer-related actions (click, dblclick, hover, drag, etc.), 
+    Playwright automatically performs these actionability checks.
+
+    But for non-UI actions (like .evaluate(), .innerText(), .dispatchEvent()), 
+    these checks don’t run, since they don’t simulate real user interaction.
+
+
+Interview-ready 1-liners:
+
+- On click, Playwright checks → in DOM → visible → stable → scrolled → receives pointer → retries if detached.
+- DOM ≠ visible → element may exist in HTML but still hidden.
+- Yes, all pointer actions run these checks by default.
+
+✅✅✅ [IMP-INTERVIEW-POINT-END] ✅✅✅
+
+
+
+
+
+⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️
+
+
+📌 Type characters
+
+Imp:
+Most of the time, you should input text with locator.fill().
+You only need to type characters if there is special keyboard handling on the page.
+
+Type into the field character by character, as if it was a user with a real keyboard 
+with locator.pressSequentially().
+
+// Press keys one by one
+await page.locator('#area').pressSequentially('Hello World!');
+
+// Press keys one by one with delay
+    await page.getByPlaceholder('Enter text...').pressSequentially('Hello World!', { delay: 100 });
+
+This method will emit all the necessary keyboard events, with all the keydown, keyup, keypress events in place. 
+You can even specify the optional delay between the key presses to simulate real user behavior.
+
+
+⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️⏭️
+
+
+📌 Keys and shortcuts [🔑 Playwright Keys & Shortcuts with locator.press()]
+
+
+
+// Hit Enter
+await page.getByText('Submit').press('Enter');
+
+    👉 What happens:
+
+        Focuses the button with text "Submit".
+        Simulates pressing the Enter key.
+        If that button is inside a form → it will trigger form submission.
+        Equivalent to a user pressing Enter while focusing that button.
+
+    💡 Example: If your login form has a Submit button, pressing Enter will submit it
+
+
+
+// Dispatch Control+Right
+await page.getByRole('textbox').press('Control+ArrowRight');
+
+👉 What happens:
+
+    Focuses the textbox.
+    Control + ArrowRight = move the cursor one word to the right.
+    Common in text editing (skip word by word).
+    💡 Example: If input has "Hello World", and cursor is before "Hello", 
+    Ctrl+ArrowRight will move it to the start of "World".
+
+     If u want to select character by character u can use shift + ArrowRight
+
+
+
+// Press $ sign on keyboard
+await page.getByRole('textbox').press('$');
+
+
+The locator.press() method focuses the selected element and produces a single keystroke. 
+It accepts the logical key names that are emitted in the keyboardEvent.key property of the keyboard events:
+
+Special Keys List
+
+    locator.press() supports logical keys:
+
+        Navigation: ArrowDown, ArrowUp, ArrowRight, ArrowLeft
+        Actions: Enter, Tab, Escape, Delete, Backspace
+        Function keys: F1 – F12
+        Digits: Digit0 – Digit9
+        Letters: KeyA – KeyZ
+
+👉 These map directly to KeyboardEvent.key values in the browser.
+
+💡 Example:
+
+await page.locator('#search').press('Escape');   // dismiss autocomplete
+await page.locator('#search').press('ArrowDown'); // navigate suggestions
+
+
+
+5. Single Characters
+
+await page.locator('#name').press('a');  // types lowercase a
+await page.locator('#name').press('A');  // types uppercase A
+
+👉 Difference:
+
+"a" = lowercase a.
+"A" = uppercase A.
+
+💡 Case-sensitive → "a" ≠ "A".
+
+
+6. Using Modifiers (Shift, Control, Alt, Meta)
+
+await page.locator('#name').press('Shift+A');  // Capital A
+await page.locator('#name').press('Shift+ArrowLeft'); // Selects text left
+
+
+8. Case-Sensitivity with Shift
+
+await page.locator('#name').press('Shift+A');  // Capital A
+await page.locator('#name').press('Shift+a');  // Lowercase a (like CapsLock)
+
+👉 Key detail:
+
+Shift+A → "A" (capital).
+
+Shift+a → "a" (lowercase).
+
+💡 Playwright mimics real OS keyboard behavior.
+
+
+⚡ Interview-style Summary
+
+    locator.press() = focuses element + simulates one keystroke.
+
+    Supports normal keys (Enter, Tab, Arrow, F1–F12, etc.).
+
+    Supports characters (a, A, #, $).
+
+    Supports modifiers (Shift, Ctrl, Alt, Meta).
+
+    Shortcuts like Ctrl+Shift+T are handled exactly as in a real browser.
+
+    Case sensitive → "a" vs "A" vs "Shift+A".
